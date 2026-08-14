@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Printer, MapPin, CheckCircle, Save, Download } from 'lucide-react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
   const [targetDate, setTargetDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -20,44 +20,49 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
   };
 
   const handleDownloadPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text(`Delivery Sheet - ${targetDate}`, 14, 20);
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text(`Delivery Sheet - ${targetDate}`, 14, 20);
 
-    const tableColumn = ["Customer Name", "Location / Flat", "Milk (L)", "Ghee (Kg)", "Chach (L)", "Extras", "Status"];
-    const tableRows = [];
+      const tableColumn = ["Customer Name", "Location / Flat", "Milk (L)", "Ghee (Kg)", "Chach (L)", "Extras", "Status"];
+      const tableRows = [];
 
-    deliveries.forEach(d => {
-      let extras = [];
-      if (d.order.paneer > 0) extras.push(`Paneer: ${d.order.paneer}kg`);
-      if (d.order.curd > 0) extras.push(`Curd: ${d.order.curd}kg`);
-      const extrasText = extras.length > 0 ? extras.join('\n') : '-';
+      deliveries.forEach(d => {
+        let extras = [];
+        if (d.order.paneer > 0) extras.push(`Paneer: ${d.order.paneer}kg`);
+        if (d.order.curd > 0) extras.push(`Curd: ${d.order.curd}kg`);
+        const extrasText = extras.length > 0 ? extras.join('\n') : '-';
 
-      const rowData = [
-        d.user.name,
-        `${d.user.flat}, ${d.user.location}`,
-        d.order.milk || 0,
-        d.order.ghee || 0,
-        d.order.chach || 0,
-        extrasText,
-        ''
-      ];
-      tableRows.push(rowData);
-    });
+        const rowData = [
+          d.user.name,
+          `${d.user.flat}, ${d.user.location}`,
+          d.order.milk || 0,
+          d.order.ghee || 0,
+          d.order.chach || 0,
+          extrasText,
+          ''
+        ];
+        tableRows.push(rowData);
+      });
 
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 30,
-      theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: { fillColor: [37, 99, 235] },
-      columnStyles: {
-        6: { cellWidth: 20 }
-      }
-    });
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 30,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 3 },
+        headStyles: { fillColor: [37, 99, 235] },
+        columnStyles: {
+          6: { cellWidth: 20 }
+        }
+      });
 
-    doc.save(`Delivery_Sheet_${targetDate}.pdf`);
+      doc.save(`Delivery_Sheet_${targetDate}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Error generating PDF. Please try again.");
+    }
   };
 
   return (
