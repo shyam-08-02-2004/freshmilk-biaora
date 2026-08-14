@@ -9,6 +9,7 @@ import ProfileModal from './components/ProfileModal';
 import AuthPage from './components/AuthPage';
 import AdminContactModal from './components/AdminContactModal';
 import PaymentModal from './components/PaymentModal';
+import CustomerDashboard from './components/CustomerDashboard';
 import { format } from 'date-fns';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -78,6 +79,7 @@ function App() {
   const [isAdminContactOpen, setIsAdminContactOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isAdminRevenueOpen, setIsAdminRevenueOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('home');
   
   const [isLoggedIn, setIsLoggedIn] = useState(() => JSON.parse(localStorage.getItem('biaora_isLoggedIn')) || false);
   const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('biaora_currentUser')) || null);
@@ -567,23 +569,17 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header 
-        totalBill={totalBill} 
-        monthTotalBill={monthTotalBill}
-        monthPaidBill={monthPaidBill}
-        billUpdated={billUpdated} 
-        onOpenHistory={() => setIsHistoryOpen(true)} 
-        onOpenProfile={() => setIsProfileOpen(true)}
-        onAdminContactToggle={() => setIsAdminContactOpen(true)}
-        onOpenPayment={() => setIsPaymentOpen(true)}
+      <CustomerLayout
         currentUser={currentUser}
-      />
-      
-      <main className="app-layout">
-        
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        onOpenPayment={() => setIsPaymentOpen(true)}
+        onOpenProfile={() => setIsProfileOpen(true)}
+      >
         {/* Pending Bottles Banner */}
         {pendingBottles > 0 && (
-          <div style={{ gridColumn: '1 / -1', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
             <div style={{ background: '#ef4444', color: 'white', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
               <span style={{ fontWeight: 'bold' }}>🍼</span>
             </div>
@@ -599,7 +595,7 @@ function App() {
           const activeBroadcasts = (broadcasts || []).filter(b => new Date(b.expiresAt) > new Date());
           if (activeBroadcasts.length === 0) return null;
           return (
-            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1.5rem' }}>
               {activeBroadcasts.map(b => (
                 <div key={b.id} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                   <div style={{ background: '#3b82f6', color: 'white', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
@@ -615,27 +611,20 @@ function App() {
           );
         })()}
 
-        <div className="left-panel">
-          <DailyStore 
-            selectedDate={selectedDate}
-            currentOrder={currentOrder}
-            onSaveOrder={handleSaveDayOrder}
-            onClearOrder={handleClearDayOrder}
-            prices={PRICES}
-            currentUser={currentUser}
-          />
-        </div>
-        
-        <div className="right-panel">
-          <Calendar 
-            currentDate={currentDate} 
-            setCurrentDate={setCurrentDate} 
-            orders={orders}
-            onDayClick={handleDayClick}
-            selectedDate={selectedDate}
-          />
-        </div>
-      </main>
+        <CustomerDashboard 
+          selectedDate={selectedDate}
+          setCurrentDate={setSelectedDate}
+          orders={orders}
+          onDayClick={setSelectedDate}
+          currentUser={currentUser}
+          prices={PRICES}
+          onSaveOrder={handleSaveDayOrder}
+          monthTotalBill={monthTotalBill}
+          monthPaidBill={monthPaidBill}
+          totalBill={totalBill}
+          onOpenPayment={() => setIsPaymentOpen(true)}
+        />
+      </CustomerLayout>
 
       {isHistoryOpen && (
         <HistoryModal 
