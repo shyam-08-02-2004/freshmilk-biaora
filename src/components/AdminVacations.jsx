@@ -9,8 +9,9 @@ const AdminVacations = ({ registeredUsers }) => {
   usersOnVacation.sort((a, b) => new Date(a.vacationStart) - new Date(b.vacationStart));
 
   return (
-    <div style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', padding: '1rem', borderRadius: '12px', color: 'white', boxShadow: '0 4px 10px rgba(14, 165, 233, 0.2)' }}>
+    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '1.5rem', boxSizing: 'border-box' }}>
+      <div style={{ width: '100%', maxWidth: '800px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', padding: '1rem', borderRadius: '12px', color: 'white', boxShadow: '0 4px 10px rgba(14, 165, 233, 0.2)' }}>
         <Plane size={28} />
         <h2 style={{ margin: 0, fontSize: '1.3rem' }}>Customer Vacations ({usersOnVacation.length})</h2>
       </div>
@@ -54,6 +55,7 @@ const AdminVacations = ({ registeredUsers }) => {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 };

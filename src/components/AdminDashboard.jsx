@@ -268,9 +268,8 @@ const AdminDashboard = ({
           </h2>
         </div>
         
-        {['users', 'orders', 'profiles', 'payments'].includes(activeTab) && (
-          <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
-          {activeTab === 'users' && (
+        <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
+        {activeTab === 'users' && (
           <div style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>All Registered Customers ({registeredUsers.length})</h3>
@@ -950,7 +949,6 @@ const AdminDashboard = ({
                   </div>
           </div>
         </div>
-        )}
       )}
       
       {activeTab === 'delivery' && (
