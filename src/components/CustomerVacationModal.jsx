@@ -23,36 +23,51 @@ const CustomerVacationModal = ({ isOpen, onClose, currentUser, onVacationUpdate 
         </div>
 
         <div style={{ background: '#f0f9ff', padding: '1.2rem', borderRadius: '12px', border: '1px solid #bae6fd', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginBottom: '1rem' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 120px' }}>
               <label style={{ fontSize: '0.8rem', color: '#0369a1', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>From Date</label>
               <input 
                 type="date" 
                 value={vacationStart} 
                 onChange={(e) => setVacationStart(e.target.value)}
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #7dd3fc', outline: 'none', background: 'white', color: '#0c4a6e' }}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #7dd3fc', outline: 'none', background: 'white', color: '#0c4a6e', boxSizing: 'border-box' }}
               />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 120px' }}>
               <label style={{ fontSize: '0.8rem', color: '#0369a1', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>To Date</label>
               <input 
                 type="date" 
                 value={vacationEnd} 
                 onChange={(e) => setVacationEnd(e.target.value)}
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #7dd3fc', outline: 'none', background: 'white', color: '#0c4a6e' }}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #7dd3fc', outline: 'none', background: 'white', color: '#0c4a6e', boxSizing: 'border-box' }}
               />
             </div>
           </div>
           
-          <button 
-            onClick={() => {
-              onVacationUpdate(vacationStart, vacationEnd);
-              onClose();
-            }}
-            style={{ width: '100%', padding: '0.8rem', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s', fontSize: '1rem' }}
-          >
-            Save Vacation Dates
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <button 
+              onClick={() => {
+                onVacationUpdate(vacationStart, vacationEnd);
+                onClose();
+              }}
+              style={{ width: '100%', padding: '0.8rem', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s', fontSize: '1rem' }}
+            >
+              Save Vacation Dates
+            </button>
+            {(currentUser?.vacationStart || currentUser?.vacationEnd) && (
+              <button 
+                onClick={() => {
+                  setVacationStart('');
+                  setVacationEnd('');
+                  onVacationUpdate('', '');
+                  onClose();
+                }}
+                style={{ width: '100%', padding: '0.8rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s', fontSize: '1rem' }}
+              >
+                Clear / Delete Vacation
+              </button>
+            )}
+          </div>
         </div>
 
       </div>

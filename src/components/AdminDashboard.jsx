@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt, Camera, FileText } from 'lucide-react';
+import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt, Camera, FileText, Plane } from 'lucide-react';
 import { format } from 'date-fns';
 import AdminHistoryModal from './AdminHistoryModal';
 import AdminDeliverySheet from './AdminDeliverySheet';
@@ -9,6 +9,7 @@ import AdminAnalytics from './AdminAnalytics';
 import AdminExportData from './AdminExportData';
 import AdminPaymentReminders from './AdminPaymentReminders';
 import AdminInventory from './AdminInventory';
+import AdminVacations from './AdminVacations';
 import CustomerPassbook from './CustomerPassbook';
 import QRScannerModal from './QRScannerModal';
 import { useLanguage } from '../LanguageContext';
@@ -210,6 +211,12 @@ const AdminDashboard = ({
               className={`admin-sidebar-btn ${activeTab === 'expenses' ? 'active' : ''}`}
             >
               <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>💵</span> Expenses
+            </button>
+            <button 
+              onClick={() => handleTabClick('vacations')}
+              className={`admin-sidebar-btn ${activeTab === 'vacations' ? 'active' : ''}`}
+            >
+              <Plane size={20} /> Vacations
             </button>
             <button 
               onClick={() => handleTabClick('analytics')}
@@ -998,6 +1005,11 @@ const AdminDashboard = ({
           globalInventory={globalInventory} 
           setGlobalInventory={setGlobalInventory} 
           prices={prices} 
+        />
+      )}
+      {activeTab === 'vacations' && (
+        <AdminVacations 
+          registeredUsers={registeredUsers} 
         />
       )}
       </div>
