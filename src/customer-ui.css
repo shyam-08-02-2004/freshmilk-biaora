@@ -348,6 +348,27 @@
   }
 }
 
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+@media (max-width: 480px) {
+  .order-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+  
+  .order-card-header > button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* --- Calendar/Timing Widget --- */
 .widget-card {
   background: white;
   border-radius: 16px;

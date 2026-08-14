@@ -108,7 +108,7 @@ const OrderCard = ({
   return (
     <div style={{ background: 'white', borderRadius: '16px', border: '1px solid var(--border)', overflow: 'hidden', marginBottom: '1.5rem' }}>
       <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="order-card-header">
           <div>
             <h3 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <ShoppingBag size={20} color="var(--text-primary)" /> Select Items
