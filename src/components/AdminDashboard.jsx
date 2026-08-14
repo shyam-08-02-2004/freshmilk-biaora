@@ -14,8 +14,12 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses' | 'analytics'
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses' | 'analytics'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  React.useEffect(() => {
+    sessionStorage.setItem('admin_activeTab', activeTab);
+  }, [activeTab]);
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
