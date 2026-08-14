@@ -29,8 +29,8 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
 
   // Today locked after 10:30 AM today
   // Tomorrow locked after 10:30 AM tomorrow (i.e., never locked today for tomorrow)
-  const isPast1030AM = now.getHours() > 10 || (now.getHours() === 10 && now.getMinutes() >= 30);
-  const isEmergencyMode = isTodayDate && isPast1030AM;
+  const isPast1130AM = now.getHours() > 11 || (now.getHours() === 11 && now.getMinutes() >= 30);
+  const isEmergencyMode = isTodayDate && isPast1130AM;
   // Tomorrow is never locked (10:30 AM tomorrow hasn't arrived yet today)
   const isTomorrowLocked = false;
   

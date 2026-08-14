@@ -60,8 +60,8 @@ const CustomerDashboard = ({
               <Clock size={24} />
             </div>
             <div className="timing-text">
-              <h4>Order Time: 6:00 AM to 10:30 AM</h4>
-              <p>Orders placed after 10:30 AM will be added for tomorrow.</p>
+              <h4>Order Time: 6:00 AM to 11:30 AM</h4>
+              <p>Orders placed after 11:30 AM will be added for tomorrow.</p>
             </div>
             <img src="/assets/milk.png" alt="Milk" className="timing-img" />
           </div>
@@ -97,7 +97,7 @@ const CustomerDashboard = ({
               <h4 style={{ margin: '0 0 0.2rem 0', color: 'var(--secondary)' }}>Tomorrow's Delivery</h4>
               <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{format(addDays(new Date(), 1), 'EEEE, d MMMM yyyy')}</p>
               <span style={{ display: 'inline-block', marginTop: '0.4rem', background: '#dcfce7', color: 'var(--secondary)', fontSize: '0.7rem', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: 'bold' }}>
-                Delivery between 6 AM - 10:30 AM
+                Delivery between 6 AM - 11:30 AM
               </span>
             </div>
           </div>

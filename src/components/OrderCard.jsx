@@ -31,8 +31,8 @@ const OrderCard = ({
     }
   }
 
-  const isPast1030AM = now.getHours() > 10 || (now.getHours() === 10 && now.getMinutes() >= 30);
-  const isEmergencyMode = isTodayDate && isPast1030AM;
+  const isPast1130AM = now.getHours() > 11 || (now.getHours() === 11 && now.getMinutes() >= 30);
+  const isEmergencyMode = isTodayDate && isPast1130AM;
   const isApproved = currentOrder?.status === 'approved';
   const isOrderable = !isPastDate && !isApproved && !isFutureBeyondTomorrow && !isOnVacation;
 
