@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Printer, MapPin, CheckCircle, Save } from 'lucide-react';
+import { Printer, MapPin, CheckCircle, Save, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
   const [targetDate, setTargetDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -17,6 +19,47 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
     window.print();
   };
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Delivery Sheet - ${targetDate}`, 14, 20);
+
+    const tableColumn = ["Customer Name", "Location / Flat", "Milk (L)", "Ghee (Kg)", "Chach (L)", "Extras", "Status"];
+    const tableRows = [];
+
+    deliveries.forEach(d => {
+      let extras = [];
+      if (d.order.paneer > 0) extras.push(`Paneer: ${d.order.paneer}kg`);
+      if (d.order.curd > 0) extras.push(`Curd: ${d.order.curd}kg`);
+      const extrasText = extras.length > 0 ? extras.join('\n') : '-';
+
+      const rowData = [
+        d.user.name,
+        `${d.user.flat}, ${d.user.location}`,
+        d.order.milk || 0,
+        d.order.ghee || 0,
+        d.order.chach || 0,
+        extrasText,
+        ''
+      ];
+      tableRows.push(rowData);
+    });
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      theme: 'grid',
+      styles: { fontSize: 10, cellPadding: 3 },
+      headStyles: { fillColor: [37, 99, 235] },
+      columnStyles: {
+        6: { cellWidth: 20 }
+      }
+    });
+
+    doc.save(`Delivery_Sheet_${targetDate}.pdf`);
+  };
+
   return (
     <div className="delivery-container" style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -29,8 +72,14 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
             style={{ padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)' }}
           />
           <button 
+            onClick={handleDownloadPDF}
+            style={{ padding: '0.6rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
+          >
+            <Download size={18} /> Download PDF
+          </button>
+          <button 
             onClick={handlePrint}
-            style={{ padding: '0.6rem 1rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            style={{ padding: '0.6rem 1rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
           >
             <Printer size={18} /> Print Sheet
           </button>
