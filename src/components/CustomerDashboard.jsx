@@ -127,7 +127,7 @@ const CustomerDashboard = ({
                       <img src="/assets/ghee.png" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
                       <div>
                         <h5 style={{ margin: 0 }}>Ghee</h5>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{tomorrowOrder.ghee} x 500g</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{tomorrowOrder.ghee} Kg</span>
                       </div>
                     </div>
                     <span style={{ fontWeight: 'bold' }}>₹{tomorrowOrder.ghee * prices.ghee}</span>
@@ -139,7 +139,7 @@ const CustomerDashboard = ({
                       <img src="/assets/chach.png" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
                       <div>
                         <h5 style={{ margin: 0 }}>Chach</h5>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{tomorrowOrder.chach} x 500ml</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{tomorrowOrder.chach} Litre</span>
                       </div>
                     </div>
                     <span style={{ fontWeight: 'bold' }}>₹{tomorrowOrder.chach * prices.chach}</span>
@@ -151,7 +151,7 @@ const CustomerDashboard = ({
                       <img src="/assets/paneer.png" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
                       <div>
                         <h5 style={{ margin: 0 }}>Paneer</h5>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{tomorrowOrder.paneer} x 200g</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{tomorrowOrder.paneer} Kg</span>
                       </div>
                     </div>
                     <span style={{ fontWeight: 'bold' }}>₹{tomorrowOrder.paneer * prices.paneer}</span>
@@ -163,7 +163,7 @@ const CustomerDashboard = ({
                       <img src="/assets/curd.jpg" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
                       <div>
                         <h5 style={{ margin: 0 }}>Dahi</h5>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{tomorrowOrder.curd} x 500g</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{tomorrowOrder.curd} Kg</span>
                       </div>
                     </div>
                     <span style={{ fontWeight: 'bold' }}>₹{tomorrowOrder.curd * prices.curd}</span>

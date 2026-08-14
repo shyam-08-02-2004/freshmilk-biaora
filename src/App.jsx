@@ -24,7 +24,7 @@ const PRICES = {
   ghee: 800, // per kg/liter
   chach: 35, // per liter
   paneer: 320, // per kg
-  curd: 100 // per kg
+  curd: 200 // per kg
 };
 
 function useFirestoreSync(docName, initialState) {

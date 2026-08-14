@@ -62,11 +62,11 @@ const OrderCard = ({
   }, [selectedDate, JSON.stringify(currentOrder)]);
 
   const products = [
-    { id: 'milk', name: t('milk'), desc: 'Pure & Fresh', price: prices.milk, unit: 'litre', img: '/assets/milk.png', step: 1 },
-    { id: 'ghee', name: t('ghee'), desc: 'Pure Cow Ghee', price: prices.ghee, unit: '500g', img: '/assets/ghee.png', step: 1 },
-    { id: 'chach', name: t('chach'), desc: 'Fresh & Healthy', price: prices.chach, unit: '500ml', img: '/assets/chach.png', step: 1 },
-    { id: 'paneer', name: t('paneer'), desc: 'Fresh & Soft', price: prices.paneer, unit: '200g', img: '/assets/paneer.png', step: 1 },
-    { id: 'curd', name: t('curd'), desc: 'Thick & Tasty', price: prices.curd, unit: '500g', img: '/assets/curd.jpg', step: 1 }
+    { id: 'milk', name: t('milk'), desc: 'Pure & Fresh', price: prices.milk, unit: 'litre', img: '/assets/milk.png', step: 0.5 },
+    { id: 'ghee', name: t('ghee'), desc: 'Pure Cow Ghee', price: prices.ghee, unit: 'kg', img: '/assets/ghee.png', step: 0.5 },
+    { id: 'chach', name: t('chach'), desc: 'Fresh & Healthy', price: prices.chach, unit: 'litre', img: '/assets/chach.png', step: 0.5 },
+    { id: 'paneer', name: t('paneer'), desc: 'Fresh & Soft', price: prices.paneer, unit: 'kg', img: '/assets/paneer.png', step: 0.5 },
+    { id: 'curd', name: t('curd'), desc: 'Thick & Tasty', price: prices.curd, unit: 'kg', img: '/assets/curd.jpg', step: 0.5 }
   ];
 
   const updateLocalQty = (id, val) => {

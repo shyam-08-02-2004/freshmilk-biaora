@@ -68,7 +68,7 @@ const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
                 <button 
-                  onClick={() => setMilkQty(Math.max(0, milkQty - 1))}
+                  onClick={() => setMilkQty(Math.max(0, milkQty - 0.5))}
                   style={{ width: '50px', height: '50px', borderRadius: '16px', background: '#f1f5f9', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (isDecreaseLocked && milkQty <= existingMilk) ? 'not-allowed' : 'pointer', color: 'var(--text-primary)', opacity: (isDecreaseLocked && milkQty <= existingMilk) ? 0.5 : 1 }}
                   disabled={isDecreaseLocked && milkQty <= existingMilk}
                 >
@@ -78,7 +78,7 @@ const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
                   {milkQty}
                 </div>
                 <button 
-                  onClick={() => setMilkQty(milkQty + 1)}
+                  onClick={() => setMilkQty(milkQty + 0.5)}
                   style={{ width: '50px', height: '50px', borderRadius: '16px', background: 'var(--primary)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)' }}
                 >
                   <Plus size={24} />
