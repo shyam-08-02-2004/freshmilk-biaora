@@ -9,10 +9,11 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'payments'
   const [expandedDate, setExpandedDate] = useState(null);
+  const [viewMonth, setViewMonth] = useState(selectedDate || new Date());
 
   // Filter by the month the user is currently viewing
-  const currentMonthStr = format(selectedDate || new Date(), 'yyyy-MM');
-  const currentMonthLabel = format(selectedDate || new Date(), 'MMMM yyyy');
+  const currentMonthStr = format(viewMonth, 'yyyy-MM');
+  const currentMonthLabel = format(viewMonth, 'MMMM yyyy');
 
   const sortedDates = Object.keys(orders || {})
     .filter(d => d.startsWith(currentMonthStr))
@@ -32,7 +33,19 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
         <div className="modal-header" style={{ paddingBottom: '0.5rem', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h2 style={{ margin: 0 }}>{t('history')}</h2>
-            <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '600' }}>{currentMonthLabel}</p>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '0.3rem', margin: '0.3rem 0 0', color: 'var(--primary)', cursor: 'pointer', background: '#e6f4ea', padding: '0.3rem 0.6rem', borderRadius: '8px', width: 'fit-content' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{currentMonthLabel} ▾</span>
+              <input 
+                type="month" 
+                value={currentMonthStr}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setViewMonth(parseISO(e.target.value + '-01'));
+                  }
+                }}
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+              />
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <button 
