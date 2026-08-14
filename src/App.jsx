@@ -391,17 +391,13 @@ function App() {
         curd: (prevDayOrder.curd || 0) + (localOrder.curd || 0),
         status: 'pending'
       };
-      
-      const userRef = ref(database, `users/${currentUser.mobile}/orders/${dateKey}`);
-      
+
       if (newDayOrder.milk === 0 && newDayOrder.ghee === 0 && newDayOrder.chach === 0 && newDayOrder.paneer === 0 && newDayOrder.curd === 0) {
         const newOrders = { ...prev };
         delete newOrders[dateKey];
-        remove(userRef);
         return newOrders;
       }
-      
-      set(userRef, newDayOrder);
+
       return { ...prev, [dateKey]: newDayOrder };
     });
   };
@@ -412,8 +408,6 @@ function App() {
     setOrders(prev => {
       const newOrders = { ...prev };
       delete newOrders[dateKey];
-      const userRef = ref(database, `users/${currentUser.mobile}/orders/${dateKey}`);
-      remove(userRef);
       return newOrders;
     });
   };

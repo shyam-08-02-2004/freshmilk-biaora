@@ -49,6 +49,7 @@ const OrderCard = ({
     paneer: currentOrder?.paneer || 0,
     curd: currentOrder?.curd || 0
   });
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   useEffect(() => {
     setLocalOrder({
@@ -99,14 +100,27 @@ const OrderCard = ({
 
   const handleDelete = () => {
     if (!canDelete) return;
-    if (window.confirm('Are you sure you want to cancel this entire order?')) {
-      const emptyOrder = { milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 };
-      onSaveOrder(selectedDate, emptyOrder, true);
-    }
+    setShowCancelConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    const emptyOrder = { milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 };
+    onSaveOrder(selectedDate, emptyOrder, true);
+    setShowCancelConfirm(false);
   };
 
   return (
     <div style={{ background: 'white', borderRadius: '16px', border: '1px solid var(--border)', overflow: 'hidden', marginBottom: '1.5rem' }}>
+      {/* Inline Cancel Confirmation Banner */}
+      {showCancelConfirm && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '1rem 1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.9rem' }}>❗ Pura order cancel karna hai?</span>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={() => setShowCancelConfirm(false)} style={{ padding: '0.4rem 1rem', borderRadius: '8px', background: '#f1f5f9', border: '1px solid #e2e8f0', cursor: 'pointer', fontWeight: 600 }}>Nahi</button>
+            <button onClick={handleConfirmDelete} style={{ padding: '0.4rem 1rem', borderRadius: '8px', background: '#dc2626', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Haan, Cancel Karo</button>
+          </div>
+        </div>
+      )}
       <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border)' }}>
         <div className="order-card-header">
           <div>
