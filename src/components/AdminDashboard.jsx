@@ -255,7 +255,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           </div>
         )}
 
-        {activeTab === 'orders' ? (
+        {activeTab === 'orders' && (
           <>
             <div className="users-list">
               <h3>Pending Order Requests</h3>
@@ -292,7 +292,8 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
               })()}
             </div>
           </>
-        ) : activeTab === 'profiles' ? (
+        )}
+        {activeTab === 'profiles' && (
           <div style={{ padding: '2rem' }}>
             <h3 style={{ marginBottom: '1.5rem' }}>Pending Profile Update Requests</h3>
             {Object.keys(profileRequests || {}).length === 0 ? (
@@ -358,7 +359,9 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
               </div>
             )}
           </div>
-        ) : (
+        )}
+        
+        {activeTab === 'payments' && (
           <div style={{ padding: '2rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
               <div>
