@@ -12,6 +12,12 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses'
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(true);
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    setIsMobileMenuOpen(false);
+  };
 
   const [editingOrderDate, setEditingOrderDate] = useState(null);
   const [editOrderValues, setEditOrderValues] = useState({ milk: 0, ghee: 0, chach: 0 });
@@ -95,111 +101,97 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
   }, 0);
 
   return (
-    <div className="admin-dashboard">
-      <div className="admin-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <img src="/assets/admin_photo.jpg" alt="Admin Avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
-          <div>
-            <h2 style={{ fontSize: '1.4rem', margin: 0, color: 'var(--text-primary)' }}>Super Admin Panel</h2>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Welcome back, Shyam Dangi</p>
-          </div>
+    <div className="admin-container">
+      {/* LEFT SIDEBAR */}
+      <div className={`admin-sidebar ${!isMobileMenuOpen ? 'hidden-mobile' : ''}`}>
+        <div className="admin-sidebar-header">
+          <img src="/assets/admin_photo.jpg" alt="Admin Avatar" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', marginBottom: '1rem' }} />
+          <h2 style={{ fontSize: '1.2rem', margin: '0 0 0.3rem', color: 'var(--text-primary)' }}>Super Admin Panel</h2>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Welcome, Shyam Dangi</p>
         </div>
-        <div className="admin-tabs-container" style={{ display: 'flex', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-          <style>
-            {`
-              .admin-tabs-container::-webkit-scrollbar {
-                display: none;
-              }
-              .admin-tab-btn {
-                white-space: nowrap;
-                padding: 0.6rem 1rem;
-                border-radius: 8px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.2s;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                flex-shrink: 0;
-              }
-            `}
-          </style>
-          
+        
+        <div className="admin-sidebar-links">
           <button 
-            onClick={() => setIsHistoryOpen(true)}
-            className="admin-tab-btn"
-            style={{ border: '1px solid var(--primary)', background: 'var(--surface)', color: 'var(--primary)' }}
+            onClick={() => { setIsHistoryOpen(true); setIsMobileMenuOpen(false); }}
+            className="admin-sidebar-btn"
           >
-            <Clock size={16} /> History Log
+            <Clock size={20} /> History Log
           </button>
           <button 
-            onClick={() => setActiveTab('users')}
-            className="admin-tab-btn"
-            style={{ border: 'none', background: activeTab === 'users' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'users' ? 'white' : 'var(--text-secondary)' }}
+            onClick={() => handleTabClick('users')}
+            className={`admin-sidebar-btn ${activeTab === 'users' ? 'active' : ''}`}
           >
-            <Users size={16} /> Customers
+            <Users size={20} /> Customers
           </button>
           <button 
-            onClick={() => setActiveTab('orders')}
-            className="admin-tab-btn"
-            style={{ position: 'relative', border: 'none', background: activeTab === 'orders' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'orders' ? 'white' : 'var(--text-secondary)' }}
+            onClick={() => handleTabClick('orders')}
+            className={`admin-sidebar-btn ${activeTab === 'orders' ? 'active' : ''}`}
+            style={{ position: 'relative' }}
           >
-            <Milk size={16} /> Orders
+            <Milk size={20} /> Orders
             {pendingOrdersCount > 0 && (
-              <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
+              <span style={{ position: 'absolute', top: '10px', right: '10px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
                 {pendingOrdersCount}
               </span>
             )}
           </button>
           <button 
-            onClick={() => setActiveTab('profiles')}
-            className="admin-tab-btn"
-            style={{ position: 'relative', border: 'none', background: activeTab === 'profiles' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'profiles' ? 'white' : 'var(--text-secondary)' }}
+            onClick={() => handleTabClick('profiles')}
+            className={`admin-sidebar-btn ${activeTab === 'profiles' ? 'active' : ''}`}
+            style={{ position: 'relative' }}
           >
-            <UserCheck size={16} /> Profiles
+            <UserCheck size={20} /> Profiles
             {Object.keys(profileRequests || {}).length > 0 && (
-              <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
+              <span style={{ position: 'absolute', top: '10px', right: '10px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
                 {Object.keys(profileRequests).length}
               </span>
             )}
           </button>
           <button 
-            onClick={() => setActiveTab('payments')}
-            className="admin-tab-btn"
-            style={{ position: 'relative', border: 'none', background: activeTab === 'payments' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'payments' ? 'white' : 'var(--text-secondary)' }}
+            onClick={() => handleTabClick('payments')}
+            className={`admin-sidebar-btn ${activeTab === 'payments' ? 'active' : ''}`}
+            style={{ position: 'relative' }}
           >
-            <span style={{ fontWeight: 'bold' }}>₹</span> Payments
+            <span style={{ fontWeight: 'bold', fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>₹</span> Payments
             {Object.keys(paymentRequests || {}).length > 0 && (
-              <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
+              <span style={{ position: 'absolute', top: '10px', right: '10px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
                 {Object.keys(paymentRequests).length}
               </span>
             )}
           </button>
           <button 
-            onClick={() => setActiveTab('delivery')}
-            className="admin-tab-btn"
-            style={{ border: 'none', background: activeTab === 'delivery' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'delivery' ? 'white' : 'var(--text-secondary)' }}
+            onClick={() => handleTabClick('delivery')}
+            className={`admin-sidebar-btn ${activeTab === 'delivery' ? 'active' : ''}`}
           >
-            📦 Delivery
+            <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>📦</span> Delivery Sheet
           </button>
           <button 
-            onClick={() => setActiveTab('broadcasts')}
-            className="admin-tab-btn"
-            style={{ border: 'none', background: activeTab === 'broadcasts' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'broadcasts' ? 'white' : 'var(--text-secondary)' }}
+            onClick={() => handleTabClick('broadcasts')}
+            className={`admin-sidebar-btn ${activeTab === 'broadcasts' ? 'active' : ''}`}
           >
-            📢 Broadcasts
+            <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>📢</span> Broadcasts
           </button>
           <button 
-            onClick={() => setActiveTab('expenses')}
-            className="admin-tab-btn"
-            style={{ border: 'none', background: activeTab === 'expenses' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'expenses' ? 'white' : 'var(--text-secondary)' }}
+            onClick={() => handleTabClick('expenses')}
+            className={`admin-sidebar-btn ${activeTab === 'expenses' ? 'active' : ''}`}
           >
-            💵 Expenses
+            <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>💵</span> Expenses
           </button>
         </div>
       </div>
 
-      <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
+      {/* RIGHT CONTENT AREA */}
+      <div className={`admin-content-area ${isMobileMenuOpen ? 'hidden-mobile' : ''}`}>
+        <div className="admin-content-header">
+          <button className="admin-back-btn" onClick={() => setIsMobileMenuOpen(true)}>
+            <ArrowLeft size={24} />
+          </button>
+          <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+            {activeTab} Management
+          </h2>
+        </div>
+        
+        <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
         {activeTab === 'users' && (
           <div style={{ padding: '2rem' }}>
             <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>All Registered Customers ({registeredUsers.length})</h3>
@@ -828,7 +820,8 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           globalPayments={globalPayments}
         />
       )}
-</div>
+      </div>
+    </div>
   );
 };
 
