@@ -68,8 +68,8 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
   ];
 
   const extraProducts = [
-    { id: 'paneer', name: t('paneer'), price: prices.paneer, unit: 'Kg', img: 'https://cdn-icons-png.flaticon.com/512/5768/5768132.png', step: 0.25 },
-    { id: 'curd', name: t('curd'), price: prices.curd, unit: 'Kg', img: 'https://cdn-icons-png.flaticon.com/512/2800/2800269.png', step: 0.5 }
+    { id: 'paneer', name: t('paneer'), price: prices.paneer, unit: 'Kg', img: '/assets/paneer.png', step: 0.25 },
+    { id: 'curd', name: t('curd'), price: prices.curd, unit: 'Kg', img: '/assets/curd.jpg', step: 0.5 }
   ];
 
   const updateLocalQty = (id, val) => {
