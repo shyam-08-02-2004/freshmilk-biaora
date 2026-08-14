@@ -12,6 +12,7 @@ import QuickMilkModal from './components/QuickMilkModal';
 import CustomerDashboard from './components/CustomerDashboard';
 import CustomerLayout from './components/CustomerLayout';
 import CustomerPassbook from './components/CustomerPassbook';
+import CustomerVacationModal from './components/CustomerVacationModal';
 import { format } from 'date-fns';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -88,6 +89,7 @@ function App() {
   const [isQuickMilkOpen, setIsQuickMilkOpen] = useState(false);
   const [isAdminRevenueOpen, setIsAdminRevenueOpen] = useState(false);
   const [isPassbookOpen, setIsPassbookOpen] = useState(false);
+  const [isVacationOpen, setIsVacationOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [adminActiveTab, setAdminActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users');
   
@@ -492,6 +494,7 @@ function App() {
           onOpenProfile={() => setIsProfileOpen(true)}
           onAdminContactToggle={() => {}}
           onOpenAdminRevenue={() => setIsAdminRevenueOpen(true)}
+          onOpenVacation={() => setIsVacationOpen(true)}
           currentUser={currentUser}
         />
         )}
@@ -555,6 +558,7 @@ function App() {
         onOpenPayment={() => setIsPaymentOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenQuickMilk={() => setIsQuickMilkOpen(true)}
+        onOpenVacation={() => setIsVacationOpen(true)}
       >
         {/* User Broadcast Banners */}
         {(() => {
@@ -616,6 +620,13 @@ function App() {
           prices={PRICES}
         />
       )}
+
+      <CustomerVacationModal 
+        isOpen={isVacationOpen}
+        onClose={() => setIsVacationOpen(false)}
+        currentUser={currentUser}
+        onVacationUpdate={handleVacationUpdate}
+      />
 
       {isProfileOpen && (
         <ProfileModal 

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Milk, History, ShieldAlert, Globe } from 'lucide-react';
+import { Milk, History, ShieldAlert, Globe, Plane } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
-const Header = ({ totalBill, monthTotalBill, monthPaidBill, billUpdated, onOpenHistory, onOpenProfile, onAdminContactToggle, onOpenPayment, onOpenAdminRevenue, currentUser }) => {
+const Header = ({ totalBill, monthTotalBill, monthPaidBill, billUpdated, onOpenHistory, onOpenProfile, onAdminContactToggle, onOpenPayment, onOpenAdminRevenue, onOpenVacation, currentUser }) => {
   const { language, toggleLanguage, t } = useLanguage();
 
   return (
@@ -73,8 +73,14 @@ const Header = ({ totalBill, monthTotalBill, monthPaidBill, billUpdated, onOpenH
         </button>
         <button className="btn-history" onClick={onOpenHistory}>
           <History size={18} />
-          <span>{t('history')}</span>
+          <span className="hidden-mobile">{t('history')}</span>
         </button>
+        {currentUser?.role !== 'admin' && (
+          <button className="btn-history" onClick={onOpenVacation} style={{ background: '#e0f2fe', color: '#0284c7', borderColor: '#bae6fd' }}>
+            <Plane size={18} />
+            <span className="hidden-mobile">Vacation</span>
+          </button>
+        )}
         <div 
           onClick={onOpenProfile}
           style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', cursor: 'pointer', border: '2px solid var(--primary-light)', padding: '2px', flexShrink: 0 }}

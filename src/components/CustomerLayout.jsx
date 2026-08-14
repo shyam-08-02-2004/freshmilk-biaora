@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, ShoppingBag, Plus, FileText, User, Menu, Bell, CreditCard, HelpCircle } from 'lucide-react';
+import { Home, ShoppingBag, Plus, FileText, User, Menu, Bell, CreditCard, HelpCircle, Plane } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 const CustomerLayout = ({ 
@@ -10,7 +10,8 @@ const CustomerLayout = ({
   onOpenHistory,
   onOpenPayment,
   onOpenProfile,
-  onOpenQuickMilk
+  onOpenQuickMilk,
+  onOpenVacation
 }) => {
   const { t, language, toggleLanguage } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -19,6 +20,7 @@ const CustomerLayout = ({
     if (tab === 'history') onOpenHistory();
     else if (tab === 'payment') onOpenPayment();
     else if (tab === 'profile') onOpenProfile();
+    else if (tab === 'vacation') onOpenVacation();
     else {
       setActiveTab(tab);
     }
@@ -78,6 +80,9 @@ const CustomerLayout = ({
           </button>
           <button className="nav-item" onClick={() => handleNavClick('profile')}>
             <User size={20} /> Profile
+          </button>
+          <button className="nav-item" onClick={() => handleNavClick('vacation')}>
+            <Plane size={20} /> Vacation
           </button>
           <button className="nav-item" onClick={() => alert('Support line: 7509766655')}>
             <HelpCircle size={20} /> Help & Support
@@ -139,6 +144,10 @@ const CustomerLayout = ({
         <button className="bottom-nav-item" onClick={() => handleNavClick('profile')}>
           <User size={22} />
           <span>Profile</span>
+        </button>
+        <button className="bottom-nav-item" onClick={() => handleNavClick('vacation')}>
+          <Plane size={22} />
+          <span>Vacation</span>
         </button>
       </nav>
     </div>

@@ -137,39 +137,6 @@ const ProfileModal = ({ onClose, currentUser, onLogout, onProfileRequest, profil
             </div>
           </div>
 
-          {currentUser?.role !== 'admin' && (
-            <div className="profile-field" style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '12px', border: '1px solid #bae6fd', marginBottom: '1rem' }}>
-              <label style={{ fontSize: '0.9rem', color: '#0369a1', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                🏖️ Vacation Mode (Pause Delivery)
-              </label>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '0.7rem', color: '#0284c7' }}>From Date</label>
-                  <input 
-                    type="date" 
-                    value={vacationStart} 
-                    onChange={(e) => setVacationStart(e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #bae6fd', outline: 'none' }}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '0.7rem', color: '#0284c7' }}>To Date</label>
-                  <input 
-                    type="date" 
-                    value={vacationEnd} 
-                    onChange={(e) => setVacationEnd(e.target.value)}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #bae6fd', outline: 'none' }}
-                  />
-                </div>
-              </div>
-              <button 
-                onClick={() => onVacationUpdate(vacationStart, vacationEnd)}
-                style={{ width: '100%', marginTop: '0.8rem', padding: '0.6rem', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-              >
-                Save Vacation Dates
-              </button>
-            </div>
-          )}
 
           {currentUser?.role !== 'admin' && (
             profileRequestStatus ? (
