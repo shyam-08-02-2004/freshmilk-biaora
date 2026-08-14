@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt } from 'lucide-react';
+import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt, Camera, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import AdminHistoryModal from './AdminHistoryModal';
 import AdminDeliverySheet from './AdminDeliverySheet';
