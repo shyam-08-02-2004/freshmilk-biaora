@@ -10,12 +10,14 @@ import AuthPage from './components/AuthPage';
 import AdminContactModal from './components/AdminContactModal';
 import PaymentModal from './components/PaymentModal';
 import CustomerDashboard from './components/CustomerDashboard';
+import CustomerLayout from './components/CustomerLayout';
 import { format } from 'date-fns';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { Megaphone } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 import './index.css';
+import './customer-ui.css';
 
 const PRICES = {
   milk: 80, // per liter
