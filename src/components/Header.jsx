@@ -1,7 +1,10 @@
 import React from 'react';
-import { Milk, History, ShieldAlert } from 'lucide-react';
+import { Milk, History, ShieldAlert, Globe } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const Header = ({ totalBill, monthTotalBill, monthPaidBill, billUpdated, onOpenHistory, onOpenProfile, onAdminContactToggle, onOpenPayment, onOpenAdminRevenue, currentUser }) => {
+  const { language, toggleLanguage, t } = useLanguage();
+
   return (
     <header className="header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
@@ -20,7 +23,7 @@ const Header = ({ totalBill, monthTotalBill, monthPaidBill, billUpdated, onOpenH
                 <span style={{ fontWeight: '600' }}>₹{monthTotalBill}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Paid:</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{t('paid')}:</span>
                 <span style={{ fontWeight: '600', color: '#10b981' }}>-₹{monthPaidBill}</span>
               </div>
               <div style={{ width: '100%', height: '1px', background: 'var(--border)', margin: '2px 0' }}></div>
@@ -34,7 +37,7 @@ const Header = ({ totalBill, monthTotalBill, monthPaidBill, billUpdated, onOpenH
                 onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'}
                 onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
               >
-                Pay Bill
+                {t('pay_bill')}
               </button>
             </>
           ) : (
@@ -54,6 +57,14 @@ const Header = ({ totalBill, monthTotalBill, monthPaidBill, billUpdated, onOpenH
       
       <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         <button 
+          onClick={toggleLanguage}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--surface)', border: '1px solid var(--border)', padding: '0.4rem 0.8rem', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold', color: 'var(--text-secondary)' }}
+        >
+          <Globe size={16} color="var(--primary)" />
+          {language === 'en' ? 'हिन्दी' : 'English'}
+        </button>
+
+        <button 
           className="btn-history" 
           onClick={onAdminContactToggle}
         >
@@ -62,7 +73,7 @@ const Header = ({ totalBill, monthTotalBill, monthPaidBill, billUpdated, onOpenH
         </button>
         <button className="btn-history" onClick={onOpenHistory}>
           <History size={18} />
-          <span>History</span>
+          <span>{t('history')}</span>
         </button>
         <div 
           onClick={onOpenProfile}

@@ -5,8 +5,10 @@ import AdminHistoryModal from './AdminHistoryModal';
 import AdminDeliverySheet from './AdminDeliverySheet';
 import AdminBroadcasts from './AdminBroadcasts';
 import AdminExpenses from './AdminExpenses';
+import { useLanguage } from '../LanguageContext';
 
-const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses }) => {
+const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses, onUpdateBottlesReturned }) => {
+  const { t } = useLanguage();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [showAllPayments, setShowAllPayments] = useState(false);
@@ -806,6 +808,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
         <AdminDeliverySheet 
           registeredUsers={registeredUsers} 
           globalOrders={globalOrders} 
+          onUpdateBottlesReturned={onUpdateBottlesReturned}
         />
       )}
       

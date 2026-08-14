@@ -3,8 +3,10 @@ import { X, Receipt, CheckCircle, Clock, Download } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useLanguage } from '../LanguageContext';
 
 const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, selectedDate, currentUser }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'payments'
   const [expandedDate, setExpandedDate] = useState(null);
 
@@ -29,7 +31,7 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
       <div className="modal-content">
         <div className="modal-header" style={{ paddingBottom: '0.5rem', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h2 style={{ margin: 0 }}>My History</h2>
+            <h2 style={{ margin: 0 }}>{t('history')}</h2>
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '600' }}>{currentMonthLabel}</p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -70,6 +72,8 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                 let totalMilk = 0;
                 let totalGhee = 0;
                 let totalChach = 0;
+                let totalPaneer = 0;
+                let totalCurd = 0;
 
                 // Sort dates chronologically for the bill
                 const chronologicalDates = [...sortedDates].reverse();
@@ -77,16 +81,20 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                 chronologicalDates.forEach(dateStr => {
                   const order = orders[dateStr];
                   if (order.status === 'approved') {
-                    const dayTotal = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach;
+                    const dayTotal = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach + (order.paneer || 0) * prices.paneer + (order.curd || 0) * prices.curd;
                     totalBill += dayTotal;
                     totalMilk += (order.milk || 0);
                     totalGhee += (order.ghee || 0);
                     totalChach += (order.chach || 0);
+                    totalPaneer += (order.paneer || 0);
+                    totalCurd += (order.curd || 0);
                     tableData.push([
                       format(parseISO(dateStr), 'dd MMM yyyy'),
                       order.milk || '-',
                       order.ghee || '-',
                       order.chach || '-',
+                      order.paneer || '-',
+                      order.curd || '-',
                       `Rs. ${dayTotal}`
                     ]);
                   }
@@ -98,9 +106,9 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                 // Draw Table
                 doc.autoTable({
                   startY: 75,
-                  head: [['Date', 'Milk (L)', 'Ghee (Kg)', 'Chach (L)', 'Daily Total']],
+                  head: [['Date', 'Milk (L)', 'Ghee (Kg)', 'Chach (L)', 'Paneer (Kg)', 'Curd (Kg)', 'Total']],
                   body: tableData,
-                  foot: [['Total', `${totalMilk} L`, `${totalGhee} Kg`, `${totalChach} L`, `Rs. ${totalBill}`]],
+                  foot: [['Total', `${totalMilk}`, `${totalGhee}`, `${totalChach}`, `${totalPaneer}`, `${totalCurd}`, `Rs. ${totalBill}`]],
                   theme: 'striped',
                   headStyles: { fillColor: [16, 185, 129] },
                   footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
@@ -185,9 +193,11 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                   </div>
                   {expandedDate === dateStr && (
                     <div className="history-details" style={{ padding: '1rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {order.milk > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🥛 Milk: {order.milk}L</div>}
-                      {order.ghee > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🧈 Ghee: {order.ghee}Kg</div>}
-                      {order.chach > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🥤 Chach: {order.chach}L</div>}
+                      {order.milk > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🥛 {t('milk')}: {order.milk}L</div>}
+                      {order.ghee > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🧈 {t('ghee')}: {order.ghee}Kg</div>}
+                      {order.chach > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🥤 {t('chach')}: {order.chach}L</div>}
+                      {order.paneer > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)', color: '#047857' }}>🧀 {t('paneer')}: {order.paneer}Kg</div>}
+                      {order.curd > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)', color: '#047857' }}>🥣 {t('curd')}: {order.curd}Kg</div>}
                     </div>
                   )}
                 </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, isBefore, startOfDay, addDays, isAfter, isSameDay } from 'date-fns';
 import { Minus, Plus, CalendarCheck, ReceiptText, ShieldCheck, X, ShoppingBag, Pencil } from 'lucide-react';
+import { useLanguage } from '../LanguageContext';
 
 const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, prices, currentUser }) => {
   const today = startOfDay(new Date());
@@ -11,6 +12,8 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
   
   const isTodayDate = isSameDay(selectedDate, today);
   const isTomorrowDate = isSameDay(selectedDate, tomorrow);
+  
+  const { t } = useLanguage();
 
   // Vacation Mode check
   let isOnVacation = false;
@@ -40,33 +43,40 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
   const [isAddingMore, setIsAddingMore] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  useEffect(() => {
+    setLocalOrder({ milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 });
+    setIsAddingMore(false);
+    setIsEditing(false);
+  }, [selectedDate]);
+
   const startEditing = () => {
     setLocalOrder({
       milk: currentOrder.milk || 0,
       ghee: currentOrder.ghee || 0,
       chach: currentOrder.chach || 0,
+      paneer: currentOrder.paneer || 0,
+      curd: currentOrder.curd || 0
     });
     setIsEditing(true);
     setIsAddingMore(true);
   };
 
-  useEffect(() => {
-    setLocalOrder({ milk: 0, ghee: 0, chach: 0 });
-    setIsAddingMore(false);
-    setIsEditing(false);
-  }, [selectedDate]);
-
   const products = [
-    { id: 'milk', name: 'Fresh Milk', price: prices.milk, unit: 'L', img: '/assets/milk.png', step: 0.5 },
-    { id: 'ghee', name: 'Pure Ghee', price: prices.ghee, unit: 'Kg', img: '/assets/ghee.png', step: 0.5 },
-    { id: 'chach', name: 'Spiced Chach', price: prices.chach, unit: 'L', img: '/assets/chach.png', step: 0.5 }
+    { id: 'milk', name: t('milk'), price: prices.milk, unit: 'L', img: '/assets/milk.png', step: 0.5 },
+    { id: 'ghee', name: t('ghee'), price: prices.ghee, unit: 'Kg', img: '/assets/ghee.png', step: 0.5 },
+    { id: 'chach', name: t('chach'), price: prices.chach, unit: 'L', img: '/assets/chach.png', step: 0.5 }
+  ];
+
+  const extraProducts = [
+    { id: 'paneer', name: t('paneer'), price: prices.paneer, unit: 'Kg', img: 'https://cdn-icons-png.flaticon.com/512/5768/5768132.png', step: 0.25 },
+    { id: 'curd', name: t('curd'), price: prices.curd, unit: 'Kg', img: 'https://cdn-icons-png.flaticon.com/512/2800/2800269.png', step: 0.5 }
   ];
 
   const updateLocalQty = (id, val) => {
     setLocalOrder(prev => ({ ...prev, [id]: val }));
   };
 
-  const isChanged = localOrder.milk > 0 || localOrder.ghee > 0 || localOrder.chach > 0;
+  const isChanged = localOrder.milk > 0 || localOrder.ghee > 0 || localOrder.chach > 0 || localOrder.paneer > 0 || localOrder.curd > 0;
 
   const handleConfirm = () => {
     if (isEditing) {
@@ -75,22 +85,24 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
     } else {
       onSaveOrder(selectedDate, localOrder);
     }
-    setLocalOrder({ milk: 0, ghee: 0, chach: 0 });
+    setLocalOrder({ milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 });
     setIsAddingMore(false);
     setIsEditing(false);
   };
 
   const handleCancelSelection = () => {
-    setLocalOrder({ milk: 0, ghee: 0, chach: 0 });
+    setLocalOrder({ milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 });
   };
 
-  const localDayTotal = (localOrder.milk * prices.milk) + (localOrder.ghee * prices.ghee) + (localOrder.chach * prices.chach);
+  const localDayTotal = (localOrder.milk * prices.milk) + (localOrder.ghee * prices.ghee) + (localOrder.chach * prices.chach) + ((localOrder.paneer || 0) * prices.paneer) + ((localOrder.curd || 0) * prices.curd);
 
   // ---- RECEIPT VIEW (has order, not editing) ----
   if (hasOrder && !isAddingMore) {
     const dayTotal = (currentOrder.milk || 0) * prices.milk + 
                      (currentOrder.ghee || 0) * prices.ghee + 
-                     (currentOrder.chach || 0) * prices.chach;
+                     (currentOrder.chach || 0) * prices.chach +
+                     (currentOrder.paneer || 0) * prices.paneer +
+                     (currentOrder.curd || 0) * prices.curd;
 
     return (
       <div className="luxury-receipt" style={{ padding: '1.5rem' }}>
@@ -109,8 +121,9 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
           ) : null}
         </div>
         
+        
         <div className="receipt-items">
-          {products.map(p => {
+          {[...products, ...extraProducts].map(p => {
              const qty = currentOrder[p.id] || 0;
              if (qty === 0) return null;
              return (
@@ -289,6 +302,67 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
                         style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer' }}
                       >
                         <Plus size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="store-header" style={{ marginTop: '2rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--border)' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#059669', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            🛍️ {t('shop_extras')}
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('tyohaar_special')}</p>
+        </div>
+
+        <div className="sidebar-product-list">
+          {extraProducts.map(p => {
+            const qty = localOrder[p.id] || 0;
+            const alreadyOrdered = currentOrder[p.id] || 0;
+            
+            return (
+              <div key={p.id} className="sidebar-product-card" style={{ border: '1px solid #10b981', background: '#f0fdf4' }}>
+                <img src={p.img} alt={p.name} className="sidebar-product-img" style={{ padding: '4px', background: 'white', borderRadius: '12px' }} />
+                <div className="sidebar-product-details">
+                  <div className="sidebar-product-header">
+                    <div>
+                      <h3 style={{ color: '#047857' }}>{p.name}</h3>
+                      <p>₹{p.price}/{p.unit}</p>
+                    </div>
+                    {alreadyOrdered > 0 && (
+                      <div style={{ textAlign: 'right', background: 'rgba(16, 185, 129, 0.1)', padding: '0.25rem 0.5rem', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', display: 'block' }}>Already</span>
+                        <div style={{ color: 'var(--secondary)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                          {alreadyOrdered}{p.unit}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="sidebar-product-controls">
+                    <span className="subtotal" style={{ color: '#047857' }}>
+                      {isEditing
+                        ? qty > 0 ? `₹${qty * p.price}` : 'Set to 0'
+                        : qty > 0 ? `+ ₹${qty * p.price} new` : 'Add to order'
+                      }
+                    </span>
+                    <div className="product-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button 
+                        className="qty-btn" 
+                        onClick={() => updateLocalQty(p.id, Math.max(0, qty - p.step))}
+                        style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #a7f3d0', background: 'white', cursor: 'pointer' }}
+                      >
+                        <Minus size={14} color="#059669" />
+                      </button>
+                      <span className="qty-value" style={{ fontWeight: 600, minWidth: '2ch', textAlign: 'center', color: '#047857' }}>{qty}</span>
+                      <button 
+                        className="qty-btn" 
+                        onClick={() => updateLocalQty(p.id, qty + p.step)}
+                        style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #a7f3d0', background: 'white', cursor: 'pointer' }}
+                      >
+                        <Plus size={14} color="#059669" />
                       </button>
                     </div>
                   </div>

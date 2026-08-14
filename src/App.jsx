@@ -13,13 +13,15 @@ import { format } from 'date-fns';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { Megaphone } from 'lucide-react';
+import { useLanguage } from './LanguageContext';
 import './index.css';
 
 const PRICES = {
-
   milk: 80, // per liter
   ghee: 800, // per kg/liter
-  chach: 35 // per liter
+  chach: 35, // per liter
+  paneer: 320, // per kg
+  curd: 100 // per kg
 };
 
 function useFirestoreSync(docName, initialState) {
@@ -62,6 +64,7 @@ function useFirestoreSync(docName, initialState) {
 }
 
 function App() {
+  const { t } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [globalOrders, setGlobalOrders] = useFirestoreSync('globalOrders', {});
   const [totalBill, setTotalBill] = useState(0);
@@ -87,6 +90,19 @@ function App() {
   const [globalExpenses, setGlobalExpenses] = useFirestoreSync('globalExpenses', []);
   const [broadcasts, setBroadcasts] = useFirestoreSync('broadcasts', []);
 
+  const pendingBottles = useMemo(() => {
+    if (!currentUser || currentUser.role === 'admin') return 0;
+    const userOrders = globalOrders[currentUser.mobile] || {};
+    let delivered = 0;
+    let returned = 0;
+    Object.values(userOrders).forEach(order => {
+      if (order.status === 'approved') {
+        delivered += (order.milk || 0); // Assuming 1L = 1 bottle
+        returned += (order.bottlesReturned || 0);
+      }
+    });
+    return Math.max(0, delivered - returned);
+  }, [currentUser, globalOrders]);
 
   const adminTotalReceived = useMemo(() => {
     let total = 0;
@@ -121,6 +137,16 @@ function App() {
     setPaymentRequests(prev => {
       const next = { ...prev };
       delete next[mobile];
+      return next;
+    });
+  };
+
+  const handleUpdateBottlesReturned = (mobile, dateStr, bottles) => {
+    setGlobalOrders(prev => {
+      const next = { ...prev };
+      if (!next[mobile]) return next;
+      if (!next[mobile][dateStr]) return next;
+      next[mobile][dateStr] = { ...next[mobile][dateStr], bottlesReturned: parseInt(bottles) || 0 };
       return next;
     });
   };
@@ -502,6 +528,7 @@ function App() {
             setBroadcasts={setBroadcasts}
             globalExpenses={globalExpenses}
             setGlobalExpenses={setGlobalExpenses}
+            onUpdateBottlesReturned={handleUpdateBottlesReturned}
           />
         </main>
         {isProfileOpen && (
@@ -541,6 +568,19 @@ function App() {
       
       <main className="app-layout">
         
+        {/* Pending Bottles Banner */}
+        {pendingBottles > 0 && (
+          <div style={{ gridColumn: '1 / -1', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ background: '#ef4444', color: 'white', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
+              <span style={{ fontWeight: 'bold' }}>🍼</span>
+            </div>
+            <div>
+              <h4 style={{ margin: '0 0 0.2rem 0', color: '#b91c1c', fontSize: '1rem' }}>{t('pending_bottles')}: {pendingBottles}</h4>
+              <p style={{ margin: 0, color: '#991b1b', fontSize: '0.9rem' }}>{t('return_bottles_msg')}</p>
+            </div>
+          </div>
+        )}
+
         {/* User Broadcast Banners */}
         {(() => {
           const activeBroadcasts = (broadcasts || []).filter(b => new Date(b.expiresAt) > new Date());
