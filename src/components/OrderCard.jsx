@@ -103,44 +103,59 @@ const OrderCard = ({
       </div>
 
       <div className="products-grid">
-        {products.map((p, idx) => {
-          const qty = localOrder[p.id] || 0;
-          return (
-            <div key={p.id} className="order-item-card">
-              <img src={p.img} alt={p.name} className="order-item-img" />
-              <div className="order-item-details">
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  {p.name} {currentOrder?.[p.id] > 0 && <span style={{ background: '#10b981', color: 'white', borderRadius: '50%', width: '14px', height: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>✓</span>}
-                </h4>
-                <p>{p.desc}</p>
-                <p style={{ marginTop: '0.2rem', color: 'var(--text-primary)', fontWeight: 500 }}>₹{p.price} / {p.unit}</p>
-              </div>
-              
-              <div className="order-item-controls">
-                <div className="qty-control" style={{ opacity: isOrderable ? 1 : 0.5 }}>
-                  <button 
-                    className="qty-btn" 
-                    onClick={() => updateLocalQty(p.id, Math.max(0, qty - p.step))}
-                    disabled={!isOrderable}
-                  >
-                    <Minus size={16} />
-                  </button>
-                  <span className="qty-display">{qty}</span>
-                  <button 
-                    className="qty-btn" 
-                    onClick={() => updateLocalQty(p.id, qty + p.step)}
-                    disabled={!isOrderable}
-                  >
-                    <Plus size={16} />
-                  </button>
+        {!isOrderable && products.filter(p => (localOrder[p.id] || 0) > 0).length === 0 ? (
+          <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🍽️</div>
+            <p>No items were ordered on this date.</p>
+          </div>
+        ) : (
+          products.map((p, idx) => {
+            const qty = localOrder[p.id] || 0;
+            
+            // If it's not orderable and qty is 0, don't show the product
+            if (!isOrderable && qty === 0) return null;
+
+            return (
+              <div key={p.id} className="order-item-card">
+                <img src={p.img} alt={p.name} className="order-item-img" />
+                <div className="order-item-details">
+                  <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    {p.name} {currentOrder?.[p.id] > 0 && <span style={{ background: '#10b981', color: 'white', borderRadius: '50%', width: '14px', height: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>✓</span>}
+                  </h4>
+                  <p>{p.desc}</p>
+                  <p style={{ marginTop: '0.2rem', color: 'var(--text-primary)', fontWeight: 500 }}>₹{p.price} / {p.unit}</p>
                 </div>
-                <div className="item-total">
-                  ₹{qty * p.price}
+                
+                <div className="order-item-controls">
+                  {isOrderable ? (
+                    <div className="qty-control">
+                      <button 
+                        className="qty-btn" 
+                        onClick={() => updateLocalQty(p.id, Math.max(0, qty - p.step))}
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className="qty-display">{qty}</span>
+                      <button 
+                        className="qty-btn" 
+                        onClick={() => updateLocalQty(p.id, qty + p.step)}
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ background: '#f8fafc', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #e2e8f0', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      Qty: {qty}
+                    </div>
+                  )}
+                  <div className="item-total">
+                    ₹{qty * p.price}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {isEmergencyMode && isOrderable && (
