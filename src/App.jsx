@@ -333,9 +333,6 @@ function App() {
           bill += (dayOrder.chach || 0) * PRICES.chach;
           bill += (dayOrder.paneer || 0) * PRICES.paneer;
           bill += (dayOrder.curd || 0) * PRICES.curd;
-          if (dayOrder.isEmergency) {
-            bill += (dayOrder.emergencyFee || 20);
-          }
         }
       }
     });

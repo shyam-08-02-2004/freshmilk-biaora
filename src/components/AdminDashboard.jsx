@@ -280,28 +280,62 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                 }
 
                 return pendingOrderUsers.map(user => {
+                  const pendingOrders = Object.entries(globalOrders[user.mobile] || {})
+                    .filter(([, order]) => order.status === 'pending')
+                    .sort((a, b) => new Date(b[0]) - new Date(a[0]));
+
                   return (
-                  <div 
-                    key={user.mobile}
-                    className={`user-card`}
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setShowAllOrders(false);
-                      setShowAllPayments(false);
-                    }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}
-                  >
-                    <div style={{ position: 'relative' }}>
-                      <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                    <div key={user.mobile} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', marginBottom: '1rem' }}>
+                      {/* User header - clickable to open full detail */}
+                      <div
+                        onClick={() => { setSelectedUser(user); setShowAllOrders(false); setShowAllPayments(false); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', cursor: 'pointer', background: '#f8fafc', borderBottom: '1px solid var(--border)' }}
+                      >
+                        <img src={user.avatar || '/assets/babu_logo.png'} alt="User Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: 0 }}>{user.name}</h4>
+                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{user.mobile} · {pendingOrders.length} pending order{pendingOrders.length > 1 ? 's' : ''}</p>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold' }}>View Details →</span>
+                      </div>
+
+                      {/* Pending orders list with quick approve */}
+                      {pendingOrders.map(([date, order]) => {
+                        const total = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach + (order.paneer || 0) * prices.paneer + (order.curd || 0) * prices.curd;
+                        const items = [];
+                        if (order.milk) items.push(`${order.milk}L Milk`);
+                        if (order.ghee) items.push(`${order.ghee}Kg Ghee`);
+                        if (order.chach) items.push(`${order.chach}L Chach`);
+                        if (order.paneer) items.push(`${order.paneer} Paneer`);
+                        if (order.curd) items.push(`${order.curd} Curd`);
+                        return (
+                          <div key={date} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
+                            <div style={{ background: '#eff6ff', padding: '0.4rem 0.7rem', borderRadius: '8px', textAlign: 'center', minWidth: '48px' }}>
+                              <div style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--primary)' }}>{format(new Date(date + 'T00:00:00'), 'dd')}</div>
+                              <div style={{ fontSize: '0.65rem', color: '#3b82f6', fontWeight: 'bold' }}>{format(new Date(date + 'T00:00:00'), 'MMM')}</div>
+                            </div>
+                            <div style={{ flex: 1, minWidth: '120px' }}>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>{items.join(', ')}</div>
+                              <div style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 'bold' }}>₹{total}</div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.4rem' }}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onApproveOrder(user.mobile, date); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.4rem 0.8rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
+                              >
+                                <CheckCircle size={14} /> Approve
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onRejectOrder(user.mobile, date); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.4rem 0.7rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="user-info">
-                      <h4>{user.name}</h4>
-                      <p>{user.mobile}</p>
-                    </div>
-                    <div className="user-due">
-                      <span>₹{calculateUserDue(user)}</span>
-                    </div>
-                  </div>
                   );
                 });
               })()}
@@ -703,7 +737,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                         return (
                           <div onClick={(e) => e.stopPropagation()}>
                             {displayedOrders.map(([date, order]) => {
-                              const totalForDay = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach;
+                              const totalForDay = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach + (order.paneer || 0) * prices.paneer + (order.curd || 0) * prices.curd;
                           const isPending = order.status === 'pending';
                           
                           return (
