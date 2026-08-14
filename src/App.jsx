@@ -581,13 +581,13 @@ function App() {
       >
         {/* Pending Bottles Banner */}
         {pendingBottles > 0 && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <div style={{ background: '#ef4444', color: 'white', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
+          <div className="notification-banner danger-banner">
+            <div className="banner-icon danger-icon">
               <span style={{ fontWeight: 'bold' }}>🍼</span>
             </div>
-            <div>
-              <h4 style={{ margin: '0 0 0.2rem 0', color: '#b91c1c', fontSize: '1rem' }}>{t('pending_bottles')}: {pendingBottles}</h4>
-              <p style={{ margin: 0, color: '#991b1b', fontSize: '0.9rem' }}>{t('return_bottles_msg')}</p>
+            <div className="banner-text">
+              <h4 style={{ color: '#b91c1c' }}>{t('pending_bottles')}: {pendingBottles}</h4>
+              <p style={{ color: '#991b1b' }}>{t('return_bottles_msg')}</p>
             </div>
           </div>
         )}
@@ -597,15 +597,15 @@ function App() {
           const activeBroadcasts = (broadcasts || []).filter(b => new Date(b.expiresAt) > new Date());
           if (activeBroadcasts.length === 0) return null;
           return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1.5rem' }}>
+            <div className="broadcast-container">
               {activeBroadcasts.map(b => (
-                <div key={b.id} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                  <div style={{ background: '#3b82f6', color: 'white', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
+                <div key={b.id} className="notification-banner info-banner">
+                  <div className="banner-icon info-icon">
                     <Megaphone size={20} />
                   </div>
-                  <div>
-                    <h4 style={{ margin: '0 0 0.3rem 0', color: '#1e40af', fontSize: '1rem' }}>Important Announcement</h4>
-                    <p style={{ margin: 0, color: '#1e3a8a', fontSize: '0.95rem', lineHeight: '1.4' }}>{b.message}</p>
+                  <div className="banner-text">
+                    <h4 style={{ color: '#1e40af' }}>Important Announcement</h4>
+                    <p style={{ color: '#1e3a8a' }}>{b.message}</p>
                   </div>
                 </div>
               ))}

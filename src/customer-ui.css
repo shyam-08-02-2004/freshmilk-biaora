@@ -283,6 +283,71 @@
 }
 
 /* --- Widgets --- */
+.notification-banner {
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+.danger-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  align-items: center;
+}
+.info-banner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+.broadcast-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+.broadcast-container .notification-banner {
+  margin-bottom: 0;
+}
+.banner-icon {
+  color: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  flex-shrink: 0;
+}
+.danger-icon {
+  background: #ef4444;
+}
+.info-icon {
+  background: #3b82f6;
+}
+.banner-text h4 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1rem;
+}
+.banner-text p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  .notification-banner {
+    padding: 0.8rem;
+    gap: 0.6rem;
+  }
+  .banner-icon {
+    padding: 0.4rem;
+  }
+  .banner-text h4 {
+    font-size: 0.95rem;
+  }
+  .banner-text p {
+    font-size: 0.85rem;
+  }
+}
+
 .widget-card {
   background: white;
   border-radius: 16px;
