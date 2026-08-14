@@ -115,35 +115,31 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, prices }) => {
             display: grid;
           }
           
+          .print-only-table {
+            display: none;
+          }
           @media print {
             body * {
               visibility: hidden;
             }
-            #printable-delivery-sheet, #printable-delivery-sheet * {
+            .delivery-card {
+              display: none !important;
+            }
+            .print-only-table, .print-only-table * {
               visibility: visible;
             }
-            #printable-delivery-sheet {
+            .print-only-table {
+              display: block !important;
               position: absolute;
               left: 0;
               top: 0;
               width: 100%;
-              padding: 0 !important;
-              border: none !important;
+              background: white;
+              color: black;
             }
-            .accordion-details {
-              display: grid !important;
-              border-top: 1px dashed #ccc !important;
-              padding: 1rem 0 !important;
-            }
-            .accordion-card {
-              border: none !important;
-              border-bottom: 2px solid #000 !important;
-              border-radius: 0 !important;
-              margin-bottom: 1rem !important;
-              page-break-inside: avoid;
-            }
-            .chevron-icon {
-              display: none !important;
+            @page {
+              margin: 1cm;
+              size: A4 portrait;
             }
           }
           
@@ -275,6 +271,50 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, prices }) => {
             })}
           </div>
         )}
+      </div>
+
+      {/* Print-Only Table (Hidden on Screen) */}
+      <div className="print-only-table">
+        <h2 style={{ textAlign: 'center', marginBottom: '1rem', color: '#000', fontSize: '1.5rem', fontWeight: 'bold' }}>
+          Delivery Route - {format(new Date(targetDate), 'dd MMM yyyy')}
+        </h2>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <thead>
+            <tr>
+              <th style={{ border: '1px solid #000', padding: '10px 8px', textAlign: 'left', background: '#f1f5f9' }}>S.No</th>
+              <th style={{ border: '1px solid #000', padding: '10px 8px', textAlign: 'left', background: '#f1f5f9' }}>Customer</th>
+              <th style={{ border: '1px solid #000', padding: '10px 8px', textAlign: 'left', background: '#f1f5f9' }}>Address</th>
+              <th style={{ border: '1px solid #000', padding: '10px 8px', textAlign: 'center', background: '#f1f5f9' }}>Milk (L)</th>
+              <th style={{ border: '1px solid #000', padding: '10px 8px', textAlign: 'center', background: '#f1f5f9' }}>Ghee (Kg)</th>
+              <th style={{ border: '1px solid #000', padding: '10px 8px', textAlign: 'center', background: '#f1f5f9' }}>Extras</th>
+              <th style={{ border: '1px solid #000', padding: '10px 8px', textAlign: 'center', background: '#f1f5f9' }}>Delivered</th>
+            </tr>
+          </thead>
+          <tbody>
+            {deliveries.map((d, i) => {
+               let extras = [];
+               if (d.order.chach > 0) extras.push(`${d.order.chach}L Chach`);
+               if (d.order.paneer > 0) extras.push(`${d.order.paneer}kg Paneer`);
+               if (d.order.curd > 0) extras.push(`${d.order.curd} Curd`);
+               return (
+                 <tr key={i}>
+                   <td style={{ border: '1px solid #000', padding: '12px 8px', textAlign: 'center', fontWeight: 'bold' }}>{i + 1}</td>
+                   <td style={{ border: '1px solid #000', padding: '12px 8px' }}>
+                     <strong>{d.user.name}</strong><br/>
+                     <span style={{ fontSize: '11px', color: '#475569' }}>{d.user.mobile}</span>
+                   </td>
+                   <td style={{ border: '1px solid #000', padding: '12px 8px' }}>{d.user.flat ? d.user.flat + ', ' : ''}{d.user.location}</td>
+                   <td style={{ border: '1px solid #000', padding: '12px 8px', textAlign: 'center', fontWeight: 'bold', fontSize: '14px' }}>{d.order.milk || '-'}</td>
+                   <td style={{ border: '1px solid #000', padding: '12px 8px', textAlign: 'center', fontWeight: 'bold' }}>{d.order.ghee || '-'}</td>
+                   <td style={{ border: '1px solid #000', padding: '12px 8px', textAlign: 'center' }}>{extras.join(', ') || '-'}</td>
+                   <td style={{ border: '1px solid #000', padding: '12px 8px', textAlign: 'center', verticalAlign: 'middle' }}>
+                     <div style={{ width: '20px', height: '20px', border: '1.5px solid #000', margin: '0 auto', borderRadius: '3px' }}></div>
+                   </td>
+                 </tr>
+               );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
