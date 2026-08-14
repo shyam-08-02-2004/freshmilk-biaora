@@ -98,21 +98,6 @@ function App() {
   const [monthlyOverrides, setMonthlyOverrides] = useFirestoreSync('monthlyOverrides', {});
   const [globalExpenses, setGlobalExpenses] = useFirestoreSync('globalExpenses', []);
   const [broadcasts, setBroadcasts] = useFirestoreSync('broadcasts', []);
-
-  const pendingBottles = useMemo(() => {
-    if (!currentUser || currentUser.role === 'admin') return 0;
-    const userOrders = globalOrders[currentUser.mobile] || {};
-    let delivered = 0;
-    let returned = 0;
-    Object.values(userOrders).forEach(order => {
-      if (order.status === 'approved') {
-        delivered += (order.milk || 0); // Assuming 1L = 1 bottle
-        returned += (order.bottlesReturned || 0);
-      }
-    });
-    return Math.max(0, delivered - returned);
-  }, [currentUser, globalOrders]);
-
   const adminTotalReceived = useMemo(() => {
     let total = 0;
     Object.values(globalPayments).forEach(userPayments => {
@@ -149,17 +134,6 @@ function App() {
       return next;
     });
   };
-
-  const handleUpdateBottlesReturned = (mobile, dateStr, bottles) => {
-    setGlobalOrders(prev => {
-      const next = { ...prev };
-      if (!next[mobile]) return next;
-      if (!next[mobile][dateStr]) return next;
-      next[mobile][dateStr] = { ...next[mobile][dateStr], bottlesReturned: parseInt(bottles) || 0 };
-      return next;
-    });
-  };
-
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
@@ -548,7 +522,6 @@ function App() {
             setBroadcasts={setBroadcasts}
             globalExpenses={globalExpenses}
             setGlobalExpenses={setGlobalExpenses}
-            onUpdateBottlesReturned={handleUpdateBottlesReturned}
           />
         </main>
         {isProfileOpen && (
@@ -583,19 +556,6 @@ function App() {
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenQuickMilk={() => setIsQuickMilkOpen(true)}
       >
-        {/* Pending Bottles Banner */}
-        {pendingBottles > 0 && (
-          <div className="notification-banner danger-banner">
-            <div className="banner-icon danger-icon">
-              <span style={{ fontWeight: 'bold' }}>🍼</span>
-            </div>
-            <div className="banner-text">
-              <h4 style={{ color: '#b91c1c' }}>{t('pending_bottles')}: {pendingBottles}</h4>
-              <p style={{ color: '#991b1b' }}>{t('return_bottles_msg')}</p>
-            </div>
-          </div>
-        )}
-
         {/* User Broadcast Banners */}
         {(() => {
           const activeBroadcasts = (broadcasts || []).filter(b => new Date(b.expiresAt) > new Date());

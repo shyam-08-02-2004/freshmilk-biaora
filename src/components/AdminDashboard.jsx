@@ -8,7 +8,7 @@ import AdminExpenses from './AdminExpenses';
 import AdminAnalytics from './AdminAnalytics';
 import { useLanguage } from '../LanguageContext';
 
-const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses, onUpdateBottlesReturned }) => {
+const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses }) => {
   const { t } = useLanguage();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
@@ -865,7 +865,6 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
         <AdminDeliverySheet 
           registeredUsers={registeredUsers} 
           globalOrders={globalOrders} 
-          onUpdateBottlesReturned={onUpdateBottlesReturned}
         />
       )}
       
