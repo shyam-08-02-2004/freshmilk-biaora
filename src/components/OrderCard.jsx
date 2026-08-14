@@ -103,7 +103,7 @@ const OrderCard = ({
       </div>
 
       <div className="products-grid">
-        {!isOrderable && products.filter(p => (localOrder[p.id] || 0) > 0).length === 0 ? (
+        {!isOrderable && (isPastDate || isApproved) && products.filter(p => (localOrder[p.id] || 0) > 0).length === 0 ? (
           <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🍽️</div>
             <p>No items were ordered on this date.</p>
@@ -112,8 +112,8 @@ const OrderCard = ({
           products.map((p, idx) => {
             const qty = localOrder[p.id] || 0;
             
-            // If it's not orderable and qty is 0, don't show the product
-            if (!isOrderable && qty === 0) return null;
+            // If it's a historical/locked date and qty is 0, don't show the product
+            if (!isOrderable && (isPastDate || isApproved) && qty === 0) return null;
 
             return (
               <div key={p.id} className="order-item-card">
@@ -127,11 +127,12 @@ const OrderCard = ({
                 </div>
                 
                 <div className="order-item-controls">
-                  {isOrderable ? (
-                    <div className="qty-control">
+                  {isOrderable || isFutureBeyondTomorrow || isOnVacation ? (
+                    <div className="qty-control" style={{ opacity: isOrderable ? 1 : 0.5 }}>
                       <button 
                         className="qty-btn" 
                         onClick={() => updateLocalQty(p.id, Math.max(0, qty - p.step))}
+                        disabled={!isOrderable}
                       >
                         <Minus size={16} />
                       </button>
@@ -139,6 +140,7 @@ const OrderCard = ({
                       <button 
                         className="qty-btn" 
                         onClick={() => updateLocalQty(p.id, qty + p.step)}
+                        disabled={!isOrderable}
                       >
                         <Plus size={16} />
                       </button>
