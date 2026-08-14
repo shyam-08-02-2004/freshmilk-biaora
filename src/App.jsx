@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Header from './components/Header';
 import Calendar from './components/Calendar';
-import DailyStore from './components/DailyStore';
 import HistoryModal from './components/HistoryModal';
 import AdminDashboard from './components/AdminDashboard';
 import AdminRevenueModal from './components/AdminRevenueModal';
@@ -383,8 +382,6 @@ function App() {
         chach: localOrder.chach || 0,
         paneer: localOrder.paneer || 0,
         curd: localOrder.curd || 0,
-        isEmergency: localOrder.isEmergency,
-        emergencyFee: localOrder.emergencyFee,
         status: 'pending'
       } : {
         milk: (prevDayOrder.milk || 0) + (localOrder.milk || 0),
@@ -392,8 +389,6 @@ function App() {
         chach: (prevDayOrder.chach || 0) + (localOrder.chach || 0),
         paneer: (prevDayOrder.paneer || 0) + (localOrder.paneer || 0),
         curd: (prevDayOrder.curd || 0) + (localOrder.curd || 0),
-        isEmergency: localOrder.isEmergency || prevDayOrder.isEmergency,
-        emergencyFee: localOrder.emergencyFee || prevDayOrder.emergencyFee,
         status: 'pending'
       };
       
