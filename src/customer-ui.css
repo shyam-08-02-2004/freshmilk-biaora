@@ -304,10 +304,19 @@
   overflow-x: auto;
   gap: 0.8rem;
   padding-bottom: 0.5rem;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
 }
 .horizontal-calendar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  height: 6px;
+}
+.horizontal-calendar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+.horizontal-calendar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
 }
 
 .date-pill {
