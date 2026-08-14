@@ -9,6 +9,8 @@ import AdminAnalytics from './AdminAnalytics';
 import AdminExportData from './AdminExportData';
 import AdminPaymentReminders from './AdminPaymentReminders';
 import AdminInventory from './AdminInventory';
+import CustomerPassbook from './CustomerPassbook';
+import QRScannerModal from './QRScannerModal';
 import { useLanguage } from '../LanguageContext';
 
 const AdminDashboard = ({ 
@@ -30,6 +32,8 @@ const AdminDashboard = ({
   const [showAllMoreFeatures, setShowAllMoreFeatures] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isPassbookOpen, setIsPassbookOpen] = useState(false);
+  const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
 
   React.useEffect(() => {
     sessionStorage.setItem('admin_activeTab', activeTab);
@@ -260,7 +264,15 @@ const AdminDashboard = ({
         <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
         {activeTab === 'users' && (
           <div style={{ padding: '1rem' }}>
-            <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>All Registered Customers ({registeredUsers.length})</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>All Registered Customers ({registeredUsers.length})</h3>
+              <button 
+                onClick={() => setIsQRScannerOpen(true)}
+                style={{ background: '#2563eb', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)' }}
+              >
+                <Camera size={18} /> Scan QR
+              </button>
+            </div>
             {registeredUsers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                 <Users size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
@@ -596,7 +608,13 @@ const AdminDashboard = ({
             >
               <ArrowLeft size={24} /> Back
             </button>
-            <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}>User Details</h2>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', flex: 1 }}>User Details</h2>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsPassbookOpen(true); }}
+              style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.9rem' }}
+            >
+              <FileText size={16} /> Passbook
+            </button>
           </div>
           
           <div style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem' }} onClick={(e) => { e.stopPropagation(); setShowAllOrders(false); setShowAllPayments(false); setIsEditingSummary(false); }}>
@@ -1001,6 +1019,34 @@ const AdminDashboard = ({
           <span style={{fontSize:'1.2rem'}}>☰</span><span>More</span>
         </button>
       </div>
+
+      {selectedUser && (
+        <CustomerPassbook
+          isOpen={isPassbookOpen}
+          onClose={() => setIsPassbookOpen(false)}
+          userName={selectedUser.name}
+          userMobile={selectedUser.mobile}
+          globalOrders={globalOrders}
+          globalPayments={globalPayments}
+          prices={prices}
+        />
+      )}
+
+      <QRScannerModal 
+        isOpen={isQRScannerOpen} 
+        onClose={() => setIsQRScannerOpen(false)} 
+        onScanSuccess={(mobileNumber) => {
+          setIsQRScannerOpen(false);
+          const foundUser = registeredUsers.find(u => u.mobile === mobileNumber);
+          if (foundUser) {
+            setSelectedUser(foundUser);
+            setActiveTab('users');
+          } else {
+            alert(`User with mobile ${mobileNumber} not found.`);
+          }
+        }} 
+      />
+
     </div>
   );
 };

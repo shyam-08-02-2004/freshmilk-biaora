@@ -15,7 +15,8 @@ const CustomerDashboard = ({
   monthTotalBill,
   monthPaidBill,
   totalBill,
-  onOpenPayment
+  onOpenPayment,
+  onOpenPassbook
 }) => {
   const tomorrow = format(addDays(startOfDay(new Date()), 1), 'yyyy-MM-dd');
   const tomorrowOrder = orders[tomorrow] || { milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 };
@@ -48,9 +49,9 @@ const CustomerDashboard = ({
               <span style={{ borderLeft: '1px solid var(--border)', paddingLeft: '1rem' }}>Remaining: ₹{totalBill}</span>
               <span 
                 style={{ marginLeft: 'auto', color: 'var(--secondary)', cursor: 'pointer', fontWeight: 600 }}
-                onClick={onOpenPayment}
+                onClick={onOpenPassbook}
               >
-                View Details &gt;
+                View Passbook &gt;
               </span>
             </div>
           </div>

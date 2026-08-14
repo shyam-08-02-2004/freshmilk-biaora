@@ -11,6 +11,7 @@ import PaymentModal from './components/PaymentModal';
 import QuickMilkModal from './components/QuickMilkModal';
 import CustomerDashboard from './components/CustomerDashboard';
 import CustomerLayout from './components/CustomerLayout';
+import CustomerPassbook from './components/CustomerPassbook';
 import { format } from 'date-fns';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -86,6 +87,7 @@ function App() {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isQuickMilkOpen, setIsQuickMilkOpen] = useState(false);
   const [isAdminRevenueOpen, setIsAdminRevenueOpen] = useState(false);
+  const [isPassbookOpen, setIsPassbookOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [adminActiveTab, setAdminActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users');
   
@@ -583,10 +585,10 @@ function App() {
           currentUser={currentUser}
           prices={PRICES}
           onSaveOrder={handleSaveDayOrder}
-          monthTotalBill={monthTotalBill}
           monthPaidBill={monthPaidBill}
           totalBill={totalBill}
           onOpenPayment={() => setIsPaymentOpen(true)}
+          onOpenPassbook={() => setIsPassbookOpen(true)}
         />
       </CustomerLayout>
 
@@ -600,6 +602,18 @@ function App() {
           selectedDate={selectedDate}
           onChangeMonth={setSelectedDate}
           currentUser={currentUser}
+        />
+      )}
+
+      {isPassbookOpen && (
+        <CustomerPassbook
+          isOpen={isPassbookOpen}
+          onClose={() => setIsPassbookOpen(false)}
+          userName={currentUser?.name}
+          userMobile={currentUser?.mobile}
+          globalOrders={globalOrders}
+          globalPayments={globalPayments}
+          prices={PRICES}
         />
       )}
 

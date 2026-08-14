@@ -187,6 +187,17 @@ const ProfileModal = ({ onClose, currentUser, onLogout, onProfileRequest, profil
             )
           )}
 
+          {currentUser?.role !== 'admin' && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem', padding: '1rem', background: 'var(--surface)', border: '1px dashed var(--border)', borderRadius: '12px' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 'bold' }}>Your QR Identity Card</p>
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUser?.mobile}`} 
+                alt="QR Code" 
+                style={{ width: '120px', height: '120px', borderRadius: '8px' }}
+              />
+            </div>
+          )}
+
           <button 
             onClick={onLogout}
             style={{ width: '100%', marginTop: '0.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.8rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
