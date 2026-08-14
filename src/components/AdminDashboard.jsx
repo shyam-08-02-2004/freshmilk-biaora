@@ -606,43 +606,50 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                         }
 
                         return (
-                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', position: 'relative' }}>
-                            <div style={{ flex: '1 1 120px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--text-secondary)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Month Bill</p>
-                              <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>₹{mTotal}</p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {/* Action buttons row */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <a
+                                href={`https://wa.me/91${selectedUser.mobile}?text=${encodeURIComponent(`Hello ${selectedUser.name},\n\nThis is your FreshMilk Biaora bill for *${format(new Date(filterMonth + '-01'), 'MMMM yyyy')}*.\n\nTotal Bill: ₹${mTotal}\nPaid: ₹${mPaid}\n*Remaining Due: ₹${mRemain}*\n\nPlease pay the pending amount.`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ padding: '0.35rem 0.75rem', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold', fontSize: '0.82rem' }}
+                                title="Send Bill via WhatsApp"
+                              >
+                                <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                                WhatsApp
+                              </a>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditSummaryValues({ mTotal, mPaid, mRemain });
+                                  setIsEditingSummary(true);
+                                }}
+                                style={{ padding: '0.35rem 0.75rem', background: '#f1f5f9', color: 'var(--text-secondary)', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                title="Edit summary"
+                              >
+                                ✏️ Edit
+                              </button>
                             </div>
-                            <div style={{ flex: '1 1 120px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #10b981', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                              <p style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase' }}>Paid</p>
-                              <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#10b981' }}>₹{mPaid}</p>
+
+                            {/* Billing cards */}
+                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                              <div style={{ flex: '1 1 100px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--text-secondary)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Month Bill</p>
+                                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>₹{mTotal}</p>
+                              </div>
+                              <div style={{ flex: '1 1 100px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #10b981', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <p style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase' }}>Paid</p>
+                                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#10b981' }}>₹{mPaid}</p>
+                              </div>
+                              <div style={{ flex: '1 1 100px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #ef4444', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <p style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 'bold', textTransform: 'uppercase' }}>Remaining</p>
+                                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ef4444' }}>₹{mRemain}</p>
+                              </div>
                             </div>
-                            <div style={{ flex: '1 1 120px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #ef4444', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                              <p style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 'bold', textTransform: 'uppercase' }}>Remaining</p>
-                              <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ef4444' }}>₹{mRemain}</p>
-                            </div>
-                            
-                            <a 
-                              href={`https://wa.me/91${selectedUser.mobile}?text=${encodeURIComponent(`Hello ${selectedUser.name},\n\nThis is your FreshMilk Biaora bill for *${format(new Date(filterMonth + '-01'), 'MMMM yyyy')}*.\n\nTotal Bill: ₹${mTotal}\nPaid: ₹${mPaid}\n*Remaining Due: ₹${mRemain}*\n\nPlease pay the pending amount.`)}`} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              style={{ position: 'absolute', top: 0, right: '60px', padding: '0.4rem', background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 'bold' }}
-                              title="Send Bill via WhatsApp"
-                            >
-                              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                              WhatsApp
-                            </a>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditSummaryValues({ mTotal, mPaid, mRemain });
-                                setIsEditingSummary(true);
-                              }}
-                              style={{ position: 'absolute', top: 0, right: 0, padding: '0.4rem', background: 'transparent', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}
-                              title="Edit summary"
-                            >
-                              ✏️ Edit
-                            </button>
+
                             {monthlyOverrides?.[selectedUser.mobile]?.[filterMonth] && (
-                              <span style={{ position: 'absolute', bottom: '-20px', right: 0, fontSize: '0.7rem', color: '#f59e0b', fontWeight: 'bold' }}>* Manually Overridden</span>
+                              <span style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: 'bold', textAlign: 'right' }}>* Manually Overridden</span>
                             )}
                           </div>
                         );
