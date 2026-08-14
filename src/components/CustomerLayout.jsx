@@ -49,9 +49,6 @@ const CustomerLayout = ({
             <Bell size={22} color="var(--text-primary)" />
             <span style={{ position: 'absolute', top: '0px', right: '2px', width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%' }}></span>
           </button>
-          <button className="icon-btn profile-btn" onClick={() => onOpenProfile()}>
-            <User size={20} color="var(--secondary)" />
-          </button>
         </div>
       </div>
 
@@ -104,12 +101,11 @@ const CustomerLayout = ({
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Good Morning! Fresh milk, every day.</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button className="lang-btn">🌐 हिन्दी</button>
+            <button className="lang-btn" onClick={toggleLanguage}>
+              🌐 {language === 'en' ? 'हिन्दी' : 'English'}
+            </button>
             <button className="desktop-btn" onClick={() => onOpenHistory()}>
               <ShoppingBag size={18} /> History
-            </button>
-            <button className="profile-btn large" onClick={() => onOpenProfile()}>
-              <User size={20} color="white" />
             </button>
           </div>
         </header>
