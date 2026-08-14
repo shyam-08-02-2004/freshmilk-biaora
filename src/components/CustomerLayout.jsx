@@ -9,7 +9,8 @@ const CustomerLayout = ({
   setActiveTab,
   onOpenHistory,
   onOpenPayment,
-  onOpenProfile
+  onOpenProfile,
+  onOpenQuickMilk
 }) => {
   const { t, language, toggleLanguage } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -126,7 +127,7 @@ const CustomerLayout = ({
           <span>My Orders</span>
         </button>
         <div className="bottom-nav-fab-container">
-          <button className="bottom-nav-fab" onClick={() => handleNavClick('home')}>
+          <button className="bottom-nav-fab" onClick={() => onOpenQuickMilk()}>
             <Plus size={28} color="white" />
           </button>
           <span>Order</span>

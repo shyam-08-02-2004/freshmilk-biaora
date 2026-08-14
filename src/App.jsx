@@ -9,6 +9,7 @@ import ProfileModal from './components/ProfileModal';
 import AuthPage from './components/AuthPage';
 import AdminContactModal from './components/AdminContactModal';
 import PaymentModal from './components/PaymentModal';
+import QuickMilkModal from './components/QuickMilkModal';
 import CustomerDashboard from './components/CustomerDashboard';
 import CustomerLayout from './components/CustomerLayout';
 import { format } from 'date-fns';
@@ -80,6 +81,7 @@ function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAdminContactOpen, setIsAdminContactOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isQuickMilkOpen, setIsQuickMilkOpen] = useState(false);
   const [isAdminRevenueOpen, setIsAdminRevenueOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   
@@ -578,6 +580,7 @@ function App() {
         onOpenHistory={() => setIsHistoryOpen(true)}
         onOpenPayment={() => setIsPaymentOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
+        onOpenQuickMilk={() => setIsQuickMilkOpen(true)}
       >
         {/* Pending Bottles Banner */}
         {pendingBottles > 0 && (
@@ -670,6 +673,15 @@ function App() {
           pendingRequest={paymentRequests[currentUser?.mobile]}
           currentUser={currentUser}
           selectedDate={selectedDate}
+        />
+      )}
+
+      {isQuickMilkOpen && (
+        <QuickMilkModal 
+          onClose={() => setIsQuickMilkOpen(false)}
+          onSaveOrder={handleSaveDayOrder}
+          currentOrders={orders}
+          prices={PRICES}
         />
       )}
     </>
