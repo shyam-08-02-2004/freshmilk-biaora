@@ -181,13 +181,18 @@ function App() {
     };
   }, [isLoggedIn]);
 
-  // Auto-logout if user is deleted by admin
+  // Auto-logout if user is deleted by admin, or sync profile updates
   useEffect(() => {
     if (isLoggedIn && currentUser && currentUser.role !== 'admin' && usersLoaded) {
-      const stillExists = registeredUsers.some(u => u.mobile === currentUser.mobile);
-      if (!stillExists) {
+      const serverUser = registeredUsers.find(u => u.mobile === currentUser.mobile);
+      if (!serverUser) {
         handleLogout();
         alert("Aapka account Admin dwara delete ya block kar diya gaya hai. Kripya Admin se sampark karein.");
+      } else {
+        // If admin approved a profile update, sync it to the local user
+        if (JSON.stringify(currentUser) !== JSON.stringify(serverUser)) {
+          setCurrentUser(serverUser);
+        }
       }
     }
   }, [registeredUsers, isLoggedIn, currentUser, usersLoaded]);
