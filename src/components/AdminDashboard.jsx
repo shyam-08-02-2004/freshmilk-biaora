@@ -16,6 +16,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [showAllPayments, setShowAllPayments] = useState(false);
+  const [showAllMoreFeatures, setShowAllMoreFeatures] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses' | 'analytics'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -188,35 +189,49 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           >
             <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>📢</span> Broadcasts
           </button>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', height: showAllMoreFeatures ? 'auto' : '0', overflow: 'hidden', opacity: showAllMoreFeatures ? 1 : 0, transition: 'all 0.3s ease-in-out' }}>
+            <button 
+              onClick={() => handleTabClick('expenses')}
+              className={`admin-sidebar-btn ${activeTab === 'expenses' ? 'active' : ''}`}
+            >
+              <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>💵</span> Expenses
+            </button>
+            <button 
+              onClick={() => handleTabClick('analytics')}
+              className={`admin-sidebar-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+            >
+              <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>🗺️</span> Analytics Map
+            </button>
+            <button 
+              onClick={() => handleTabClick('export')}
+              className={`admin-sidebar-btn ${activeTab === 'export' ? 'active' : ''}`}
+            >
+              <DownloadCloud size={20} /> Export Data
+            </button>
+            <button 
+              onClick={() => handleTabClick('reminders')}
+              className={`admin-sidebar-btn ${activeTab === 'reminders' ? 'active' : ''}`}
+            >
+              <BellRing size={20} /> Payment Reminders
+            </button>
+            <button 
+              onClick={() => handleTabClick('inventory')}
+              className={`admin-sidebar-btn ${activeTab === 'inventory' ? 'active' : ''}`}
+            >
+              <Package size={20} /> Inventory
+            </button>
+          </div>
+
           <button 
-            onClick={() => handleTabClick('expenses')}
-            className={`admin-sidebar-btn ${activeTab === 'expenses' ? 'active' : ''}`}
+            onClick={() => setShowAllMoreFeatures(!showAllMoreFeatures)}
+            style={{ 
+              background: 'none', border: 'none', color: 'var(--primary)', 
+              fontSize: '0.85rem', fontWeight: 'bold', padding: '0.6rem 1rem', 
+              cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.3rem', width: '100%', marginTop: '0.2rem' 
+            }}
           >
-            <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>💵</span> Expenses
-          </button>
-          <button 
-            onClick={() => handleTabClick('analytics')}
-            className={`admin-sidebar-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-          >
-            <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>🗺️</span> Analytics Map
-          </button>
-          <button 
-            onClick={() => handleTabClick('export')}
-            className={`admin-sidebar-btn ${activeTab === 'export' ? 'active' : ''}`}
-          >
-            <DownloadCloud size={20} /> Export Data
-          </button>
-          <button 
-            onClick={() => handleTabClick('reminders')}
-            className={`admin-sidebar-btn ${activeTab === 'reminders' ? 'active' : ''}`}
-          >
-            <BellRing size={20} /> Payment Reminders
-          </button>
-          <button 
-            onClick={() => handleTabClick('inventory')}
-            className={`admin-sidebar-btn ${activeTab === 'inventory' ? 'active' : ''}`}
-          >
-            <Package size={20} /> Inventory
+            {showAllMoreFeatures ? '▲ Show Less' : '▼ View More (5)'}
           </button>
         </div>
       </div>
