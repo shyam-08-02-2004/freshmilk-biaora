@@ -9,5 +9,10 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      window.addEventListener("error", function(e) {
+        document.body.innerHTML += "<div style='color:red;padding:20px;z-index:9999;position:fixed;top:0;left:0;background:white;width:100%'>" + e.message + " <br/> " + e.filename + ":" + e.lineno + "</div>";
+      });
+    </script>
   </body>
 </html>

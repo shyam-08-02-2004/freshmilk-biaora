@@ -85,6 +85,7 @@ function App() {
   const [isAdminContactOpen, setIsAdminContactOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isQuickMilkOpen, setIsQuickMilkOpen] = useState(false);
+  const [isAdminRevenueOpen, setIsAdminRevenueOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [adminActiveTab, setAdminActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users');
   
