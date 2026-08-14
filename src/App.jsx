@@ -375,127 +375,100 @@ function App() {
     const dateKey = format(date, 'yyyy-MM-dd');
     const mobile = currentUser.mobile;
 
-    setGlobalOrders(prev => {
-      const prevUserOrders = prev[mobile] || {};
-      const prevDayOrder = prevUserOrders[dateKey] || { milk: 0, ghee: 0, chach: 0, status: 'pending' };
+    // Compute new state using current globalOrders from closure (correct React pattern)
+    const prevUserOrders = globalOrders[mobile] || {};
+    const prevDayOrder = prevUserOrders[dateKey] || { milk: 0, ghee: 0, chach: 0, status: 'pending' };
 
-      const newDayOrder = replaceMode ? {
-        milk: localOrder.milk || 0,
-        ghee: localOrder.ghee || 0,
-        chach: localOrder.chach || 0,
-        paneer: localOrder.paneer || 0,
-        curd: localOrder.curd || 0,
-        status: 'pending'
-      } : {
-        milk: (prevDayOrder.milk || 0) + (localOrder.milk || 0),
-        ghee: (prevDayOrder.ghee || 0) + (localOrder.ghee || 0),
-        chach: (prevDayOrder.chach || 0) + (localOrder.chach || 0),
-        paneer: (prevDayOrder.paneer || 0) + (localOrder.paneer || 0),
-        curd: (prevDayOrder.curd || 0) + (localOrder.curd || 0),
-        status: 'pending'
-      };
+    const newDayOrder = replaceMode ? {
+      milk: localOrder.milk || 0,
+      ghee: localOrder.ghee || 0,
+      chach: localOrder.chach || 0,
+      paneer: localOrder.paneer || 0,
+      curd: localOrder.curd || 0,
+      status: 'pending'
+    } : {
+      milk: (prevDayOrder.milk || 0) + (localOrder.milk || 0),
+      ghee: (prevDayOrder.ghee || 0) + (localOrder.ghee || 0),
+      chach: (prevDayOrder.chach || 0) + (localOrder.chach || 0),
+      paneer: (prevDayOrder.paneer || 0) + (localOrder.paneer || 0),
+      curd: (prevDayOrder.curd || 0) + (localOrder.curd || 0),
+      status: 'pending'
+    };
 
-      let newGlobalOrders;
-      if (newDayOrder.milk === 0 && newDayOrder.ghee === 0 && newDayOrder.chach === 0 && newDayOrder.paneer === 0 && newDayOrder.curd === 0) {
-        const newUserOrders = { ...prevUserOrders };
-        delete newUserOrders[dateKey];
-        newGlobalOrders = { ...prev, [mobile]: newUserOrders };
-      } else {
-        newGlobalOrders = { ...prev, [mobile]: { ...prevUserOrders, [dateKey]: newDayOrder } };
-      }
+    let newGlobalOrders;
+    if (newDayOrder.milk === 0 && newDayOrder.ghee === 0 && newDayOrder.chach === 0 && newDayOrder.paneer === 0 && newDayOrder.curd === 0) {
+      const newUserOrders = { ...prevUserOrders };
+      delete newUserOrders[dateKey];
+      newGlobalOrders = { ...globalOrders, [mobile]: newUserOrders };
+    } else {
+      newGlobalOrders = { ...globalOrders, [mobile]: { ...prevUserOrders, [dateKey]: newDayOrder } };
+    }
 
-      // Write directly to Firestore immediately — don't wait for useEffect
-      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
-      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
-
-      return newGlobalOrders;
-    });
+    // Update React state
+    setGlobalOrders(newGlobalOrders);
+    // Write to Firestore OUTSIDE setState — guaranteed to fire
+    setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+    localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
   };
 
   const handleClearDayOrder = (date) => {
     if (!currentUser) return;
     const dateKey = format(date, 'yyyy-MM-dd');
     const mobile = currentUser.mobile;
-    setGlobalOrders(prev => {
-      const newUserOrders = { ...(prev[mobile] || {}) };
-      delete newUserOrders[dateKey];
-      const newGlobalOrders = { ...prev, [mobile]: newUserOrders };
-      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
-      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
-      return newGlobalOrders;
-    });
+    const newUserOrders = { ...(globalOrders[mobile] || {}) };
+    delete newUserOrders[dateKey];
+    const newGlobalOrders = { ...globalOrders, [mobile]: newUserOrders };
+    setGlobalOrders(newGlobalOrders);
+    setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+    localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
   };
 
   const handleApproveUserOrder = (userMobile, dateKey) => {
-    let dayOrder = null;
-    setGlobalOrders(prev => {
-      const userOrders = prev[userMobile] || {};
-      dayOrder = userOrders[dateKey];
-      if (!dayOrder) return prev;
-      const newGlobalOrders = {
-        ...prev,
-        [userMobile]: {
-          ...userOrders,
-          [dateKey]: { ...dayOrder, status: 'approved' }
-        }
-      };
-      // Write directly to Firestore so user's bill updates instantly
-      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
-      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
-      return newGlobalOrders;
-    });
-    // Log after state update (dayOrder may be null here due to closure timing, log separately)
-    setTimeout(() => {
-      if (dayOrder) {
-        const user = registeredUsers.find(u => u.mobile === userMobile);
-        const parts = [];
-        if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
-        if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
-        if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
-        logAdminAction('order', userMobile, user?.name || 'Unknown', 'approved', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
-      }
-    }, 0);
+    const userOrders = globalOrders[userMobile] || {};
+    const dayOrder = userOrders[dateKey];
+    if (!dayOrder) return;
+    const newGlobalOrders = {
+      ...globalOrders,
+      [userMobile]: { ...userOrders, [dateKey]: { ...dayOrder, status: 'approved' } }
+    };
+    setGlobalOrders(newGlobalOrders);
+    setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+    localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+    const user = registeredUsers.find(u => u.mobile === userMobile);
+    const parts = [];
+    if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
+    if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
+    if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
+    logAdminAction('order', userMobile, user?.name || 'Unknown', 'approved', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
   };
 
   const handleRejectUserOrder = (userMobile, dateKey) => {
-    let dayOrder = null;
-    setGlobalOrders(prev => {
-      const userOrders = prev[userMobile] || {};
-      dayOrder = userOrders[dateKey];
-      if (!dayOrder) return prev;
-      const newUserOrders = { ...userOrders };
-      delete newUserOrders[dateKey];
-      const newGlobalOrders = { ...prev, [userMobile]: newUserOrders };
-      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
-      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
-      return newGlobalOrders;
-    });
-    setTimeout(() => {
-      if (dayOrder) {
-        const user = registeredUsers.find(u => u.mobile === userMobile);
-        const parts = [];
-        if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
-        if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
-        if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
-        logAdminAction('order', userMobile, user?.name || 'Unknown', 'deleted', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
-      }
-    }, 0);
+    const userOrders = globalOrders[userMobile] || {};
+    const dayOrder = userOrders[dateKey];
+    if (!dayOrder) return;
+    const newUserOrders = { ...userOrders };
+    delete newUserOrders[dateKey];
+    const newGlobalOrders = { ...globalOrders, [userMobile]: newUserOrders };
+    setGlobalOrders(newGlobalOrders);
+    setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+    localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+    const user = registeredUsers.find(u => u.mobile === userMobile);
+    const parts = [];
+    if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
+    if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
+    if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
+    logAdminAction('order', userMobile, user?.name || 'Unknown', 'deleted', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
   };
 
   const handleEditUserOrder = (userMobile, dateKey, updatedOrder) => {
-    setGlobalOrders(prev => {
-      const userOrders = prev[userMobile] || {};
-      const newGlobalOrders = {
-        ...prev,
-        [userMobile]: {
-          ...userOrders,
-          [dateKey]: { ...userOrders[dateKey], ...updatedOrder }
-        }
-      };
-      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
-      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
-      return newGlobalOrders;
-    });
+    const userOrders = globalOrders[userMobile] || {};
+    const newGlobalOrders = {
+      ...globalOrders,
+      [userMobile]: { ...userOrders, [dateKey]: { ...userOrders[dateKey], ...updatedOrder } }
+    };
+    setGlobalOrders(newGlobalOrders);
+    setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+    localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
   };
 
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
