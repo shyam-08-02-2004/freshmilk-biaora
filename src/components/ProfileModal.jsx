@@ -4,13 +4,15 @@ import { MapPin, KeyRound, Phone, Home, X, Save, Eye, EyeOff, User, LogOut, Cloc
 const ProfileModal = ({ onClose, currentUser, onLogout, onProfileRequest, profileRequestStatus, onUpdateAvatar }) => {
   const [location, setLocation] = useState(currentUser?.location || '');
   const [flatNo, setFlatNo] = useState(currentUser?.flat || '');
+  const [name, setName] = useState(currentUser?.name || '');
+  const [mobile, setMobile] = useState(currentUser?.mobile || '');
   const [showPassword, setShowPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [vacationStart, setVacationStart] = useState(currentUser?.vacationStart || '');
   const [vacationEnd, setVacationEnd] = useState(currentUser?.vacationEnd || '');
   const userPassword = currentUser?.password || "";
   
-  const hasChanges = location !== currentUser?.location || flatNo !== currentUser?.flat;
+  const hasChanges = location !== currentUser?.location || flatNo !== currentUser?.flat || name !== currentUser?.name || mobile !== currentUser?.mobile;
 
   const handleRequestClick = () => {
     if (!isEditing) {
@@ -18,7 +20,7 @@ const ProfileModal = ({ onClose, currentUser, onLogout, onProfileRequest, profil
     } else {
       if (hasChanges) {
         if (window.confirm("Are you sure you want to submit this profile update request to the admin?")) {
-          onProfileRequest(currentUser.mobile, { location, flat: flatNo });
+          onProfileRequest(currentUser.mobile, { name, mobile, location, flat: flatNo });
           setIsEditing(false);
         }
       } else {
@@ -66,18 +68,36 @@ const ProfileModal = ({ onClose, currentUser, onLogout, onProfileRequest, profil
             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
               <User size={16} /> Name
             </label>
-            <div style={{ padding: '0.6rem 1rem', background: 'var(--background)', borderRadius: '12px', border: '1px solid var(--border)', fontWeight: '500', color: 'var(--text-secondary)' }}>
-              {currentUser?.name || 'N/A'} (Cannot be changed)
-            </div>
+            {isEditing ? (
+              <input 
+                type="text" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ width: '100%', padding: '0.6rem 1rem', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--primary-light)', fontWeight: '500', outline: 'none', color: 'var(--text-primary)' }}
+              />
+            ) : (
+              <div style={{ padding: '0.6rem 1rem', background: '#f0f9ff', borderRadius: '12px', border: '1px solid #bae6fd', fontWeight: 'bold', color: '#0369a1', fontSize: '1.05rem', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)' }}>
+                {currentUser?.name || 'N/A'}
+              </div>
+            )}
           </div>
 
           <div className="profile-field">
             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
               <Phone size={16} /> Mobile Number
             </label>
-            <div style={{ padding: '0.6rem 1rem', background: 'var(--background)', borderRadius: '12px', border: '1px solid var(--border)', fontWeight: '500', color: 'var(--text-secondary)' }}>
-              {currentUser?.mobile} (Cannot be changed)
-            </div>
+            {isEditing ? (
+              <input 
+                type="tel" 
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                style={{ width: '100%', padding: '0.6rem 1rem', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--primary-light)', fontWeight: '500', outline: 'none', color: 'var(--text-primary)' }}
+              />
+            ) : (
+              <div style={{ padding: '0.6rem 1rem', background: '#fef2f2', borderRadius: '12px', border: '1px solid #fecaca', fontWeight: 'bold', color: '#b91c1c', fontSize: '1.05rem', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)', letterSpacing: '0.5px' }}>
+                {currentUser?.mobile}
+              </div>
+            )}
           </div>
 
           {currentUser?.role !== 'admin' && (
