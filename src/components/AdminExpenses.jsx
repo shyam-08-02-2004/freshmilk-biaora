@@ -2,8 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { IndianRupee, Plus, Trash2, TrendingUp, TrendingDown, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
-const AdminExpenses = ({ globalExpenses, setGlobalExpenses, globalPayments }) => {
-  const [filterMonth, setFilterMonth] = useState(format(new Date(), 'yyyy-MM'));
+const AdminExpenses = ({ globalExpenses, setGlobalExpenses, globalPayments, filterMonth, setFilterMonth }) => {
   const [desc, setDesc] = useState('');
   const [amount, setAmount] = useState('');
 

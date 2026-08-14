@@ -610,6 +610,7 @@ function App() {
           onClose={() => setIsHistoryOpen(false)} 
           prices={PRICES}
           selectedDate={selectedDate}
+          onChangeMonth={setSelectedDate}
           currentUser={currentUser}
         />
       )}

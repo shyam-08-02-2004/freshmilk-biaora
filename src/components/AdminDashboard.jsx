@@ -29,7 +29,6 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
   const [editingOrderDate, setEditingOrderDate] = useState(null);
   const [editOrderValues, setEditOrderValues] = useState({ milk: 0, ghee: 0, chach: 0 });
   const [filterMonth, setFilterMonth] = useState(format(new Date(), 'yyyy-MM'));
-  const [paymentTabFilterMonth, setPaymentTabFilterMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [expandedPaymentUsers, setExpandedPaymentUsers] = useState({});
   const [isEditingSummary, setIsEditingSummary] = useState(false);
   const [editSummaryValues, setEditSummaryValues] = useState({ mTotal: 0, mPaid: 0, mRemain: 0 });
@@ -428,8 +427,8 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                 <label style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '0.9rem' }}>Filter Month:</label>
                 <input 
                   type="month" 
-                  value={paymentTabFilterMonth} 
-                  onChange={(e) => setPaymentTabFilterMonth(e.target.value)} 
+                  value={filterMonth} 
+                  onChange={(e) => setFilterMonth(e.target.value)} 
                   style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '1rem', color: 'var(--text-primary)', cursor: 'pointer' }}
                 />
               </div>
@@ -456,7 +455,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                     const monthlyPayments = (globalPayments[user.mobile] || [])
                       .filter(p => {
                         const pMonth = p.paymentMonth || p.timestamp.substring(0, 7);
-                        return pMonth === paymentTabFilterMonth;
+                        return pMonth === filterMonth;
                       })
                       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
@@ -522,6 +521,8 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
         <AdminHistoryModal 
           onClose={() => setIsHistoryOpen(false)}
           adminLogs={adminLogs}
+          filterMonth={filterMonth}
+          setFilterMonth={setFilterMonth}
         />
       )}
     
@@ -885,6 +886,8 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           globalExpenses={globalExpenses} 
           setGlobalExpenses={setGlobalExpenses} 
           globalPayments={globalPayments}
+          filterMonth={filterMonth}
+          setFilterMonth={setFilterMonth}
         />
       )}
       

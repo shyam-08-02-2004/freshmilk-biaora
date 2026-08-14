@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Search, Calendar, User, Clock, CheckCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
-const AdminHistoryModal = ({ onClose, adminLogs }) => {
-  const [filterMonth, setFilterMonth] = useState(format(new Date(), 'yyyy-MM'));
-
+const AdminHistoryModal = ({ onClose, adminLogs, filterMonth, setFilterMonth }) => {
   const filteredLogs = adminLogs.filter(log => {
     // The timestamp of the action itself
     const logMonth = format(new Date(log.timestamp), 'yyyy-MM');

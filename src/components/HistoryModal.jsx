@@ -5,15 +5,14 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useLanguage } from '../LanguageContext';
 
-const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, selectedDate, currentUser }) => {
+const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, selectedDate, onChangeMonth, currentUser }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'payments'
   const [expandedDate, setExpandedDate] = useState(null);
-  const [viewMonth, setViewMonth] = useState(selectedDate || new Date());
 
   // Filter by the month the user is currently viewing
-  const currentMonthStr = format(viewMonth, 'yyyy-MM');
-  const currentMonthLabel = format(viewMonth, 'MMMM yyyy');
+  const currentMonthStr = format(selectedDate, 'yyyy-MM');
+  const currentMonthLabel = format(selectedDate, 'MMMM yyyy');
 
   const sortedDates = Object.keys(orders || {})
     .filter(d => d.startsWith(currentMonthStr))
@@ -39,8 +38,8 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                 type="month" 
                 value={currentMonthStr}
                 onChange={(e) => {
-                  if (e.target.value) {
-                    setViewMonth(parseISO(e.target.value + '-01'));
+                  if (e.target.value && onChangeMonth) {
+                    onChangeMonth(parseISO(e.target.value + '-01'));
                   }
                 }}
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
