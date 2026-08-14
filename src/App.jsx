@@ -12,6 +12,7 @@ import PaymentModal from './components/PaymentModal';
 import { format } from 'date-fns';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { Megaphone } from 'lucide-react';
 import './index.css';
 
 const PRICES = {
@@ -539,6 +540,28 @@ function App() {
       />
       
       <main className="app-layout">
+        
+        {/* User Broadcast Banners */}
+        {(() => {
+          const activeBroadcasts = (broadcasts || []).filter(b => new Date(b.expiresAt) > new Date());
+          if (activeBroadcasts.length === 0) return null;
+          return (
+            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1rem' }}>
+              {activeBroadcasts.map(b => (
+                <div key={b.id} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div style={{ background: '#3b82f6', color: 'white', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}>
+                    <Megaphone size={20} />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 0.3rem 0', color: '#1e40af', fontSize: '1rem' }}>Important Announcement</h4>
+                    <p style={{ margin: 0, color: '#1e3a8a', fontSize: '0.95rem', lineHeight: '1.4' }}>{b.message}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
         <div className="left-panel">
           <DailyStore 
             selectedDate={selectedDate}
