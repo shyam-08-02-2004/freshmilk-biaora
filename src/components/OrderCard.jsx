@@ -52,7 +52,7 @@ const OrderCard = ({
       paneer: currentOrder?.paneer || 0,
       curd: currentOrder?.curd || 0
     });
-  }, [selectedDate, currentOrder]);
+  }, [selectedDate, JSON.stringify(currentOrder)]);
 
   const products = [
     { id: 'milk', name: t('milk'), desc: 'Pure & Fresh', price: prices.milk, unit: 'litre', img: '/assets/milk.png', step: 1 },
