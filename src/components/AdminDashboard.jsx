@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft } from 'lucide-react';
+import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt } from 'lucide-react';
 import { format } from 'date-fns';
 import AdminHistoryModal from './AdminHistoryModal';
 import AdminDeliverySheet from './AdminDeliverySheet';
 import AdminBroadcasts from './AdminBroadcasts';
 import AdminExpenses from './AdminExpenses';
 import AdminAnalytics from './AdminAnalytics';
+import AdminDeliveryStaff from './AdminDeliveryStaff';
+import AdminExportData from './AdminExportData';
+import AdminPaymentReminders from './AdminPaymentReminders';
+import AdminInventory from './AdminInventory';
 import { useLanguage } from '../LanguageContext';
 
 const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses }) => {
@@ -121,7 +125,8 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Welcome, Shyam Dangi</p>
         </div>
         
-        <div className="admin-sidebar-links">
+        <div className="admin-sidebar-links" style={{ paddingBottom: '1rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', padding: '0.5rem 1rem 0.2rem', marginTop: '0.5rem' }}>Main Menu</div>
           <button 
             onClick={() => { setIsHistoryOpen(true); setIsMobileMenuOpen(false); }}
             className="admin-sidebar-btn"
@@ -170,6 +175,8 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
               </span>
             )}
           </button>
+
+          <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', padding: '1rem 1rem 0.2rem', marginTop: '0.5rem', borderTop: '1px solid var(--border)' }}>More Features</div>
           <button 
             onClick={() => handleTabClick('delivery')}
             className={`admin-sidebar-btn ${activeTab === 'delivery' ? 'active' : ''}`}
@@ -193,6 +200,30 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
             className={`admin-sidebar-btn ${activeTab === 'analytics' ? 'active' : ''}`}
           >
             <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>🗺️</span> Analytics Map
+          </button>
+          <button 
+            onClick={() => handleTabClick('delivery-staff')}
+            className={`admin-sidebar-btn ${activeTab === 'delivery-staff' ? 'active' : ''}`}
+          >
+            <Truck size={20} /> Delivery Staff
+          </button>
+          <button 
+            onClick={() => handleTabClick('export')}
+            className={`admin-sidebar-btn ${activeTab === 'export' ? 'active' : ''}`}
+          >
+            <DownloadCloud size={20} /> Export Data
+          </button>
+          <button 
+            onClick={() => handleTabClick('reminders')}
+            className={`admin-sidebar-btn ${activeTab === 'reminders' ? 'active' : ''}`}
+          >
+            <BellRing size={20} /> Payment Reminders
+          </button>
+          <button 
+            onClick={() => handleTabClick('inventory')}
+            className={`admin-sidebar-btn ${activeTab === 'inventory' ? 'active' : ''}`}
+          >
+            <Package size={20} /> Inventory
           </button>
         </div>
       </div>
@@ -897,6 +928,11 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           globalOrders={globalOrders}
         />
       )}
+
+      {activeTab === 'delivery-staff' && <AdminDeliveryStaff />}
+      {activeTab === 'export' && <AdminExportData />}
+      {activeTab === 'reminders' && <AdminPaymentReminders />}
+      {activeTab === 'inventory' && <AdminInventory />}
       </div>
 
       {/* Mobile Bottom Nav */}
@@ -911,9 +947,6 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
         <button className={`admin-bnav-btn ${activeTab==='payments'?'active':''}`} onClick={()=>handleTabClick('payments')} style={{position:'relative'}}>
           <span style={{fontSize:'1.3rem',lineHeight:1}}>₹</span><span>Payments</span>
           {Object.keys(paymentRequests||{}).length > 0 && <span className="bnav-badge">{Object.keys(paymentRequests).length}</span>}
-        </button>
-        <button className={`admin-bnav-btn ${activeTab==='delivery'?'active':''}`} onClick={()=>handleTabClick('delivery')}>
-          <span style={{fontSize:'1.2rem'}}>📦</span><span>Delivery</span>
         </button>
         <button className={`admin-bnav-btn`} onClick={()=>setIsMobileMenuOpen(!isMobileMenuOpen)}>
           <span style={{fontSize:'1.2rem'}}>☰</span><span>More</span>
