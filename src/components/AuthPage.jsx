@@ -16,6 +16,7 @@ const AuthPage = ({ onAuthAction }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [coordinates, setCoordinates] = useState(null);
 
   const handleDetectLocation = async () => {
     setIsLocating(true);
@@ -29,6 +30,7 @@ const AuthPage = ({ onAuthAction }) => {
         if (data.city) {
           setLocation((prev) => prev ? prev : `${data.city}, ${data.region}`);
           ipFallbackUsed = true;
+          setCoordinates({ lat: data.latitude, lng: data.longitude });
         }
       } catch (e) {
         console.error("IP Loc error", e);
@@ -41,6 +43,7 @@ const AuthPage = ({ onAuthAction }) => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
+          setCoordinates({ lat: latitude, lng: longitude });
           try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
             const data = await response.json();
@@ -99,7 +102,7 @@ const AuthPage = ({ onAuthAction }) => {
         setErrorMsg("Passwords do not match!");
         return;
       }
-      const result = onAuthAction({ action: 'register', data: { mobile, password, name: name.trim(), location: location.trim(), flat: flat.trim() } });
+      const result = onAuthAction({ action: 'register', data: { mobile, password, name: name.trim(), location: location.trim(), flat: flat.trim(), coordinates } });
       if (!result.success) {
         setErrorMsg(result.error);
       }

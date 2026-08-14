@@ -282,8 +282,19 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.5rem', background: 'var(--background)', padding: '1rem', borderRadius: '12px' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                        <strong style={{ minWidth: '70px' }}>Location:</strong> <span>{user.location || 'N/A'}</span>
+                      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <strong style={{ minWidth: '70px' }}>Location:</strong> 
+                        <span>{user.location || 'N/A'}</span>
+                        {user.coordinates && (
+                          <a 
+                            href={`https://www.google.com/maps?q=${user.coordinates.lat},${user.coordinates.lng}`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            style={{ marginLeft: 'auto', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold' }}
+                          >
+                            📍 View on Map
+                          </a>
+                        )}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                         <strong style={{ minWidth: '70px' }}>Flat:</strong> <span>{user.flat || 'N/A'}</span>

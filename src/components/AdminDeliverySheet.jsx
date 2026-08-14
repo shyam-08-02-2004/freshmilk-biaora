@@ -217,8 +217,20 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, prices }) => {
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>LOCATION / FLAT</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-primary)', fontWeight: '500' }}>
-                        <MapPin size={16} color="var(--primary)" /> {d.user.flat}, {d.user.location}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-primary)', fontWeight: '500', flexWrap: 'wrap' }}>
+                        <MapPin size={16} color="var(--primary)" /> 
+                        <span>{d.user.flat}, {d.user.location}</span>
+                        {d.user.coordinates && (
+                          <a 
+                            href={`https://www.google.com/maps?q=${d.user.coordinates.lat},${d.user.coordinates.lng}`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            style={{ marginLeft: '0.5rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.8rem', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '12px', textDecoration: 'none' }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            📍 View Map
+                          </a>
+                        )}
                       </div>
                     </div>
                     
