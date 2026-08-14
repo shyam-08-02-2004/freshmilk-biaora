@@ -156,30 +156,7 @@ function App() {
     alert('Vacation mode updated successfully!');
   };
 
-  // Inactivity Auto-Logout (10 minutes)
-  useEffect(() => {
-    if (!isLoggedIn) return;
 
-    let inactivityTimer;
-    const resetTimer = () => {
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        handleLogout();
-        alert("Aapka session 10 minute tak inactive hone ki wajah se automatically logout ho gaya hai.");
-      }, 10 * 60 * 1000); // 10 minutes
-    };
-
-    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
-    activityEvents.forEach(event => window.addEventListener(event, resetTimer));
-    
-    // Initialize timer
-    resetTimer();
-
-    return () => {
-      clearTimeout(inactivityTimer);
-      activityEvents.forEach(event => window.removeEventListener(event, resetTimer));
-    };
-  }, [isLoggedIn]);
 
   // Auto-logout if user is deleted by admin, or sync profile updates
   useEffect(() => {
