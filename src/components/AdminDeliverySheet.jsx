@@ -27,7 +27,7 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, onUpdateBottlesRetu
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div className="delivery-container" style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Delivery Sheet</h3>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -60,21 +60,35 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, onUpdateBottlesRetu
               left: 0;
               top: 0;
               width: 100%;
+              padding: 0 !important;
+              border: none !important;
+            }
+            .table-responsive {
+              overflow-x: visible !important;
+            }
+          }
+          @media (max-width: 768px) {
+            .delivery-container {
+              padding: 1rem !important;
+            }
+            .delivery-card {
+              padding: 1rem !important;
             }
           }
         `}
       </style>
 
-      <div id="printable-delivery-sheet" style={{ background: 'var(--surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid var(--border)', paddingBottom: '1rem' }}>
+      <div id="printable-delivery-sheet" className="delivery-card" style={{ background: 'var(--surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', borderBottom: '2px solid var(--border)', paddingBottom: '1rem', color: 'var(--text-primary)' }}>
           Delivery Route - {format(new Date(targetDate), 'dd MMM yyyy')}
         </h2>
         
         {deliveries.length === 0 ? (
           <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No deliveries scheduled for this date.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
-            <thead>
+          <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', marginTop: '1rem' }}>
+              <thead>
               <tr style={{ background: 'var(--background)', textAlign: 'left' }}>
                 <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Customer Name</th>
                 <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Location / Flat</th>
@@ -131,6 +145,7 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, onUpdateBottlesRetu
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
