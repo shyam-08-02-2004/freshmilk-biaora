@@ -12,8 +12,24 @@ const AdminHistoryModal = ({ onClose, adminLogs }) => {
   });
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 500, background: 'var(--background)' }}>
-      <div style={{ width: '100%', height: '100%', overflowY: 'auto', background: 'var(--background)' }}>
+    <div className="modal-overlay" style={{ zIndex: 500 }} onClick={onClose}>
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="responsive-modal-content"
+        style={{ 
+          width: '100%', 
+          maxWidth: '650px', 
+          height: '90vh', 
+          maxHeight: '800px', 
+          background: 'var(--background)', 
+          borderRadius: '16px',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+        }}
+      >
+        <div style={{ width: '100%', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <div style={{ position: 'sticky', top: 0, background: 'var(--surface)', padding: '1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem', zIndex: 10 }}>
           <button 
@@ -86,7 +102,8 @@ const AdminHistoryModal = ({ onClose, adminLogs }) => {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default AdminHistoryModal;
