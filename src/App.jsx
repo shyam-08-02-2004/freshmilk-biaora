@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Header from './components/Header';
 import Calendar from './components/Calendar';
 import HistoryModal from './components/HistoryModal';
@@ -32,9 +32,12 @@ function useFirestoreSync(docName, initialState) {
      const cached = localStorage.getItem(`biaora_${docName}`);
      return cached ? JSON.parse(cached) : initialState;
   });
-  
+
+  // Track whether the last setState came from Firestore (remote) so we don't echo it back
   const isRemote = useRef(false);
   const isFirstRender = useRef(true);
+  // Buffer for writes that happen inside a setState updater (async timing fix)
+  const pendingWriteRef = useRef(null);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "store", docName), (docSnap) => {
@@ -59,12 +62,36 @@ function useFirestoreSync(docName, initialState) {
       isRemote.current = false;
       return;
     }
+    // Always write local changes to Firestore
     localStorage.setItem(`biaora_${docName}`, JSON.stringify(state));
     setDoc(doc(db, "store", docName), { data: state });
   }, [state, docName]);
 
-  return [state, setState];
+  // Wrap setState so writes queued inside functional updaters are also flushed
+  const setStateWithWrite = useCallback((updater) => {
+    if (typeof updater === 'function') {
+      setState(prev => {
+        const next = updater(prev);
+        // Schedule immediate Firestore write outside the render cycle
+        pendingWriteRef.current = next;
+        Promise.resolve().then(() => {
+          if (pendingWriteRef.current !== null) {
+            const toWrite = pendingWriteRef.current;
+            pendingWriteRef.current = null;
+            localStorage.setItem(`biaora_${docName}`, JSON.stringify(toWrite));
+            setDoc(doc(db, "store", docName), { data: toWrite });
+          }
+        });
+        return next;
+      });
+    } else {
+      setState(updater);
+    }
+  }, [docName]);
+
+  return [state, setStateWithWrite];
 }
+
 
 function App() {
   const { t } = useLanguage();
