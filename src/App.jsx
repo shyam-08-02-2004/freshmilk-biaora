@@ -432,22 +432,29 @@ function App() {
       const userOrders = prev[userMobile] || {};
       dayOrder = userOrders[dateKey];
       if (!dayOrder) return prev;
-      return {
+      const newGlobalOrders = {
         ...prev,
         [userMobile]: {
           ...userOrders,
           [dateKey]: { ...dayOrder, status: 'approved' }
         }
       };
+      // Write directly to Firestore so user's bill updates instantly
+      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+      return newGlobalOrders;
     });
-    if (dayOrder) {
-      const user = registeredUsers.find(u => u.mobile === userMobile);
-      const parts = [];
-      if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
-      if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
-      if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
-      logAdminAction('order', userMobile, user?.name || 'Unknown', 'approved', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
-    }
+    // Log after state update (dayOrder may be null here due to closure timing, log separately)
+    setTimeout(() => {
+      if (dayOrder) {
+        const user = registeredUsers.find(u => u.mobile === userMobile);
+        const parts = [];
+        if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
+        if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
+        if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
+        logAdminAction('order', userMobile, user?.name || 'Unknown', 'approved', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
+      }
+    }, 0);
   };
 
   const handleRejectUserOrder = (userMobile, dateKey) => {
@@ -458,31 +465,36 @@ function App() {
       if (!dayOrder) return prev;
       const newUserOrders = { ...userOrders };
       delete newUserOrders[dateKey];
-      return {
-        ...prev,
-        [userMobile]: newUserOrders
-      };
+      const newGlobalOrders = { ...prev, [userMobile]: newUserOrders };
+      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+      return newGlobalOrders;
     });
-    if (dayOrder) {
-      const user = registeredUsers.find(u => u.mobile === userMobile);
-      const parts = [];
-      if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
-      if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
-      if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
-      logAdminAction('order', userMobile, user?.name || 'Unknown', 'deleted', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
-    }
+    setTimeout(() => {
+      if (dayOrder) {
+        const user = registeredUsers.find(u => u.mobile === userMobile);
+        const parts = [];
+        if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
+        if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
+        if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
+        logAdminAction('order', userMobile, user?.name || 'Unknown', 'deleted', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
+      }
+    }, 0);
   };
 
   const handleEditUserOrder = (userMobile, dateKey, updatedOrder) => {
     setGlobalOrders(prev => {
       const userOrders = prev[userMobile] || {};
-      return {
+      const newGlobalOrders = {
         ...prev,
         [userMobile]: {
           ...userOrders,
           [dateKey]: { ...userOrders[dateKey], ...updatedOrder }
         }
       };
+      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+      return newGlobalOrders;
     });
   };
 
