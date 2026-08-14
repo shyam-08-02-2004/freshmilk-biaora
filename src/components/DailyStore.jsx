@@ -30,13 +30,14 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
   // Today locked after 10:30 AM today
   // Tomorrow locked after 10:30 AM tomorrow (i.e., never locked today for tomorrow)
   const isPast1030AM = now.getHours() > 10 || (now.getHours() === 10 && now.getMinutes() >= 30);
-  const isTodayLocked = isTodayDate && isPast1030AM;
+  const isEmergencyMode = isTodayDate && isPast1030AM;
   // Tomorrow is never locked (10:30 AM tomorrow hasn't arrived yet today)
   const isTomorrowLocked = false;
   
   const isApproved = currentOrder?.status === 'approved';
-  const isOrderable = !isPastDate && !isApproved && !isFutureBeyondTomorrow && !isTodayLocked && !isTomorrowLocked && !isOnVacation;
-  const hasOrder = (currentOrder.milk > 0 || currentOrder.ghee > 0 || currentOrder.chach > 0);
+  // Allow ordering even if isEmergencyMode (but it will be tagged as emergency)
+  const isOrderable = !isPastDate && !isApproved && !isFutureBeyondTomorrow && !isTomorrowLocked && !isOnVacation;
+  const hasOrder = (currentOrder.milk > 0 || currentOrder.ghee > 0 || currentOrder.chach > 0 || currentOrder.paneer > 0 || currentOrder.curd > 0);
 
   
   const [localOrder, setLocalOrder] = useState({ milk: 0, ghee: 0, chach: 0 });
@@ -79,11 +80,15 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
   const isChanged = localOrder.milk > 0 || localOrder.ghee > 0 || localOrder.chach > 0 || localOrder.paneer > 0 || localOrder.curd > 0;
 
   const handleConfirm = () => {
+    const orderToSave = { ...localOrder };
+    if (isEmergencyMode) {
+      orderToSave.isEmergency = true;
+      orderToSave.emergencyFee = 20;
+    }
     if (isEditing) {
-      // In edit mode: replace entire order with new quantities
-      onSaveOrder(selectedDate, localOrder, true); // true = replace mode
+      onSaveOrder(selectedDate, orderToSave, true);
     } else {
-      onSaveOrder(selectedDate, localOrder);
+      onSaveOrder(selectedDate, orderToSave);
     }
     setLocalOrder({ milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 });
     setIsAddingMore(false);
@@ -145,6 +150,13 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
           <span>Total</span>
           <span className="amount" style={{ fontSize: '1.25rem' }}>₹{dayTotal}</span>
         </div>
+        
+        {currentOrder.isEmergency && (
+          <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', color: '#ef4444', fontSize: '0.9rem', fontWeight: 'bold' }}>
+            <span>Emergency Delivery Fee</span>
+            <span>+ ₹{currentOrder.emergencyFee || 20}</span>
+          </div>
+        )}
 
         {/* Add Items & Edit Items buttons — shown only if ordering is still allowed */}
         {isOrderable ? (
@@ -207,10 +219,22 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
         <p style={{ fontSize: '0.8rem', marginTop: '1rem', color: 'var(--primary)' }}>
           {isApproved ? 'This order is already approved and locked.' 
             : isPastDate ? 'This is a past date. Orders cannot be placed or modified.'
-            : isTodayLocked ? 'Orders for today are closed after 10:30 AM.'
             : isFutureBeyondTomorrow ? 'You can only place orders for Today and Tomorrow.'
             : ''}
         </p>
+        
+        {isOrderable && isEmergencyMode && (
+          <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px' }}>
+            <h4 style={{ color: '#dc2626', margin: '0 0 0.5rem 0' }}>🚨 Instant Emergency Order</h4>
+            <p style={{ fontSize: '0.85rem', color: '#991b1b', margin: '0 0 1rem 0' }}>It is past 10:30 AM today. You can request an emergency delivery for a ₹20 extra fee. Subject to availability.</p>
+            <button 
+              onClick={() => { setIsEditing(false); setLocalOrder({ milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 }); setIsAddingMore(true); }}
+              style={{ width: '100%', padding: '0.8rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Place Emergency Order
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -222,11 +246,11 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
         {/* Header with back button when adding more to existing order */}
         <div className="store-header" style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px dashed var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '0.8rem', alignItems: 'flex-start' }}>
-              <CalendarCheck style={{ color: '#d97706', flexShrink: 0 }} size={24} />
-              <p style={{ margin: 0, fontSize: '0.9rem', color: '#92400e', lineHeight: '1.5' }}>
+            <div style={{ padding: '1rem', background: isEmergencyMode ? '#fef2f2' : '#fef3c7', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', gap: '0.8rem', alignItems: 'flex-start' }}>
+              <CalendarCheck style={{ color: isEmergencyMode ? '#dc2626' : '#d97706', flexShrink: 0 }} size={24} />
+              <p style={{ margin: 0, fontSize: '0.9rem', color: isEmergencyMode ? '#991b1b' : '#92400e', lineHeight: '1.5' }}>
                 We deliver between 6 AM and 10:30 AM daily. 
-                {isTodayLocked ? ' Orders for today are now locked.' : ' Any edits for tomorrow must be done before 10:30 AM today.'}
+                {isEmergencyMode ? ' You are placing an EMERGENCY order. A ₹20 fee will be added.' : ' Any edits for tomorrow must be done before 10:30 AM today.'}
               </p>
             </div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
@@ -236,8 +260,11 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
             {isEditing && (
               <p style={{ fontSize: '0.72rem', color: '#f59e0b', marginTop: '0.3rem', fontWeight: 600 }}>✏️ Editing existing order — adjust quantities and confirm</p>
             )}
-            {!isEditing && isTodayDate && (
+            {!isEditing && isTodayDate && !isEmergencyMode && (
               <p style={{ fontSize: '0.72rem', color: '#f59e0b', marginTop: '0.3rem', fontWeight: 600 }}>⏰ Today: Add before 10:30 AM</p>
+            )}
+            {isEmergencyMode && (
+              <p style={{ fontSize: '0.72rem', color: '#dc2626', marginTop: '0.3rem', fontWeight: 600 }}>🚨 Emergency Order (₹20 Fee)</p>
             )}
             {!isEditing && isTomorrowDate && (
               <p style={{ fontSize: '0.72rem', color: '#10b981', marginTop: '0.3rem', fontWeight: 600 }}>📅 Tomorrow: Add before 10:30 AM tomorrow</p>
@@ -386,10 +413,10 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
               </button>
               <button 
                 onClick={handleConfirm}
-                style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem 0.5rem', background: isEditing ? '#f59e0b' : 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', boxShadow: `0 4px 12px ${isEditing ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'}`, transition: 'all 0.2s' }}
+                style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem 0.5rem', background: isEmergencyMode ? '#ef4444' : (isEditing ? '#f59e0b' : 'var(--primary)'), color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', boxShadow: `0 4px 12px ${isEmergencyMode ? 'rgba(239,68,68,0.3)' : (isEditing ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)')}`, transition: 'all 0.2s' }}
               >
                 <ShieldCheck size={20} />
-                {isEditing ? `Save Changes ₹${localDayTotal}` : `Confirm ₹${localDayTotal}`}
+                {isEmergencyMode ? `Emergency Order ₹${localDayTotal + 20}` : isEditing ? `Save Changes ₹${localDayTotal}` : `Confirm ₹${localDayTotal}`}
               </button>
             </div>
           ) : (

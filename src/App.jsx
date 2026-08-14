@@ -325,6 +325,11 @@ function App() {
           bill += (dayOrder.milk || 0) * PRICES.milk;
           bill += (dayOrder.ghee || 0) * PRICES.ghee;
           bill += (dayOrder.chach || 0) * PRICES.chach;
+          bill += (dayOrder.paneer || 0) * PRICES.paneer;
+          bill += (dayOrder.curd || 0) * PRICES.curd;
+          if (dayOrder.isEmergency) {
+            bill += (dayOrder.emergencyFee || 20);
+          }
         }
       }
     });
@@ -367,18 +372,26 @@ function App() {
     setOrders(prev => {
       const prevDayOrder = prev[dateKey] || { milk: 0, ghee: 0, chach: 0, status: 'pending' };
       const newDayOrder = replaceMode ? {
-        milk: localOrder.milk,
-        ghee: localOrder.ghee,
-        chach: localOrder.chach,
+        milk: localOrder.milk || 0,
+        ghee: localOrder.ghee || 0,
+        chach: localOrder.chach || 0,
+        paneer: localOrder.paneer || 0,
+        curd: localOrder.curd || 0,
+        isEmergency: localOrder.isEmergency,
+        emergencyFee: localOrder.emergencyFee,
         status: 'pending'
       } : {
-        milk: prevDayOrder.milk + localOrder.milk,
-        ghee: prevDayOrder.ghee + localOrder.ghee,
-        chach: prevDayOrder.chach + localOrder.chach,
+        milk: (prevDayOrder.milk || 0) + (localOrder.milk || 0),
+        ghee: (prevDayOrder.ghee || 0) + (localOrder.ghee || 0),
+        chach: (prevDayOrder.chach || 0) + (localOrder.chach || 0),
+        paneer: (prevDayOrder.paneer || 0) + (localOrder.paneer || 0),
+        curd: (prevDayOrder.curd || 0) + (localOrder.curd || 0),
+        isEmergency: localOrder.isEmergency || prevDayOrder.isEmergency,
+        emergencyFee: localOrder.emergencyFee || prevDayOrder.emergencyFee,
         status: 'pending'
       };
       
-      if (newDayOrder.milk === 0 && newDayOrder.ghee === 0 && newDayOrder.chach === 0) {
+      if (newDayOrder.milk === 0 && newDayOrder.ghee === 0 && newDayOrder.chach === 0 && newDayOrder.paneer === 0 && newDayOrder.curd === 0) {
         const newOrders = { ...prev };
         delete newOrders[dateKey];
         return newOrders;

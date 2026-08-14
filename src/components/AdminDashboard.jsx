@@ -5,6 +5,7 @@ import AdminHistoryModal from './AdminHistoryModal';
 import AdminDeliverySheet from './AdminDeliverySheet';
 import AdminBroadcasts from './AdminBroadcasts';
 import AdminExpenses from './AdminExpenses';
+import AdminAnalytics from './AdminAnalytics';
 import { useLanguage } from '../LanguageContext';
 
 const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses, onUpdateBottlesReturned }) => {
@@ -13,7 +14,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses'
+  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses' | 'analytics'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(true);
 
   const handleTabClick = (tabId) => {
@@ -102,6 +103,10 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
     return total + Object.values(userOrders || {}).filter(order => order.status === 'pending').length;
   }, 0);
 
+  const emergencyOrdersCount = Object.values(globalOrders || {}).reduce((total, userOrders) => {
+    return total + Object.values(userOrders || {}).filter(order => order.status === 'pending' && order.isEmergency).length;
+  }, 0);
+
   return (
     <div className="admin-container">
       {/* LEFT SIDEBAR */}
@@ -179,6 +184,12 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           >
             <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>💵</span> Expenses
           </button>
+          <button 
+            onClick={() => handleTabClick('analytics')}
+            className={`admin-sidebar-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+          >
+            <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>🗺️</span> Analytics Map
+          </button>
         </div>
       </div>
 
@@ -193,6 +204,23 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           </h2>
         </div>
         
+        {emergencyOrdersCount > 0 && activeTab !== 'orders' && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '1rem', margin: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ color: '#dc2626', margin: '0 0 0.3rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ animation: 'pulse 2s infinite' }}>🚨</span> Emergency Orders Pending
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#991b1b' }}>There are {emergencyOrdersCount} instant orders waiting for approval.</p>
+            </div>
+            <button 
+              onClick={() => handleTabClick('orders')}
+              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              View
+            </button>
+          </div>
+        )}
+
         <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
         {activeTab === 'users' && (
           <div style={{ padding: '1rem' }}>
@@ -270,27 +298,33 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                   return <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>No pending order requests.</p>;
                 }
 
-                return pendingOrderUsers.map(user => (
+                return pendingOrderUsers.map(user => {
+                  const hasEmergency = Object.values(globalOrders[user.mobile] || {}).some(order => order.status === 'pending' && order.isEmergency);
+                  return (
                   <div 
                     key={user.mobile}
-                    className={`user-card`}
+                    className={`user-card ${hasEmergency ? 'emergency-card' : ''}`}
                     onClick={() => {
                       setSelectedUser(user);
                       setShowAllOrders(false);
                       setShowAllPayments(false);
                     }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: hasEmergency ? '2px solid #ef4444' : '' }}
                   >
-                    <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                    <div style={{ position: 'relative' }}>
+                      <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                      {hasEmergency && <span style={{ position: 'absolute', top: -5, right: -5, fontSize: '1rem' }}>🚨</span>}
+                    </div>
                     <div className="user-info">
-                      <h4>{user.name}</h4>
+                      <h4 style={{ color: hasEmergency ? '#ef4444' : '' }}>{user.name} {hasEmergency && '(Emergency)'}</h4>
                       <p>{user.mobile}</p>
                     </div>
                     <div className="user-due">
                       <span>₹{calculateUserDue(user)}</span>
                     </div>
                   </div>
-                ));
+                  );
+                });
               })()}
             </div>
           </>
@@ -824,6 +858,13 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           globalExpenses={globalExpenses} 
           setGlobalExpenses={setGlobalExpenses} 
           globalPayments={globalPayments}
+        />
+      )}
+      
+      {activeTab === 'analytics' && (
+        <AdminAnalytics 
+          registeredUsers={registeredUsers}
+          globalOrders={globalOrders}
         />
       )}
       </div>

@@ -89,8 +89,11 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, onUpdateBottlesRetu
             </thead>
             <tbody>
               {deliveries.map((d, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>{d.user.name}</td>
+                <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: d.order.isEmergency ? '#fef2f2' : 'transparent' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>
+                    {d.user.name}
+                    {d.order.isEmergency && <div style={{ fontSize: '0.7rem', color: '#dc2626', background: '#fee2e2', padding: '0.1rem 0.4rem', borderRadius: '4px', display: 'inline-block', marginLeft: '0.5rem' }}>🚨 EMERGENCY</div>}
+                  </td>
                   <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <MapPin size={14} />
@@ -103,7 +106,8 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, onUpdateBottlesRetu
                   <td style={{ padding: '1rem', fontWeight: 'bold', color: '#047857', fontSize: '0.8rem' }}>
                     {d.order.paneer > 0 && <div>Paneer: {d.order.paneer}kg</div>}
                     {d.order.curd > 0 && <div>Curd: {d.order.curd}kg</div>}
-                    {!d.order.paneer && !d.order.curd && '-'}
+                    {d.order.isEmergency && <div style={{ color: '#dc2626' }}>Fee: +₹{d.order.emergencyFee || 20}</div>}
+                    {!d.order.paneer && !d.order.curd && !d.order.isEmergency && '-'}
                   </td>
                   <td style={{ padding: '1rem' }} className="no-print">
                     <form onSubmit={(e) => handleSaveBottles(d.user.mobile, e)} style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
