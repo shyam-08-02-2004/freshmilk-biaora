@@ -592,6 +592,7 @@ function App() {
           onClose={() => setIsHistoryOpen(false)} 
           prices={PRICES}
           selectedDate={selectedDate}
+          currentUser={currentUser}
         />
       )}
 

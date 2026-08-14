@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, selectedDate }) => {
+const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, selectedDate, currentUser }) => {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'payments'
   const [expandedDate, setExpandedDate] = useState(null);
 
@@ -36,42 +36,105 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
             <button 
               onClick={() => {
                 const doc = new jsPDF();
-                doc.setFontSize(18);
-                doc.text('FreshMilk Biaora - Monthly Bill', 14, 22);
-                doc.setFontSize(11);
-                doc.text(`Month: ${currentMonthLabel}`, 14, 30);
                 
+                // Add Logo/Header
+                doc.setFontSize(22);
+                doc.setTextColor(30, 58, 138); // Dark blue primary color
+                doc.text('FreshMilk Biaora', 14, 20);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(100, 116, 139);
+                doc.text('Monthly Invoice', 14, 28);
+                
+                // Invoice Details (Right Side)
+                doc.setFontSize(10);
+                doc.setTextColor(15, 23, 42);
+                doc.text(`Date: ${format(new Date(), 'dd MMM yyyy')}`, 140, 20);
+                doc.text(`Billing Month: ${currentMonthLabel}`, 140, 26);
+                
+                // Customer Details Box
+                doc.setFillColor(248, 250, 252);
+                doc.rect(14, 35, 182, 30, 'F');
+                
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "bold");
+                doc.text('Customer Details', 20, 42);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Name: ${currentUser?.name || 'Customer'}`, 20, 48);
+                doc.text(`Mobile: ${currentUser?.mobile || ''}`, 20, 54);
+                doc.text(`Location: ${currentUser?.flat || ''}, ${currentUser?.location || ''}`, 20, 60);
+
+                // Calculations
                 const tableData = [];
                 let totalBill = 0;
+                let totalMilk = 0;
+                let totalGhee = 0;
+                let totalChach = 0;
 
-                sortedDates.forEach(dateStr => {
+                // Sort dates chronologically for the bill
+                const chronologicalDates = [...sortedDates].reverse();
+
+                chronologicalDates.forEach(dateStr => {
                   const order = orders[dateStr];
                   if (order.status === 'approved') {
                     const dayTotal = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach;
                     totalBill += dayTotal;
+                    totalMilk += (order.milk || 0);
+                    totalGhee += (order.ghee || 0);
+                    totalChach += (order.chach || 0);
                     tableData.push([
-                      format(new Date(dateStr), 'dd MMM yyyy'),
-                      order.milk || 0,
-                      order.ghee || 0,
-                      order.chach || 0,
+                      format(parseISO(dateStr), 'dd MMM yyyy'),
+                      order.milk || '-',
+                      order.ghee || '-',
+                      order.chach || '-',
                       `Rs. ${dayTotal}`
                     ]);
                   }
                 });
-
+                
+                const totalPaid = monthlyPayments.reduce((acc, pay) => acc + Number(pay.amount || 0), 0);
+                const remainingDue = Math.max(0, totalBill - totalPaid);
+                
+                // Draw Table
                 doc.autoTable({
-                  startY: 40,
+                  startY: 75,
                   head: [['Date', 'Milk (L)', 'Ghee (Kg)', 'Chach (L)', 'Daily Total']],
                   body: tableData,
-                  foot: [['', '', '', 'Total Bill:', `Rs. ${totalBill}`]],
+                  foot: [['Total', `${totalMilk} L`, `${totalGhee} Kg`, `${totalChach} L`, `Rs. ${totalBill}`]],
                   theme: 'striped',
                   headStyles: { fillColor: [16, 185, 129] },
-                  footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' }
+                  footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
+                  styles: { fontSize: 9 }
                 });
-
-                doc.save(`Milk_Bill_${currentMonthStr}.pdf`);
+                
+                const finalY = doc.lastAutoTable.finalY || 100;
+                
+                // Payment Summary Box
+                doc.setDrawColor(226, 232, 240);
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(120, finalY + 10, 75, 35, 3, 3, 'FD');
+                
+                doc.setFontSize(10);
+                doc.text('Total Amount:', 125, finalY + 20);
+                doc.text(`Rs. ${totalBill}`, 185, finalY + 20, { align: 'right' });
+                
+                doc.text('Amount Paid:', 125, finalY + 28);
+                doc.text(`Rs. ${totalPaid}`, 185, finalY + 28, { align: 'right' });
+                
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(220, 38, 38); // Red
+                doc.text('Remaining Due:', 125, finalY + 38);
+                doc.text(`Rs. ${remainingDue}`, 185, finalY + 38, { align: 'right' });
+                
+                // Footer
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(148, 163, 184);
+                doc.setFontSize(9);
+                doc.text('Thank you for choosing FreshMilk Biaora!', 105, 280, { align: 'center' });
+                
+                doc.save(`FreshMilk_Bill_${currentMonthStr}.pdf`);
               }}
-              style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', padding: '0.5rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
+              style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)' }}
             >
               <Download size={16} /> Bill
             </button>
