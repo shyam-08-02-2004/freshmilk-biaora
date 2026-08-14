@@ -64,7 +64,7 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
     <div className="delivery-container" style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Delivery Sheet</h3>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <input 
             type="date" 
             value={targetDate} 
@@ -113,6 +113,17 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
             }
             .delivery-card {
               padding: 1rem !important;
+            }
+            .header-actions {
+              width: 100%;
+            }
+            .header-actions input {
+              width: 100%;
+            }
+            .header-actions button {
+              flex: 1;
+              justify-content: center;
+              padding: 0.8rem !important;
             }
             /* Table to Card Mobile View */
             .responsive-table, .responsive-table thead, .responsive-table tbody, .responsive-table th, .responsive-table td, .responsive-table tr {
