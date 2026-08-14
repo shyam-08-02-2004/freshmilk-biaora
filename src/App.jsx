@@ -570,7 +570,7 @@ function App() {
   }
 
   return (
-    <div className="app-container">
+    <>
       <CustomerLayout
         currentUser={currentUser}
         activeTab={activeTab}
@@ -672,7 +672,7 @@ function App() {
           selectedDate={selectedDate}
         />
       )}
-    </div>
+    </>
   );
 }
 
