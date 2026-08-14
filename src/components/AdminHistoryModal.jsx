@@ -68,13 +68,14 @@ const AdminHistoryModal = ({ onClose, adminLogs }) => {
               {filteredLogs.map(log => {
                 const isApproved = log.action === 'approved';
                 const isOrder = log.type === 'order';
+                const isProfile = log.type === 'profile';
                 
                 return (
                   <div key={log.id} style={{ background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ padding: '0.8rem 1rem', background: isApproved ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: isApproved ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: '0.3rem', textTransform: 'uppercase' }}>
                         {isApproved ? <CheckCircle size={14} /> : <Trash2 size={14} />}
-                        {isOrder ? 'Order' : 'Payment'} {isApproved ? 'Approved' : 'Deleted'}
+                        {isOrder ? 'Order' : isProfile ? 'Profile' : 'Payment'} {isApproved ? 'Approved' : 'Deleted'}
                       </span>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                         <Clock size={12} /> {format(new Date(log.timestamp), 'dd MMM, hh:mm a')}

@@ -199,6 +199,7 @@ function App() {
   const handleApproveProfile = (mobile) => {
     const details = profileRequests[mobile];
     if (details) {
+      const user = registeredUsers.find(u => u.mobile === mobile);
       setRegisteredUsers(prev => prev.map(u => u.mobile === mobile ? { ...u, ...details } : u));
       if (currentUser?.mobile === mobile) {
          setCurrentUser(prev => ({ ...prev, ...details }));
@@ -208,6 +209,10 @@ function App() {
         delete next[mobile];
         return next;
       });
+      
+      if (user) {
+        logAdminAction('profile', mobile, user.name || 'Unknown', 'approved', `Profile details updated: ${Object.keys(details).join(', ')}`);
+      }
     }
   };
 
