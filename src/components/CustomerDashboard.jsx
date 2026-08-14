@@ -55,15 +55,15 @@ const CustomerDashboard = ({
             </div>
           </div>
 
-          <div className="widget-card" style={{ flex: 1, background: '#fffbeb', border: '1px solid #fef3c7', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ background: '#f59e0b', color: 'white', padding: '0.8rem', borderRadius: '50%' }}>
+          <div className="widget-card timing-widget">
+            <div className="timing-icon">
               <Clock size={24} />
             </div>
-            <div>
-              <h4 style={{ margin: '0 0 0.3rem 0', color: '#b45309' }}>Order Time: 6:00 AM to 10:30 AM</h4>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#92400e' }}>Orders placed after 10:30 AM will be added for tomorrow.</p>
+            <div className="timing-text">
+              <h4>Order Time: 6:00 AM to 10:30 AM</h4>
+              <p>Orders placed after 10:30 AM will be added for tomorrow.</p>
             </div>
-            <img src="/assets/milk.png" alt="Milk" style={{ width: '40px', marginLeft: 'auto', opacity: 0.5 }} />
+            <img src="/assets/milk.png" alt="Milk" className="timing-img" />
           </div>
         </div>
 
