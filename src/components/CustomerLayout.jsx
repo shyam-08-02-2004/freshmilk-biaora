@@ -11,7 +11,8 @@ const CustomerLayout = ({
   onOpenPayment,
   onOpenProfile,
   onOpenQuickMilk,
-  onOpenVacation
+  onOpenVacation,
+  onAdminContactToggle
 }) => {
   const { t, language, toggleLanguage } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -34,7 +35,7 @@ const CustomerLayout = ({
         <button className="icon-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
           <Menu size={24} color="var(--text-primary)" />
         </button>
-        <div className="brand" style={{ gap: '0.5rem' }}>
+        <div className="brand" style={{ gap: '0.5rem', cursor: 'pointer' }} onClick={onAdminContactToggle}>
           <img src="/assets/babu_logo.png" alt="Logo" style={{ height: '32px' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--secondary)', lineHeight: '1' }}>FreshMilk</span>
@@ -57,7 +58,7 @@ const CustomerLayout = ({
 
       {/* Desktop Sidebar */}
       <aside className={`desktop-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
-        <div className="sidebar-brand">
+        <div className="sidebar-brand" style={{ cursor: 'pointer' }} onClick={onAdminContactToggle}>
           <img src="/assets/babu_logo.png" alt="Logo" style={{ height: '40px' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--secondary)', lineHeight: '1' }}>FreshMilk</span>

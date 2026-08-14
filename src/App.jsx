@@ -559,6 +559,7 @@ function App() {
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenQuickMilk={() => setIsQuickMilkOpen(true)}
         onOpenVacation={() => setIsVacationOpen(true)}
+        onAdminContactToggle={() => setIsAdminContactOpen(true)}
       >
         {/* User Broadcast Banners */}
         {(() => {
