@@ -39,10 +39,11 @@ const HorizontalCalendar = ({
     }
   }, [selectedDate, viewMonth]);
 
-  const handleMonthChange = (e) => {
+  const handleDateChange = (e) => {
     if (!e.target.value) return;
-    const newMonthDate = parse(e.target.value, 'yyyy-MM', new Date());
-    setViewMonth(startOfMonth(newMonthDate));
+    const newDate = new Date(e.target.value);
+    setSelectedDate(newDate);
+    if (onDayClick) onDayClick(newDate);
   };
 
   return (
@@ -54,9 +55,9 @@ const HorizontalCalendar = ({
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', color: 'var(--secondary)', fontWeight: 600, fontSize: '0.9rem', gap: '0.2rem', cursor: 'pointer', background: '#f0fdf4', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
           {format(viewMonth, 'MMMM yyyy')} <ChevronRight size={16} />
           <input 
-            type="month" 
-            value={format(viewMonth, 'yyyy-MM')}
-            onChange={handleMonthChange}
+            type="date" 
+            value={format(selectedDate, 'yyyy-MM-dd')}
+            onChange={handleDateChange}
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
           />
         </div>
