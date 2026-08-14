@@ -201,7 +201,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                 <p>No registered users yet.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' }}>
+              <div className="customers-grid">
                 {registeredUsers.map(user => (
                   <div key={user.mobile} style={{ background: 'var(--surface)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -302,7 +302,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                 <p>No pending profile requests.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' }}>
+              <div className="customers-grid">
                 {Object.entries(profileRequests).map(([mobile, updates]) => {
                   const user = registeredUsers.find(u => u.mobile === mobile);
                   return (
