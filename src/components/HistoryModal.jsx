@@ -187,18 +187,34 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
           <div className="history-list">
             {sortedDates.map(dateStr => {
               const order = orders[dateStr];
-              const dayTotal = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach;
-              
+              const dayTotal = (order.milk || 0) * prices.milk
+                + (order.ghee || 0) * prices.ghee
+                + (order.chach || 0) * prices.chach
+                + (order.paneer || 0) * prices.paneer
+                + (order.curd || 0) * prices.curd;
+              const isPending = order.status !== 'approved';
+
               return (
-                <div key={dateStr} className="history-item" style={{ background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', marginBottom: '1rem' }}>
-                  <div 
-                    className="history-date" 
+                <div key={dateStr} className="history-item" style={{ background: 'var(--surface)', borderRadius: '12px', border: `1px solid ${isPending ? '#fde68a' : 'var(--border)'}`, overflow: 'hidden', marginBottom: '1rem' }}>
+                  <div
+                    className="history-date"
                     onClick={() => setExpandedDate(expandedDate === dateStr ? null : dateStr)}
                     style={{ cursor: 'pointer', padding: '1rem', background: expandedDate === dateStr ? 'var(--background)' : 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold' }}
                   >
-                    <span>{format(parseISO(dateStr), 'EEEE, d MMMM yyyy')}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <span>{format(parseISO(dateStr), 'EEEE, d MMMM yyyy')}</span>
+                      {isPending ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#d97706', background: '#fef3c7', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: 'bold', width: 'fit-content' }}>
+                          ⏳ Pending Approval
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: '#059669', background: '#d1fae5', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: 'bold', width: 'fit-content' }}>
+                          ✅ Approved
+                        </span>
+                      )}
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span style={{ color: 'var(--primary)' }}>₹{dayTotal}</span>
+                      <span style={{ color: isPending ? '#d97706' : 'var(--primary)' }}>₹{dayTotal}</span>
                       <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
                         {expandedDate === dateStr ? '▲' : '▼'}
                       </span>
@@ -206,11 +222,11 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                   </div>
                   {expandedDate === dateStr && (
                     <div className="history-details" style={{ padding: '1rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {order.milk > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🥛 {t('milk')}: {order.milk}L</div>}
-                      {order.ghee > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🧈 {t('ghee')}: {order.ghee}Kg</div>}
-                      {order.chach > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🥤 {t('chach')}: {order.chach}L</div>}
-                      {order.paneer > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)', color: '#047857' }}>🧀 {t('paneer')}: {order.paneer}Kg</div>}
-                      {order.curd > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)', color: '#047857' }}>🥣 {t('curd')}: {order.curd}Kg</div>}
+                      {order.milk > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🥛 {t('milk')}: {order.milk}L — ₹{order.milk * prices.milk}</div>}
+                      {order.ghee > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🧈 {t('ghee')}: {order.ghee}Kg — ₹{order.ghee * prices.ghee}</div>}
+                      {order.chach > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)' }}>🥤 {t('chach')}: {order.chach}L — ₹{order.chach * prices.chach}</div>}
+                      {order.paneer > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)', color: '#047857' }}>🧀 {t('paneer')}: {order.paneer}Kg — ₹{order.paneer * prices.paneer}</div>}
+                      {order.curd > 0 && <div className="history-product" style={{ background: 'var(--background)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border)', color: '#047857' }}>🥣 {t('curd')}: {order.curd}Kg — ₹{order.curd * prices.curd}</div>}
                     </div>
                   )}
                 </div>
