@@ -392,20 +392,28 @@ function App() {
         status: 'pending'
       };
       
+      const userRef = ref(database, `users/${currentUser.mobile}/orders/${dateKey}`);
+      
       if (newDayOrder.milk === 0 && newDayOrder.ghee === 0 && newDayOrder.chach === 0 && newDayOrder.paneer === 0 && newDayOrder.curd === 0) {
         const newOrders = { ...prev };
         delete newOrders[dateKey];
+        remove(userRef);
         return newOrders;
       }
+      
+      set(userRef, newDayOrder);
       return { ...prev, [dateKey]: newDayOrder };
     });
   };
 
   const handleClearDayOrder = (date) => {
+    if (!currentUser) return;
     const dateKey = format(date, 'yyyy-MM-dd');
     setOrders(prev => {
       const newOrders = { ...prev };
       delete newOrders[dateKey];
+      const userRef = ref(database, `users/${currentUser.mobile}/orders/${dateKey}`);
+      remove(userRef);
       return newOrders;
     });
   };
