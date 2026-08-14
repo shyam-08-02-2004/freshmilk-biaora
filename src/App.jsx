@@ -516,6 +516,7 @@ function App() {
             onApprovePayment={handleApprovePayment}
             onRejectPayment={handleRejectPayment}
             globalPayments={globalPayments}
+            setGlobalPayments={setGlobalPayments}
             adminLogs={adminLogs}
             monthlyOverrides={monthlyOverrides}
             setMonthlyOverrides={setMonthlyOverrides}

@@ -12,6 +12,7 @@ import AdminInventory from './AdminInventory';
 import AdminVacations from './AdminVacations';
 import CustomerPassbook from './CustomerPassbook';
 import QRScannerModal from './QRScannerModal';
+import AdminBulkCashEntry from './AdminBulkCashEntry';
 import { useLanguage } from '../LanguageContext';
 
 const AdminDashboard = ({ 
@@ -20,7 +21,7 @@ const AdminDashboard = ({
   onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser,
   profileRequests, onApproveProfile, onRejectProfile,
   paymentRequests, onApprovePayment, onRejectPayment,
-  globalPayments, adminLogs,
+  globalPayments, setGlobalPayments, adminLogs,
   monthlyOverrides, setMonthlyOverrides,
   broadcasts, setBroadcasts,
   globalExpenses, setGlobalExpenses,
@@ -35,6 +36,7 @@ const AdminDashboard = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPassbookOpen, setIsPassbookOpen] = useState(false);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+  const [isBulkCashOpen, setIsBulkCashOpen] = useState(false);
 
   React.useEffect(() => {
     sessionStorage.setItem('admin_activeTab', activeTab);
@@ -64,6 +66,25 @@ const AdminDashboard = ({
   const saveEditOrder = (userMobile, date) => {
     onEditUserOrder(userMobile, date, editOrderValues);
     setEditingOrderDate(null);
+  };
+
+  const handleBulkCashSubmit = (entries) => {
+    setGlobalPayments(prev => {
+      const next = { ...prev };
+      entries.forEach(e => {
+        const userPayments = next[e.mobile] || [];
+        next[e.mobile] = [...userPayments, {
+          id: Date.now() + Math.random().toString(36).substr(2, 9),
+          amount: parseFloat(e.amount),
+          utr: 'CASH',
+          timestamp: new Date().toISOString(),
+          paymentMonth: format(new Date(), 'yyyy-MM'),
+          status: 'approved'
+        }];
+      });
+      return next;
+    });
+    setIsBulkCashOpen(false);
   };
 
   const calculateUserDue = (user) => {
@@ -542,14 +563,22 @@ const AdminDashboard = ({
                 <h3>Payments Management</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>View pending requests and payment history</p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <label style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '0.9rem' }}>Filter Month:</label>
-                <input 
-                  type="month" 
-                  value={filterMonth} 
-                  onChange={(e) => setFilterMonth(e.target.value)} 
-                  style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '1rem', color: 'var(--text-primary)', cursor: 'pointer' }}
-                />
+              <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button 
+                  onClick={() => setIsBulkCashOpen(true)}
+                  style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', padding: '0.6rem 1rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
+                >
+                  <Plus size={18} /> Fast Cash Entry
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <label style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '0.9rem' }}>Filter Month:</label>
+                  <input 
+                    type="month" 
+                    value={filterMonth} 
+                    onChange={(e) => setFilterMonth(e.target.value)} 
+                    style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '1rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1098,6 +1127,14 @@ const AdminDashboard = ({
           }
         }} 
       />
+
+      {isBulkCashOpen && (
+        <AdminBulkCashEntry 
+          registeredUsers={registeredUsers} 
+          onSubmit={handleBulkCashSubmit} 
+          onClose={() => setIsBulkCashOpen(false)} 
+        />
+      )}
 
     </div>
   );
