@@ -104,24 +104,47 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
             <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Welcome back, Shyam Dangi</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="admin-tabs-container" style={{ display: 'flex', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+          <style>
+            {`
+              .admin-tabs-container::-webkit-scrollbar {
+                display: none;
+              }
+              .admin-tab-btn {
+                white-space: nowrap;
+                padding: 0.6rem 1rem;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-shrink: 0;
+              }
+            `}
+          </style>
+          
           <button 
             onClick={() => setIsHistoryOpen(true)}
-            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--primary)', background: 'var(--surface)', color: 'var(--primary)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', transition: 'all 0.2s' }}
+            className="admin-tab-btn"
+            style={{ border: '1px solid var(--primary)', background: 'var(--surface)', color: 'var(--primary)' }}
           >
             <Clock size={16} /> History Log
           </button>
           <button 
             onClick={() => setActiveTab('users')}
-            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'users' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'users' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+            className="admin-tab-btn"
+            style={{ border: 'none', background: activeTab === 'users' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'users' ? 'white' : 'var(--text-secondary)' }}
           >
-            All Customers
+            <Users size={16} /> Customers
           </button>
           <button 
             onClick={() => setActiveTab('orders')}
-            style={{ position: 'relative', padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'orders' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'orders' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+            className="admin-tab-btn"
+            style={{ position: 'relative', border: 'none', background: activeTab === 'orders' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'orders' ? 'white' : 'var(--text-secondary)' }}
           >
-            Manage Orders
+            <Milk size={16} /> Orders
             {pendingOrdersCount > 0 && (
               <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
                 {pendingOrdersCount}
@@ -130,9 +153,10 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           </button>
           <button 
             onClick={() => setActiveTab('profiles')}
-            style={{ position: 'relative', padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'profiles' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'profiles' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+            className="admin-tab-btn"
+            style={{ position: 'relative', border: 'none', background: activeTab === 'profiles' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'profiles' ? 'white' : 'var(--text-secondary)' }}
           >
-            Profile Requests
+            <UserCheck size={16} /> Profiles
             {Object.keys(profileRequests || {}).length > 0 && (
               <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
                 {Object.keys(profileRequests).length}
@@ -141,9 +165,10 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           </button>
           <button 
             onClick={() => setActiveTab('payments')}
-            style={{ position: 'relative', padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'payments' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'payments' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+            className="admin-tab-btn"
+            style={{ position: 'relative', border: 'none', background: activeTab === 'payments' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'payments' ? 'white' : 'var(--text-secondary)' }}
           >
-            Payments
+            <span style={{ fontWeight: 'bold' }}>₹</span> Payments
             {Object.keys(paymentRequests || {}).length > 0 && (
               <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
                 {Object.keys(paymentRequests).length}
@@ -152,21 +177,24 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           </button>
           <button 
             onClick={() => setActiveTab('delivery')}
-            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'delivery' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'delivery' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+            className="admin-tab-btn"
+            style={{ border: 'none', background: activeTab === 'delivery' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'delivery' ? 'white' : 'var(--text-secondary)' }}
           >
-            Delivery Sheet
+            📦 Delivery
           </button>
           <button 
             onClick={() => setActiveTab('broadcasts')}
-            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'broadcasts' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'broadcasts' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+            className="admin-tab-btn"
+            style={{ border: 'none', background: activeTab === 'broadcasts' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'broadcasts' ? 'white' : 'var(--text-secondary)' }}
           >
-            Broadcasts
+            📢 Broadcasts
           </button>
           <button 
             onClick={() => setActiveTab('expenses')}
-            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'expenses' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'expenses' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+            className="admin-tab-btn"
+            style={{ border: 'none', background: activeTab === 'expenses' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'expenses' ? 'white' : 'var(--text-secondary)' }}
           >
-            Expenses
+            💵 Expenses
           </button>
         </div>
       </div>
