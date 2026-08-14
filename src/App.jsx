@@ -432,7 +432,7 @@ function App() {
       setIsLoggedIn(true);
       return { success: true };
     } else if (action === 'login') {
-      if (data.mobile === '7509766655' && data.password === 'babu@66655') {
+      if (data.mobile === '7509766655' && data.password === 'shyam@66655') {
         setCurrentUser({ name: 'Shyam Dangi (Admin)', mobile: '7509766655', role: 'admin' });
         setIsLoggedIn(true);
         return { success: true };
