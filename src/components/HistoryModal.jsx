@@ -245,8 +245,6 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: '#d97706', background: '#fde68a', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: 'bold' }}><Clock size={12} /> Pending</span>
                     </div>
                     <div style={{ fontSize: '0.85rem', color: '#92400e', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                      <span><strong>UTR:</strong> {pendingPayment.utr}</span>
-                      <span><strong>For Month:</strong> {pendingPayment.paymentMonth ? format(new Date(pendingPayment.paymentMonth + '-01'), 'MMMM yyyy') : 'N/A'}</span>
                       <span>{format(new Date(pendingPayment.timestamp), 'dd MMM yyyy, hh:mm a')}</span>
                     </div>
                   </div>
@@ -258,8 +256,6 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: 'bold' }}><CheckCircle size={12} /> Paid</span>
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                      <span><strong>UTR:</strong> {pay.utr}</span>
-                      <span><strong>For Month:</strong> {pay.paymentMonth ? format(new Date(pay.paymentMonth + '-01'), 'MMMM yyyy') : 'N/A'}</span>
                       <span>{format(new Date(pay.timestamp), 'dd MMM yyyy, hh:mm a')}</span>
                     </div>
                   </div>
