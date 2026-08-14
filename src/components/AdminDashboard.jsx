@@ -271,6 +271,33 @@ const AdminDashboard = ({
         <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
         {activeTab === 'users' && (
           <div style={{ padding: '1rem' }}>
+            {/* Daily To-Do Summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <div onClick={() => handleTabClick('payments')} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', padding: '1.2rem', borderRadius: '16px', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'transform 0.2s' }}>
+                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.8rem', borderRadius: '50%' }}><Receipt size={24} /></div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '1.4rem' }}>{Object.keys(paymentRequests || {}).length}</h4>
+                  <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.9 }}>Pending Payments</p>
+                </div>
+              </div>
+              <div onClick={() => handleTabClick('profiles')} style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', padding: '1.2rem', borderRadius: '16px', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'transform 0.2s' }}>
+                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.8rem', borderRadius: '50%' }}><UserCheck size={24} /></div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '1.4rem' }}>{Object.keys(profileRequests || {}).length}</h4>
+                  <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.9 }}>Profile Approvals</p>
+                </div>
+              </div>
+              <div onClick={() => handleTabClick('vacations')} style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', padding: '1.2rem', borderRadius: '16px', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'transform 0.2s' }}>
+                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.8rem', borderRadius: '50%' }}><Plane size={24} /></div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '1.4rem' }}>
+                    {registeredUsers.filter(u => u.vacationStart && u.vacationEnd && new Date() >= new Date(u.vacationStart) && new Date() <= new Date(u.vacationEnd)).length}
+                  </h4>
+                  <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.9 }}>On Vacation</p>
+                </div>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>All Registered Customers ({registeredUsers.length})</h3>
               <button 
@@ -287,15 +314,22 @@ const AdminDashboard = ({
               </div>
             ) : (
               <div className="customers-grid">
-                {registeredUsers.map(user => (
-                  <div key={user.mobile} style={{ background: 'var(--surface)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
+                {registeredUsers.map(user => {
+                  const due = calculateUserDue(user);
+                  const userPayments = globalPayments[user.mobile] || [];
+                  const lastPayment = userPayments.length > 0 ? userPayments[userPayments.length - 1] : null;
+                  const daysSinceLastPayment = lastPayment ? Math.floor((new Date() - new Date(lastPayment.date)) / (1000 * 60 * 60 * 24)) : Infinity;
+                  const isDefaulter = due > 1500 || (daysSinceLastPayment > 30 && due > 500);
+
+                  return (
+                  <div key={user.mobile} style={{ background: isDefaulter ? '#fef2f2' : 'var(--surface)', padding: '1.5rem', borderRadius: '16px', border: `1px solid ${isDefaulter ? '#fca5a5' : 'var(--border)'}`, boxShadow: isDefaulter ? '0 4px 12px rgba(239, 68, 68, 0.1)' : '0 4px 6px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                        <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isDefaulter ? '#ef4444' : 'var(--primary-light)'}` }} />
                         <div>
                           <h4 
                             onClick={() => { setSelectedUser(user); }}
-                            style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.2rem', cursor: 'pointer', textDecoration: 'underline' }}
+                            style={{ fontSize: '1.2rem', color: isDefaulter ? '#b91c1c' : 'var(--primary)', marginBottom: '0.2rem', cursor: 'pointer', textDecoration: 'underline' }}
                             title="View Orders and Details"
                           >
                             {user.name}
@@ -305,18 +339,23 @@ const AdminDashboard = ({
                           </span>
                         </div>
                       </div>
-                      <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.4rem 0.8rem', borderRadius: '8px', fontWeight: 'bold' }}>
-                        Due: ₹{calculateUserDue(user)}
+                      <div style={{ background: isDefaulter ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: isDefaulter ? '#ef4444' : '#10b981', padding: '0.4rem 0.8rem', borderRadius: '8px', fontWeight: 'bold' }}>
+                        Due: ₹{due}
                       </div>
                     </div>
+                    {isDefaulter && (
+                      <div style={{ background: '#ef4444', color: 'white', fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '6px', display: 'inline-flex', marginBottom: '1rem', fontWeight: 'bold' }}>
+                        ⚠️ {due > 1500 ? 'High Outstanding Due' : 'Payment Overdue (>30 Days)'}
+                      </div>
+                    )}
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.5rem', background: 'var(--background)', padding: '1rem', borderRadius: '12px' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)', alignItems: 'center', flexWrap: 'wrap' }}>
                         <strong style={{ minWidth: '70px' }}>Location:</strong> 
                         <span>{user.location || 'N/A'}</span>
-                        {user.coordinates && (
+                        {user.location && (
                           <a 
-                            href={`https://www.google.com/maps?q=${user.coordinates.lat},${user.coordinates.lng}`} 
+                            href={user.coordinates ? `https://www.google.com/maps?q=${user.coordinates.lat},${user.coordinates.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(user.location + ', Biaora')}`} 
                             target="_blank" 
                             rel="noreferrer"
                             style={{ marginLeft: 'auto', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold' }}
@@ -345,7 +384,8 @@ const AdminDashboard = ({
                       <Trash2 size={18} /> Delete Account
                     </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
