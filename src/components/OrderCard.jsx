@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format, isBefore, startOfDay, addDays, isAfter, isSameDay } from 'date-fns';
-import { Minus, Plus, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, ArrowRight, Trash2 } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 const OrderCard = ({ 
@@ -33,8 +33,14 @@ const OrderCard = ({
 
   const isPast1130AM = now.getHours() > 11 || (now.getHours() === 11 && now.getMinutes() >= 30);
   const isLockedToday = isTodayDate && isPast1130AM;
+  const isPast7AM = now.getHours() >= 7;
+  const isDecreaseLocked = isTodayDate && isPast7AM;
+  
   const isApproved = currentOrder?.status === 'approved';
   const isOrderable = !isPastDate && !isLockedToday && !isApproved && !isFutureBeyondTomorrow && !isOnVacation;
+
+  const hasExistingOrder = (currentOrder?.milk > 0) || (currentOrder?.ghee > 0) || (currentOrder?.chach > 0) || (currentOrder?.paneer > 0) || (currentOrder?.curd > 0);
+  const canDelete = isOrderable && hasExistingOrder && !isDecreaseLocked;
 
   const [localOrder, setLocalOrder] = useState({
     milk: currentOrder?.milk || 0,
@@ -64,6 +70,10 @@ const OrderCard = ({
 
   const updateLocalQty = (id, val) => {
     if (!isOrderable) return;
+    if (isDecreaseLocked) {
+      const existingQty = currentOrder?.[id] || 0;
+      if (val < existingQty) return;
+    }
     setLocalOrder(prev => ({ ...prev, [id]: val }));
   };
 
@@ -87,15 +97,40 @@ const OrderCard = ({
     onSaveOrder(selectedDate, orderToSave, true); // replaceMode = true
   };
 
+  const handleDelete = () => {
+    if (!canDelete) return;
+    if (window.confirm('Are you sure you want to cancel this entire order?')) {
+      const emptyOrder = { milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 };
+      onSaveOrder(selectedDate, emptyOrder, true);
+    }
+  };
+
   return (
     <div style={{ background: 'white', borderRadius: '16px', border: '1px solid var(--border)', overflow: 'hidden', marginBottom: '1.5rem' }}>
       <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border)' }}>
-        <h3 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <ShoppingBag size={20} color="var(--text-primary)" /> Select Items
-        </h3>
-        <p style={{ margin: '0.2rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-          {isTomorrowDate ? "Add items for tomorrow's delivery" : isTodayDate ? "Add items for today's delivery" : `Orders for ${format(selectedDate, 'do MMM yyyy')}`}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShoppingBag size={20} color="var(--text-primary)" /> Select Items
+            </h3>
+            <p style={{ margin: '0.2rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              {isTomorrowDate ? "Add items for tomorrow's delivery" : isTodayDate ? "Add items for today's delivery" : `Orders for ${format(selectedDate, 'do MMM yyyy')}`}
+            </p>
+            {isDecreaseLocked && isOrderable && (
+              <span style={{ display: 'inline-block', marginTop: '0.5rem', background: '#fef3c7', color: '#92400e', fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: 'bold' }}>
+                Past 7 AM: Decreasing items locked
+              </span>
+            )}
+          </div>
+          {canDelete && (
+            <button 
+              onClick={handleDelete}
+              style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}
+            >
+              <Trash2 size={14} /> Cancel Order
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="products-grid">
@@ -128,7 +163,7 @@ const OrderCard = ({
                       <button 
                         className="qty-btn" 
                         onClick={() => updateLocalQty(p.id, Math.max(0, qty - p.step))}
-                        disabled={!isOrderable}
+                        disabled={!isOrderable || (isDecreaseLocked && qty <= (currentOrder?.[p.id] || 0))}
                       >
                         <Minus size={16} />
                       </button>

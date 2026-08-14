@@ -11,8 +11,13 @@ const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
   const dateKey = format(targetDate, 'yyyy-MM-dd');
   
   const existingOrder = currentOrders[dateKey] || {};
-  const [milkQty, setMilkQty] = useState(existingOrder.milk || 1); // Default to 1 litre if they have 0
+  const existingMilk = existingOrder.milk || 0;
+  const [milkQty, setMilkQty] = useState(existingMilk || 1); // Default to 1 litre if they have 0
   const [isSaved, setIsSaved] = useState(false);
+  
+  const isTodayDate = format(targetDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+  const isPast7AM = now.getHours() >= 7;
+  const isDecreaseLocked = isTodayDate && isPast7AM;
 
   const handleConfirm = () => {
     // Keep existing items, just update milk
@@ -61,10 +66,11 @@ const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
                 <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--secondary)' }}>₹{prices.milk} / L</span>
               </div>
               
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
                 <button 
                   onClick={() => setMilkQty(Math.max(0, milkQty - 1))}
-                  style={{ width: '50px', height: '50px', borderRadius: '16px', background: '#f1f5f9', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-primary)' }}
+                  style={{ width: '50px', height: '50px', borderRadius: '16px', background: '#f1f5f9', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (isDecreaseLocked && milkQty <= existingMilk) ? 'not-allowed' : 'pointer', color: 'var(--text-primary)', opacity: (isDecreaseLocked && milkQty <= existingMilk) ? 0.5 : 1 }}
+                  disabled={isDecreaseLocked && milkQty <= existingMilk}
                 >
                   <Minus size={24} />
                 </button>
@@ -78,6 +84,12 @@ const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
                   <Plus size={24} />
                 </button>
               </div>
+
+              {isDecreaseLocked && existingMilk > 0 && (
+                <div style={{ textAlign: 'center', color: '#dc2626', fontSize: '0.8rem', marginBottom: '1rem', fontWeight: 'bold' }}>
+                  Past 7 AM: Cannot reduce existing quantity.
+                </div>
+              )}
 
               <button 
                 onClick={handleConfirm}
