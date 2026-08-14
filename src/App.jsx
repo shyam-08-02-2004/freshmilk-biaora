@@ -32,6 +32,7 @@ function useFirestoreSync(docName, initialState) {
      const cached = localStorage.getItem(`biaora_${docName}`);
      return cached ? JSON.parse(cached) : initialState;
   });
+  const [isLoaded, setIsLoaded] = useState(() => !!localStorage.getItem(`biaora_${docName}`));
 
   const isRemote = useRef(false);
   const isFirstRender = useRef(true);
@@ -43,8 +44,10 @@ function useFirestoreSync(docName, initialState) {
         const remoteData = docSnap.data().data;
         setState(remoteData);
         localStorage.setItem(`biaora_${docName}`, JSON.stringify(remoteData));
+        setIsLoaded(true);
       } else {
         setDoc(doc(db, "store", docName), { data: state });
+        setIsLoaded(true);
       }
     });
     return () => unsub();
@@ -63,7 +66,7 @@ function useFirestoreSync(docName, initialState) {
     setDoc(doc(db, "store", docName), { data: state });
   }, [state, docName]);
 
-  return [state, setState];
+  return [state, setState, isLoaded];
 }
 
 
@@ -87,7 +90,7 @@ function App() {
   
   const [isLoggedIn, setIsLoggedIn] = useState(() => JSON.parse(localStorage.getItem('biaora_isLoggedIn')) || false);
   const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('biaora_currentUser')) || null);
-  const [registeredUsers, setRegisteredUsers] = useFirestoreSync('registeredUsers', []);
+  const [registeredUsers, setRegisteredUsers, usersLoaded] = useFirestoreSync('registeredUsers', []);
   const [profileRequests, setProfileRequests] = useFirestoreSync('profileRequests', {});
   const [paymentRequests, setPaymentRequests] = useFirestoreSync('paymentRequests', {});
   const [globalPayments, setGlobalPayments] = useFirestoreSync('globalPayments', {});
@@ -206,14 +209,14 @@ function App() {
 
   // Auto-logout if user is deleted by admin
   useEffect(() => {
-    if (isLoggedIn && currentUser && currentUser.role !== 'admin') {
+    if (isLoggedIn && currentUser && currentUser.role !== 'admin' && usersLoaded) {
       const stillExists = registeredUsers.some(u => u.mobile === currentUser.mobile);
-      if (!stillExists && registeredUsers.length > 0) {
+      if (!stillExists) {
         handleLogout();
         alert("Aapka account Admin dwara delete ya block kar diya gaya hai. Kripya Admin se sampark karein.");
       }
     }
-  }, [registeredUsers, isLoggedIn, currentUser]);
+  }, [registeredUsers, isLoggedIn, currentUser, usersLoaded]);
 
   const handleProfileRequest = (mobile, updates) => {
     setProfileRequests(prev => ({ ...prev, [mobile]: updates }));
