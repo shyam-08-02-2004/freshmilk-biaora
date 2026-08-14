@@ -161,6 +161,8 @@ function App() {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setIsProfileOpen(false);
+    localStorage.removeItem('biaora_isLoggedIn');
+    localStorage.removeItem('biaora_currentUser');
   };
 
   const handleVacationUpdate = (startDate, endDate) => {
