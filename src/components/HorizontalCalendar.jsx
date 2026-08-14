@@ -12,6 +12,7 @@ const HorizontalCalendar = ({
   const today = startOfDay(new Date());
   const tomorrow = addDays(today, 1);
   const scrollRef = useRef(null);
+  const dateInputRef = useRef(null);
 
   // Track the month currently being viewed in the calendar strip
   const [viewMonth, setViewMonth] = useState(startOfMonth(selectedDate));
@@ -46,19 +47,35 @@ const HorizontalCalendar = ({
     if (onDayClick) onDayClick(newDate);
   };
 
+  const handleOpenPicker = () => {
+    try {
+      if (dateInputRef.current && typeof dateInputRef.current.showPicker === 'function') {
+        dateInputRef.current.showPicker();
+      } else if (dateInputRef.current) {
+        dateInputRef.current.focus();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <div style={{ marginBottom: '1.5rem', background: 'white', padding: '1.25rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h3 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <CalendarIcon size={20} color="var(--primary)" /> Delivery Date
         </h3>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', color: 'var(--secondary)', fontWeight: 600, fontSize: '0.9rem', gap: '0.2rem', cursor: 'pointer', background: '#f0fdf4', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
+        <div 
+          onClick={handleOpenPicker}
+          style={{ position: 'relative', display: 'flex', alignItems: 'center', color: 'var(--secondary)', fontWeight: 600, fontSize: '0.9rem', gap: '0.2rem', cursor: 'pointer', background: '#f0fdf4', padding: '0.4rem 0.8rem', borderRadius: '8px' }}
+        >
           {format(viewMonth, 'MMMM yyyy')} <ChevronRight size={16} />
           <input 
+            ref={dateInputRef}
             type="date" 
             value={format(selectedDate, 'yyyy-MM-dd')}
             onChange={handleDateChange}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+            style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0, opacity: 0, border: 'none', padding: 0, margin: 0 }}
           />
         </div>
       </div>
