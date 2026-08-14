@@ -83,6 +83,9 @@ function App() {
   const [globalPayments, setGlobalPayments] = useFirestoreSync('globalPayments', {});
   const [adminLogs, setAdminLogs] = useFirestoreSync('adminLogs', []);
   const [monthlyOverrides, setMonthlyOverrides] = useFirestoreSync('monthlyOverrides', {});
+  const [globalExpenses, setGlobalExpenses] = useFirestoreSync('globalExpenses', []);
+  const [broadcasts, setBroadcasts] = useFirestoreSync('broadcasts', []);
+
 
   const adminTotalReceived = useMemo(() => {
     let total = 0;
@@ -125,6 +128,20 @@ function App() {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setIsProfileOpen(false);
+  };
+
+  const handleVacationUpdate = (startDate, endDate) => {
+    if (!currentUser) return;
+    
+    // Update currentUser local state
+    const updatedUser = { ...currentUser, vacationStart: startDate, vacationEnd: endDate };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('biaora_currentUser', JSON.stringify(updatedUser));
+    
+    // Update registeredUsers global state
+    setRegisteredUsers(prev => prev.map(u => u.mobile === currentUser.mobile ? updatedUser : u));
+    
+    alert('Vacation mode updated successfully!');
   };
 
   // Inactivity Auto-Logout (10 minutes)
@@ -469,10 +486,22 @@ function App() {
             adminLogs={adminLogs}
             monthlyOverrides={monthlyOverrides}
             setMonthlyOverrides={setMonthlyOverrides}
+            broadcasts={broadcasts}
+            setBroadcasts={setBroadcasts}
+            globalExpenses={globalExpenses}
+            setGlobalExpenses={setGlobalExpenses}
           />
         </main>
         {isProfileOpen && (
-          <ProfileModal onClose={() => setIsProfileOpen(false)} currentUser={currentUser} onLogout={handleLogout} onProfileRequest={handleProfileRequest} profileRequestStatus={profileRequests[currentUser?.mobile]} onUpdateAvatar={handleUpdateAvatar} />
+          <ProfileModal 
+            onClose={() => setIsProfileOpen(false)} 
+            currentUser={currentUser} 
+            onLogout={handleLogout} 
+            onProfileRequest={handleProfileRequest} 
+            profileRequestStatus={profileRequests[currentUser?.mobile]} 
+            onUpdateAvatar={handleUpdateAvatar}
+            onVacationUpdate={handleVacationUpdate}
+          />
         )}
         {isAdminRevenueOpen && (
           <AdminRevenueModal 
@@ -506,6 +535,7 @@ function App() {
             onSaveOrder={handleSaveDayOrder}
             onClearOrder={handleClearDayOrder}
             prices={PRICES}
+            currentUser={currentUser}
           />
         </div>
         
@@ -532,7 +562,15 @@ function App() {
       )}
 
       {isProfileOpen && (
-        <ProfileModal onClose={() => setIsProfileOpen(false)} currentUser={currentUser} onLogout={handleLogout} onProfileRequest={handleProfileRequest} profileRequestStatus={profileRequests[currentUser?.mobile]} onUpdateAvatar={handleUpdateAvatar} />
+        <ProfileModal 
+          onClose={() => setIsProfileOpen(false)} 
+          currentUser={currentUser} 
+          onLogout={handleLogout} 
+          onProfileRequest={handleProfileRequest} 
+          profileRequestStatus={profileRequests[currentUser?.mobile]} 
+          onUpdateAvatar={handleUpdateAvatar} 
+          onVacationUpdate={handleVacationUpdate} 
+        />
       )}
 
       {isAdminContactOpen && (

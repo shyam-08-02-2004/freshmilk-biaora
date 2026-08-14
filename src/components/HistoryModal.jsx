@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { X, Receipt, CheckCircle, Clock } from 'lucide-react';
+import { X, Receipt, CheckCircle, Clock, Download } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, selectedDate }) => {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'payments'
@@ -25,12 +27,56 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
   return (
     <div className="modal-overlay" onClick={(e) => e.target.classList.contains('modal-overlay') && onClose()}>
       <div className="modal-content">
-        <div className="modal-header" style={{ paddingBottom: '0.5rem', borderBottom: 'none' }}>
+        <div className="modal-header" style={{ paddingBottom: '0.5rem', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h2 style={{ margin: 0 }}>My History</h2>
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '600' }}>{currentMonthLabel}</p>
           </div>
-          <button className="close-btn" onClick={onClose}><X size={20} /></button>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <button 
+              onClick={() => {
+                const doc = new jsPDF();
+                doc.setFontSize(18);
+                doc.text('FreshMilk Biaora - Monthly Bill', 14, 22);
+                doc.setFontSize(11);
+                doc.text(`Month: ${currentMonthLabel}`, 14, 30);
+                
+                const tableData = [];
+                let totalBill = 0;
+
+                sortedDates.forEach(dateStr => {
+                  const order = orders[dateStr];
+                  if (order.status === 'approved') {
+                    const dayTotal = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach;
+                    totalBill += dayTotal;
+                    tableData.push([
+                      format(new Date(dateStr), 'dd MMM yyyy'),
+                      order.milk || 0,
+                      order.ghee || 0,
+                      order.chach || 0,
+                      `Rs. ${dayTotal}`
+                    ]);
+                  }
+                });
+
+                doc.autoTable({
+                  startY: 40,
+                  head: [['Date', 'Milk (L)', 'Ghee (Kg)', 'Chach (L)', 'Daily Total']],
+                  body: tableData,
+                  foot: [['', '', '', 'Total Bill:', `Rs. ${totalBill}`]],
+                  theme: 'striped',
+                  headStyles: { fillColor: [16, 185, 129] },
+                  footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' }
+                });
+
+                doc.save(`Milk_Bill_${currentMonthStr}.pdf`);
+              }}
+              style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', padding: '0.5rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
+            >
+              <Download size={16} /> Bill
+            </button>
+            <button className="close-btn" onClick={onClose}><X size={20} /></button>
+          </div>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', padding: '0 1.5rem 1rem', borderBottom: '1px solid var(--border)' }}>

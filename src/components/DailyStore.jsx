@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format, isBefore, startOfDay, addDays, isAfter, isSameDay } from 'date-fns';
 import { Minus, Plus, CalendarCheck, ReceiptText, ShieldCheck, X, ShoppingBag, Pencil } from 'lucide-react';
 
-const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, prices }) => {
+const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, prices, currentUser }) => {
   const today = startOfDay(new Date());
   const now = new Date();
   const tomorrow = addDays(today, 1);
@@ -12,6 +12,18 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
   const isTodayDate = isSameDay(selectedDate, today);
   const isTomorrowDate = isSameDay(selectedDate, tomorrow);
 
+  // Vacation Mode check
+  let isOnVacation = false;
+  if (currentUser?.vacationStart && currentUser?.vacationEnd) {
+    const vStart = startOfDay(new Date(currentUser.vacationStart));
+    const vEnd = startOfDay(new Date(currentUser.vacationEnd));
+    const sDate = startOfDay(selectedDate);
+    if ((isAfter(sDate, vStart) || isSameDay(sDate, vStart)) && 
+        (isBefore(sDate, vEnd) || isSameDay(sDate, vEnd))) {
+      isOnVacation = true;
+    }
+  }
+
   // Today locked after 8 AM today
   // Tomorrow locked after 8 AM tomorrow (i.e., never locked today for tomorrow)
   const isPast8AM = now.getHours() >= 8;
@@ -20,8 +32,9 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
   const isTomorrowLocked = false;
   
   const isApproved = currentOrder?.status === 'approved';
-  const isOrderable = !isPastDate && !isApproved && !isFutureBeyondTomorrow && !isTodayLocked && !isTomorrowLocked;
+  const isOrderable = !isPastDate && !isApproved && !isFutureBeyondTomorrow && !isTodayLocked && !isTomorrowLocked && !isOnVacation;
   const hasOrder = (currentOrder.milk > 0 || currentOrder.ghee > 0 || currentOrder.chach > 0);
+
   
   const [localOrder, setLocalOrder] = useState({ milk: 0, ghee: 0, chach: 0 });
   const [isAddingMore, setIsAddingMore] = useState(false);
@@ -153,6 +166,11 @@ const DailyStore = ({ selectedDate, currentOrder, onSaveOrder, onClearOrder, pri
           </div>
         ) : (
           <div style={{ marginTop: '1.5rem', padding: '0.75rem 1rem', background: 'var(--surface)', borderRadius: '12px', border: '1px dashed var(--border)', textAlign: 'center' }}>
+            {isOnVacation && (
+              <div style={{ padding: '0.5rem', marginBottom: '0.5rem', background: '#e0f2fe', borderRadius: '8px', border: '1px solid #bae6fd', color: '#0369a1', fontSize: '0.8rem' }}>
+                🏖️ Vacation mode is active for this date.
+              </div>
+            )}
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               {isApproved ? '🔒 Order is approved and locked'
                 : isPastDate ? '📅 Past date — cannot modify'

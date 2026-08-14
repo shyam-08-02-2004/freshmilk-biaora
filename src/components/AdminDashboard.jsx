@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import AdminHistoryModal from './AdminHistoryModal';
+import AdminDeliverySheet from './AdminDeliverySheet';
+import AdminBroadcasts from './AdminBroadcasts';
+import AdminExpenses from './AdminExpenses';
 
-const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides }) => {
+const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'orders' | 'profiles' | 'payments'
+  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses'
+
   const [editingOrderDate, setEditingOrderDate] = useState(null);
   const [editOrderValues, setEditOrderValues] = useState({ milk: 0, ghee: 0, chach: 0 });
   const [filterMonth, setFilterMonth] = useState(format(new Date(), 'yyyy-MM'));
@@ -145,6 +149,24 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                 {Object.keys(paymentRequests).length}
               </span>
             )}
+          </button>
+          <button 
+            onClick={() => setActiveTab('delivery')}
+            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'delivery' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'delivery' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            Delivery Sheet
+          </button>
+          <button 
+            onClick={() => setActiveTab('broadcasts')}
+            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'broadcasts' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'broadcasts' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            Broadcasts
+          </button>
+          <button 
+            onClick={() => setActiveTab('expenses')}
+            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'expenses' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'expenses' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            Expenses
           </button>
         </div>
       </div>
@@ -560,6 +582,16 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                               <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ef4444' }}>₹{mRemain}</p>
                             </div>
                             
+                            <a 
+                              href={`https://wa.me/91${selectedUser.mobile}?text=${encodeURIComponent(`Hello ${selectedUser.name},\n\nThis is your FreshMilk Biaora bill for *${format(new Date(filterMonth + '-01'), 'MMMM yyyy')}*.\n\nTotal Bill: ₹${mTotal}\nPaid: ₹${mPaid}\n*Remaining Due: ₹${mRemain}*\n\nPlease pay the pending amount.`)}`} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              style={{ position: 'absolute', top: 0, right: '60px', padding: '0.4rem', background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 'bold' }}
+                              title="Send Bill via WhatsApp"
+                            >
+                              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                              WhatsApp
+                            </a>
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -745,6 +777,28 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                   </div>
           </div>
         </div>
+      )}
+      
+      {activeTab === 'delivery' && (
+        <AdminDeliverySheet 
+          registeredUsers={registeredUsers} 
+          globalOrders={globalOrders} 
+        />
+      )}
+      
+      {activeTab === 'broadcasts' && (
+        <AdminBroadcasts 
+          broadcasts={broadcasts} 
+          setBroadcasts={setBroadcasts} 
+        />
+      )}
+      
+      {activeTab === 'expenses' && (
+        <AdminExpenses 
+          globalExpenses={globalExpenses} 
+          setGlobalExpenses={setGlobalExpenses} 
+          globalPayments={globalPayments}
+        />
       )}
 </div>
   );
