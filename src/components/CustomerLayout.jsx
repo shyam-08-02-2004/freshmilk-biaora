@@ -11,7 +11,7 @@ const CustomerLayout = ({
   onOpenPayment,
   onOpenProfile
 }) => {
-  const { t } = useLanguage();
+  const { t, language, toggleLanguage } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleNavClick = (tab) => {
@@ -39,6 +39,12 @@ const CustomerLayout = ({
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button 
+            onClick={toggleLanguage}
+            style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.3rem 0.5rem', fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            {language === 'en' ? 'अ/A' : 'A/अ'}
+          </button>
           <button className="icon-btn" style={{ position: 'relative' }}>
             <Bell size={22} color="var(--text-primary)" />
             <span style={{ position: 'absolute', top: '0px', right: '2px', width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%' }}></span>
