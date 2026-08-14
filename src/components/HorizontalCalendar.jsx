@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { format, addDays, subDays, isSameDay, isBefore, startOfDay, isAfter } from 'date-fns';
-import { CheckCircle, Circle, ChevronRight } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { format, addDays, subDays, isSameDay, isBefore, startOfDay, isAfter, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, parse } from 'date-fns';
+import { CheckCircle, Circle, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
 const HorizontalCalendar = ({ 
   selectedDate, 
@@ -13,8 +13,21 @@ const HorizontalCalendar = ({
   const tomorrow = addDays(today, 1);
   const scrollRef = useRef(null);
 
-  // Generate an array of dates to show: 7 days in past, 7 days in future
-  const dates = Array.from({ length: 15 }).map((_, i) => addDays(subDays(today, 3), i));
+  // Track the month currently being viewed in the calendar strip
+  const [viewMonth, setViewMonth] = useState(startOfMonth(selectedDate));
+
+  // Update viewMonth if selectedDate changes to a different month
+  useEffect(() => {
+    if (!isSameMonth(selectedDate, viewMonth)) {
+      setViewMonth(startOfMonth(selectedDate));
+    }
+  }, [selectedDate]);
+
+  // Generate all days for the currently viewed month
+  const dates = eachDayOfInterval({
+    start: startOfMonth(viewMonth),
+    end: endOfMonth(viewMonth)
+  });
 
   useEffect(() => {
     // Scroll to the selected date element
@@ -24,16 +37,28 @@ const HorizontalCalendar = ({
         selectedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       }
     }
-  }, [selectedDate]);
+  }, [selectedDate, viewMonth]);
+
+  const handleMonthChange = (e) => {
+    if (!e.target.value) return;
+    const newMonthDate = parse(e.target.value, 'yyyy-MM', new Date());
+    setViewMonth(startOfMonth(newMonthDate));
+  };
 
   return (
     <div style={{ marginBottom: '1.5rem', background: 'white', padding: '1.25rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h3 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.2rem' }}>📅</span> Select Delivery Date
+          <CalendarIcon size={20} color="var(--primary)" /> Delivery Date
         </h3>
-        <div style={{ display: 'flex', alignItems: 'center', color: 'var(--secondary)', fontWeight: 600, fontSize: '0.9rem', gap: '0.2rem', cursor: 'pointer' }}>
-          {format(selectedDate, 'MMMM yyyy')} <ChevronRight size={16} />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', color: 'var(--secondary)', fontWeight: 600, fontSize: '0.9rem', gap: '0.2rem', cursor: 'pointer', background: '#f0fdf4', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>
+          {format(viewMonth, 'MMMM yyyy')} <ChevronRight size={16} />
+          <input 
+            type="month" 
+            value={format(viewMonth, 'yyyy-MM')}
+            onChange={handleMonthChange}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+          />
         </div>
       </div>
 
