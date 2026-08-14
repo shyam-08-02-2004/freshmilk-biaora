@@ -169,6 +169,17 @@ function App() {
     };
   }, [isLoggedIn]);
 
+  // Auto-logout if user is deleted by admin
+  useEffect(() => {
+    if (isLoggedIn && currentUser && currentUser.role !== 'admin') {
+      const stillExists = registeredUsers.some(u => u.mobile === currentUser.mobile);
+      if (!stillExists && registeredUsers.length > 0) {
+        handleLogout();
+        alert("Aapka account Admin dwara delete ya block kar diya gaya hai. Kripya Admin se sampark karein.");
+      }
+    }
+  }, [registeredUsers, isLoggedIn, currentUser]);
+
   const handleProfileRequest = (mobile, updates) => {
     setProfileRequests(prev => ({ ...prev, [mobile]: updates }));
   };
