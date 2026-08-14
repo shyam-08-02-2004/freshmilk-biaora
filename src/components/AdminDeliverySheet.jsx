@@ -114,6 +114,67 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
             .delivery-card {
               padding: 1rem !important;
             }
+            /* Table to Card Mobile View */
+            .responsive-table, .responsive-table thead, .responsive-table tbody, .responsive-table th, .responsive-table td, .responsive-table tr {
+              display: block;
+            }
+            .responsive-table thead tr {
+              position: absolute;
+              top: -9999px;
+              left: -9999px;
+            }
+            .responsive-table tr {
+              border: 1px solid var(--border) !important;
+              border-radius: 12px;
+              margin-bottom: 1.5rem;
+              padding: 0.5rem;
+              background: #f8fafc;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+            .responsive-table td {
+              border: none !important;
+              border-bottom: 1px dashed var(--border) !important;
+              position: relative;
+              padding: 0.8rem 1rem 0.8rem 50% !important;
+              text-align: right !important;
+              display: flex;
+              justify-content: flex-end;
+              align-items: center;
+              min-height: 40px;
+            }
+            .responsive-table td:last-child {
+              border-bottom: 0 !important;
+            }
+            .responsive-table td::before {
+              position: absolute;
+              top: 50%;
+              left: 1rem;
+              width: 45%;
+              padding-right: 10px;
+              white-space: nowrap;
+              text-align: left;
+              font-weight: 600;
+              color: var(--text-secondary);
+              transform: translateY(-50%);
+            }
+            .responsive-table td:nth-of-type(1)::before { content: "Customer Name"; }
+            .responsive-table td:nth-of-type(2)::before { content: "Location / Flat"; }
+            .responsive-table td:nth-of-type(3)::before { content: "Milk (L)"; }
+            .responsive-table td:nth-of-type(4)::before { content: "Ghee (Kg)"; }
+            .responsive-table td:nth-of-type(5)::before { content: "Chach (L)"; }
+            .responsive-table td:nth-of-type(6)::before { content: "Extras"; }
+            .responsive-table td:nth-of-type(7)::before { content: "Status"; }
+            
+            .responsive-table {
+              min-width: 100% !important;
+            }
+            .table-responsive {
+              overflow-x: hidden !important;
+            }
+            /* Adjust content to right on mobile */
+            .responsive-table td > div {
+              justify-content: flex-end;
+            }
           }
         `}
       </style>
@@ -127,7 +188,7 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
           <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No deliveries scheduled for this date.</p>
         ) : (
           <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
-            <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', marginTop: '1rem' }}>
+            <table className="responsive-table" style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', marginTop: '1rem' }}>
               <thead>
               <tr style={{ background: 'var(--background)', textAlign: 'left' }}>
                 <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Customer Name</th>
