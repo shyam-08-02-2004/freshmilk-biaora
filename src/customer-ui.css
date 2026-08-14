@@ -190,6 +190,7 @@
   overflow-y: auto;
   padding: 2rem;
   background: var(--background);
+  min-width: 0;
 }
 
 @media (max-width: 768px) {
@@ -204,6 +205,11 @@
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
+  width: 100%;
+}
+
+.left-column, .right-column {
+  min-width: 0;
 }
 
 @media (max-width: 1024px) {
