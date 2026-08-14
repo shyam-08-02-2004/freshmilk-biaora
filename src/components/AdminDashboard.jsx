@@ -193,15 +193,15 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
         
         <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
         {activeTab === 'users' && (
-          <div style={{ padding: '2rem' }}>
+          <div style={{ padding: '1rem' }}>
             <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>All Registered Customers ({registeredUsers.length})</h3>
             {registeredUsers.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                 <Users size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
                 <p>No registered users yet.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+              <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' }}>
                 {registeredUsers.map(user => (
                   <div key={user.mobile} style={{ background: 'var(--surface)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -302,7 +302,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                 <p>No pending profile requests.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+              <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' }}>
                 {Object.entries(profileRequests).map(([mobile, updates]) => {
                   const user = registeredUsers.find(u => u.mobile === mobile);
                   return (
