@@ -1,137 +1,752 @@
 import React, { useState } from 'react';
-import { dummyUsers } from '../data/dummyUsers';
-import { User, Phone, MapPin, Home, Receipt, CalendarCheck, ChevronRight } from 'lucide-react';
+import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
+import AdminHistoryModal from './AdminHistoryModal';
 
-const AdminDashboard = ({ prices }) => {
-  const [selectedUserId, setSelectedUserId] = useState(dummyUsers[0].id);
-  const [showMobileList, setShowMobileList] = useState(true);
+const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides }) => {
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showAllOrders, setShowAllOrders] = useState(false);
+  const [showAllPayments, setShowAllPayments] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'orders' | 'profiles' | 'payments'
+  const [editingOrderDate, setEditingOrderDate] = useState(null);
+  const [editOrderValues, setEditOrderValues] = useState({ milk: 0, ghee: 0, chach: 0 });
+  const [filterMonth, setFilterMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [paymentTabFilterMonth, setPaymentTabFilterMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [expandedPaymentUsers, setExpandedPaymentUsers] = useState({});
+  const [isEditingSummary, setIsEditingSummary] = useState(false);
+  const [editSummaryValues, setEditSummaryValues] = useState({ mTotal: 0, mPaid: 0, mRemain: 0 });
 
-  const selectedUser = dummyUsers.find(u => u.id === selectedUserId);
-
-  const handleSelectUser = (id) => {
-    setSelectedUserId(id);
-    if (window.innerWidth <= 1024) {
-      setShowMobileList(false);
-    }
+  const togglePaymentUser = (mobile) => {
+    setExpandedPaymentUsers(prev => ({...prev, [mobile]: !prev[mobile]}));
   };
 
-  const calculateTotalBill = (userOrders) => {
-    let total = 0;
+  const startEditOrder = (date, order) => {
+    setEditingOrderDate(date);
+    setEditOrderValues({ milk: order.milk || 0, ghee: order.ghee || 0, chach: order.chach || 0 });
+  };
+
+  const saveEditOrder = (userMobile, date) => {
+    onEditUserOrder(userMobile, date, editOrderValues);
+    setEditingOrderDate(null);
+  };
+
+  const calculateUserDue = (user) => {
+    let due = 0;
+    const userOrders = globalOrders[user.mobile] || {};
     Object.values(userOrders).forEach(order => {
-      total += (order.milk || 0) * prices.milk;
-      total += (order.ghee || 0) * prices.ghee;
-      total += (order.chach || 0) * prices.chach;
+      if (order.status === 'approved') {
+        due += (order.milk || 0) * prices.milk;
+        due += (order.ghee || 0) * prices.ghee;
+        due += (order.chach || 0) * prices.chach;
+      }
     });
-    return total;
+    
+    let paid = 0;
+    const userPayments = globalPayments[user.mobile] || [];
+    userPayments.forEach(payment => {
+      if (payment.status === 'approved') {
+        paid += parseFloat(payment.amount);
+      }
+    });
+    
+    return Math.max(0, due - paid);
   };
+
+  const calculateMonthlyUserSummary = (userMobile, monthStr) => {
+    let mTotal = 0;
+    let mPaid = 0;
+    
+    const userOrders = globalOrders[userMobile] || {};
+    Object.entries(userOrders).forEach(([dateStr, order]) => {
+      if (dateStr.startsWith(monthStr) && order.status === 'approved') {
+        mTotal += (order.milk || 0) * prices.milk;
+        mTotal += (order.ghee || 0) * prices.ghee;
+        mTotal += (order.chach || 0) * prices.chach;
+      }
+    });
+
+    const userPayments = globalPayments[userMobile] || [];
+    userPayments.forEach(payment => {
+      const pMonth = payment.paymentMonth || payment.timestamp.substring(0, 7);
+      if (payment.status === 'approved' && pMonth === monthStr) {
+        mPaid += parseFloat(payment.amount);
+      }
+    });
+
+    const adj = monthlyOverrides?.[userMobile]?.[monthStr];
+    if (adj) {
+      if (adj.mTotal !== undefined && adj.mTotalAdj === undefined) {
+        return { mTotal: adj.mTotal, mPaid: adj.mPaid, mRemain: adj.mRemain };
+      }
+      mTotal += (adj.mTotalAdj || 0);
+      mPaid += (adj.mPaidAdj || 0);
+    }
+
+    return { mTotal, mPaid, mRemain: Math.max(0, mTotal - mPaid) };
+  };
+
+  const pendingOrdersCount = Object.values(globalOrders || {}).reduce((total, userOrders) => {
+    return total + Object.values(userOrders || {}).filter(order => order.status === 'pending').length;
+  }, 0);
 
   return (
-    <div className="admin-container">
-      <div className={`admin-sidebar ${!showMobileList ? 'hide-on-mobile' : ''}`}>
-        <h2 style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <User size={24} color="var(--primary)" /> Customers
-        </h2>
-        <div className="user-list">
-          {dummyUsers.map(user => (
-            <div 
-              key={user.id} 
-              className={`user-list-item ${selectedUserId === user.id ? 'active' : ''}`}
-              onClick={() => handleSelectUser(user.id)}
-            >
-              <div className="user-avatar-small">
-                {user.name.charAt(0)}
-              </div>
-              <div className="user-info-lite">
-                <h3>{user.name}</h3>
-                <span>{user.mobile}</span>
-              </div>
-              <ChevronRight size={18} className="chevron" />
-            </div>
-          ))}
+    <div className="admin-dashboard">
+      <div className="admin-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <img src="/assets/admin_photo.jpg" alt="Admin Avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
+          <div>
+            <h2 style={{ fontSize: '1.4rem', margin: 0, color: 'var(--text-primary)' }}>Super Admin Panel</h2>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Welcome back, Shyam Dangi</p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button 
+            onClick={() => setIsHistoryOpen(true)}
+            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--primary)', background: 'var(--surface)', color: 'var(--primary)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', transition: 'all 0.2s' }}
+          >
+            <Clock size={16} /> History Log
+          </button>
+          <button 
+            onClick={() => setActiveTab('users')}
+            style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'users' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'users' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            All Customers
+          </button>
+          <button 
+            onClick={() => setActiveTab('orders')}
+            style={{ position: 'relative', padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'orders' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'orders' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            Manage Orders
+            {pendingOrdersCount > 0 && (
+              <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
+                {pendingOrdersCount}
+              </span>
+            )}
+          </button>
+          <button 
+            onClick={() => setActiveTab('profiles')}
+            style={{ position: 'relative', padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'profiles' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'profiles' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            Profile Requests
+            {Object.keys(profileRequests || {}).length > 0 && (
+              <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
+                {Object.keys(profileRequests).length}
+              </span>
+            )}
+          </button>
+          <button 
+            onClick={() => setActiveTab('payments')}
+            style={{ position: 'relative', padding: '0.6rem 1rem', borderRadius: '8px', border: 'none', background: activeTab === 'payments' ? 'var(--primary)' : 'var(--surface)', color: activeTab === 'payments' ? 'white' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            Payments
+            {Object.keys(paymentRequests || {}).length > 0 && (
+              <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)' }}>
+                {Object.keys(paymentRequests).length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
-      <div className={`admin-content ${showMobileList ? 'hide-on-mobile' : ''}`}>
-        {selectedUser ? (
-          <div className="user-detail-view">
-            <button 
-              className="back-btn-mobile" 
-              onClick={() => setShowMobileList(true)}
-            >
-              <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} /> Back to List
-            </button>
-            
-            <div className="detail-header">
-              <div className="avatar-large">{selectedUser.name.charAt(0)}</div>
-              <div>
-                <h2>{selectedUser.name}</h2>
-                <p className="mobile-badge"><Phone size={14} /> {selectedUser.mobile}</p>
+      <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
+        {activeTab === 'users' && (
+          <div style={{ padding: '2rem' }}>
+            <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>All Registered Customers ({registeredUsers.length})</h3>
+            {registeredUsers.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                <Users size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
+                <p>No registered users yet.</p>
               </div>
-            </div>
+            ) : (
+              <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                {registeredUsers.map(user => (
+                  <div key={user.mobile} style={{ background: 'var(--surface)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                        <div>
+                          <h4 
+                            onClick={() => { setSelectedUser(user); }}
+                            style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.2rem', cursor: 'pointer', textDecoration: 'underline' }}
+                            title="View Orders and Details"
+                          >
+                            {user.name}
+                          </h4>
+                          <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <Phone size={14} /> {user.mobile}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.4rem 0.8rem', borderRadius: '8px', fontWeight: 'bold' }}>
+                        Due: ₹{calculateUserDue(user)}
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.5rem', background: 'var(--background)', padding: '1rem', borderRadius: '12px' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        <strong style={{ minWidth: '70px' }}>Location:</strong> <span>{user.location || 'N/A'}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        <strong style={{ minWidth: '70px' }}>Flat:</strong> <span>{user.flat || 'N/A'}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        <strong style={{ minWidth: '70px' }}>Password:</strong> 
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><KeyRound size={12} /> {user.password}</span>
+                      </div>
+                    </div>
 
-            <div className="stats-row">
-              <div className="stat-card">
-                <div className="stat-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)' }}>
-                  <Receipt size={24} />
-                </div>
-                <div>
-                  <p>Total Due</p>
-                  <h3>₹{calculateTotalBill(selectedUser.orders)}</h3>
-                </div>
+                    <button 
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to permanently delete ${user.name}'s account and all their orders?`)) {
+                          onDeleteUser(user.mobile);
+                        }
+                      }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#fee2e2', color: '#ef4444', border: 'none', padding: '0.8rem', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+                    >
+                      <Trash2 size={18} /> Delete Account
+                    </button>
+                  </div>
+                ))}
               </div>
-              <div className="stat-card">
-                <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--secondary)' }}>
-                  <CalendarCheck size={24} />
-                </div>
-                <div>
-                  <p>Total Orders</p>
-                  <h3>{Object.keys(selectedUser.orders).length} Days</h3>
-                </div>
-              </div>
-            </div>
+            )}
+          </div>
+        )}
 
-            <div className="info-card">
-              <h3>Profile Details</h3>
-              <div className="info-row">
-                <MapPin size={18} /> <span>{selectedUser.location}</span>
-              </div>
-              <div className="info-row">
-                <Home size={18} /> <span>{selectedUser.flat}</span>
-              </div>
-            </div>
+        {activeTab === 'orders' ? (
+          <>
+            <div className="users-list">
+              <h3>Pending Order Requests</h3>
+              {(() => {
+                const pendingOrderUsers = registeredUsers.filter(user => {
+                  return Object.values(globalOrders[user.mobile] || {}).some(order => order.status === 'pending');
+                });
+                
+                if (pendingOrderUsers.length === 0) {
+                  return <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>No pending order requests.</p>;
+                }
 
-            <div className="info-card">
-              <h3>Order History</h3>
-              <div className="order-history-list">
-                {Object.entries(selectedUser.orders).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([dateStr, order]) => {
-                  const dayTotal = (order.milk * prices.milk) + (order.ghee * prices.ghee) + (order.chach * prices.chach);
+                return pendingOrderUsers.map(user => (
+                  <div 
+                    key={user.mobile}
+                    className={`user-card`}
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowAllOrders(false);
+                      setShowAllPayments(false);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}
+                  >
+                    <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                    <div className="user-info">
+                      <h4>{user.name}</h4>
+                      <p>{user.mobile}</p>
+                    </div>
+                    <div className="user-due">
+                      <span>₹{calculateUserDue(user)}</span>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </>
+        ) : activeTab === 'profiles' ? (
+          <div style={{ padding: '2rem' }}>
+            <h3 style={{ marginBottom: '1.5rem' }}>Pending Profile Update Requests</h3>
+            {Object.keys(profileRequests || {}).length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                <UserCheck size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
+                <p>No pending profile requests.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+                {Object.entries(profileRequests).map(([mobile, updates]) => {
+                  const user = registeredUsers.find(u => u.mobile === mobile);
                   return (
-                    <div key={dateStr} className="history-item">
-                      <div className="history-date">
-                        <strong>{format(new Date(dateStr), 'dd MMM')}</strong>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{format(new Date(dateStr), 'EEEE')}</span>
+                    <div 
+                      key={mobile} 
+                      onClick={() => {
+                        const foundUser = registeredUsers.find(u => u.mobile === mobile);
+                        if (foundUser) { setSelectedUser(foundUser); setShowAllOrders(false); setShowAllPayments(false); }
+                      }}
+                      style={{ background: 'var(--surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border)', cursor: 'pointer', transition: 'box-shadow 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                        <img src={user?.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                        <div>
+                          <h4 style={{ margin: 0, color: 'var(--primary)', fontSize: '1.1rem' }}>{user?.name || mobile}</h4>
+                          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0.2rem 0 0' }}>{mobile}</p>
+                        </div>
+                        <div style={{ marginLeft: 'auto', background: '#fef3c7', color: '#d97706', padding: '0.25rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold' }}>Pending</div>
                       </div>
-                      <div className="history-items">
-                        {order.milk > 0 && <span className="badge milk">{order.milk}L Milk</span>}
-                        {order.ghee > 0 && <span className="badge ghee">{order.ghee}kg Ghee</span>}
-                        {order.chach > 0 && <span className="badge chach">{order.chach}L Chach</span>}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1rem' }}>
+                        {updates.location !== undefined && updates.location !== user?.location && (
+                          <div style={{ padding: '0.8rem', background: 'var(--background)', borderRadius: '8px', borderLeft: '3px solid var(--primary)' }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.2rem' }}>Location Change</span>
+                            <s style={{ color: '#ef4444', marginRight: '0.5rem' }}>{user?.location}</s>
+                            <span style={{ color: '#10b981', fontWeight: 'bold' }}>{updates.location}</span>
+                          </div>
+                        )}
+                        {updates.flat !== undefined && updates.flat !== user?.flat && (
+                          <div style={{ padding: '0.8rem', background: 'var(--background)', borderRadius: '8px', borderLeft: '3px solid var(--primary)' }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.2rem' }}>Flat Change</span>
+                            <s style={{ color: '#ef4444', marginRight: '0.5rem' }}>{user?.flat}</s>
+                            <span style={{ color: '#10b981', fontWeight: 'bold' }}>{updates.flat}</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="history-price">₹{dayTotal}</div>
+                      
+                      <div style={{ display: 'flex', gap: '1rem' }} onClick={e => e.stopPropagation()}>
+                        <button 
+                          onClick={() => onApproveProfile(mobile)}
+                          style={{ flex: 1, padding: '0.8rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                          <CheckCircle size={16} /> Approve
+                        </button>
+                        <button 
+                          onClick={() => onRejectProfile(mobile)}
+                          style={{ flex: 1, padding: '0.8rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                          <XCircle size={16} /> Reject
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
-                {Object.keys(selectedUser.orders).length === 0 && (
-                  <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '1rem' }}>No orders found for this user.</p>
-                )}
               </div>
-            </div>
+            )}
           </div>
         ) : (
-          <div className="empty-state">Select a user to view details</div>
+          <div style={{ padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <h3>Payments Management</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>View pending requests and payment history</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <label style={{ fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '0.9rem' }}>Filter Month:</label>
+                <input 
+                  type="month" 
+                  value={paymentTabFilterMonth} 
+                  onChange={(e) => setPaymentTabFilterMonth(e.target.value)} 
+                  style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '1rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+                />
+              </div>
+            </div>
+
+            {(() => {
+              const usersWithPendingPayments = registeredUsers.filter(u => paymentRequests[u.mobile]);
+
+              if (usersWithPendingPayments.length === 0) {
+                return (
+                  <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                    <CheckCircle size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
+                    <p>No pending payment requests.</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {usersWithPendingPayments.map(user => {
+                    const req = paymentRequests[user.mobile];
+                    const isExpanded = expandedPaymentUsers[user.mobile];
+                    
+                    const monthlyPayments = (globalPayments[user.mobile] || [])
+                      .filter(p => {
+                        const pMonth = p.paymentMonth || p.timestamp.substring(0, 7);
+                        return pMonth === paymentTabFilterMonth;
+                      })
+                      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                    return (
+                      <div 
+                        key={user.mobile} 
+                        style={{ background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden' }}
+                      >
+                        {/* User Info Header */}
+                        <div 
+                          onClick={() => { setSelectedUser(user); setShowAllOrders(false); setShowAllPayments(false); }}
+                          style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', borderBottom: '1px solid var(--border)' }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                            <img src={user.avatar || "/assets/babu_logo.png"} alt="User" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} />
+                            <div>
+                              <h4 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '1rem' }}>{user.name}</h4>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{user.mobile}</span>
+                            </div>
+                          </div>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>View profile →</span>
+                        </div>
+
+                        {/* Pending Payment Request */}
+                        {req && (
+                          <div style={{ padding: '1rem', background: '#fffbeb' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.8rem' }}>
+                              <div style={{ flex: '1 1 200px' }}>
+                                <p style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '0.4rem' }}>⚠ Pending Payment</p>
+                                <p style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#b45309', marginBottom: '0.3rem' }}>₹{req.amount}</p>
+                                <p style={{ fontSize: '0.8rem', color: '#92400e' }}>UTR: {req.utr}</p>
+                                <p style={{ fontSize: '0.8rem', color: '#92400e' }}>For: {req.paymentMonth ? format(new Date(req.paymentMonth + '-01'), 'MMMM yyyy') : 'N/A'}</p>
+                                <p style={{ fontSize: '0.75rem', color: '#92400e', marginTop: '0.2rem' }}>{format(new Date(req.timestamp), 'dd MMM yyyy, hh:mm a')}</p>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, alignSelf: 'center' }}>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); if(window.confirm(`Approve payment of ₹${req.amount}?`)) onApprovePayment(user.mobile); }}
+                                  style={{ padding: '0.6rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem' }}
+                                >
+                                  <CheckCircle size={15} /> Approve
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); if(window.confirm('Delete this payment request?')) onRejectPayment(user.mobile); }}
+                                  style={{ padding: '0.6rem 1rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem' }}
+                                >
+                                  <Trash2 size={15} /> Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
         )}
       </div>
-    </div>
+
+      {isHistoryOpen && (
+        <AdminHistoryModal 
+          onClose={() => setIsHistoryOpen(false)}
+          adminLogs={adminLogs}
+        />
+      )}
+    
+      {/* FULL PAGE USER DETAILS MODAL */}
+      {selectedUser && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1000, background: 'var(--background)', overflowY: 'auto' }} onClick={() => setIsEditingSummary(false)}>
+          <div style={{ padding: '1rem', background: 'var(--surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', gap: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setSelectedUser(null); setShowAllOrders(false); setShowAllPayments(false); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--text-primary)' }}
+            >
+              <ArrowLeft size={24} /> Back
+            </button>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}>User Details</h2>
+          </div>
+          
+          <div style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem' }} onClick={(e) => { e.stopPropagation(); setShowAllOrders(false); setShowAllPayments(false); setIsEditingSummary(false); }}>
+<div className="detail-header" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.5rem', color: 'var(--text-primary)' }}>{selectedUser.name}'s Profile</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.4rem' }}>
+                          <strong>Location:</strong> {selectedUser.location} | <strong>Flat:</strong> {selectedUser.flat} | <KeyRound size={12} style={{ display: 'inline' }}/> <strong>Pass:</strong> {selectedUser.password}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this user?')) {
+                            onDeleteUser(selectedUser.mobile);
+                            setSelectedUser(null);
+                          }
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#fee2e2', color: '#ef4444', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+                      >
+                        <Trash2 size={16} /> Delete Account
+                      </button>
+                    </div>
+
+                    <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                        <label style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>Filter by Month:</label>
+                        <input 
+                          type="month" 
+                          value={filterMonth} 
+                          onChange={(e) => setFilterMonth(e.target.value)} 
+                          style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--primary-light)', outline: 'none', fontSize: '1rem' }}
+                        />
+                      </div>
+                      
+                      {(() => {
+                        const { mTotal, mPaid, mRemain } = calculateMonthlyUserSummary(selectedUser.mobile, filterMonth);
+                        
+                        if (isEditingSummary) {
+                          return (
+                            <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--primary)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                              <h4 style={{ margin: 0, color: 'var(--primary)' }}>Edit Monthly Summary</h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '1rem' }}>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Month Bill (₹)</label>
+                                  <input type="number" value={editSummaryValues.mTotal} onChange={e => setEditSummaryValues({...editSummaryValues, mTotal: Number(e.target.value)})} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', outline: 'none' }} />
+                                </div>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Paid (₹)</label>
+                                  <input type="number" value={editSummaryValues.mPaid} onChange={e => setEditSummaryValues({...editSummaryValues, mPaid: Number(e.target.value)})} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', outline: 'none' }} />
+                                </div>
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Remaining (₹)</label>
+                                  <input type="number" value={editSummaryValues.mRemain} onChange={e => setEditSummaryValues({...editSummaryValues, mRemain: Number(e.target.value)})} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', outline: 'none' }} />
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                                <button onClick={() => setIsEditingSummary(false)} style={{ padding: '0.5rem 1rem', background: 'var(--background)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+                                <button onClick={() => {
+                                  const diffTotal = editSummaryValues.mTotal - mTotal;
+                                  const diffPaid = editSummaryValues.mPaid - mPaid;
+                                  
+                                  setMonthlyOverrides(prev => {
+                                    const userOverrides = prev[selectedUser.mobile] || {};
+                                    const currentAdj = userOverrides[filterMonth] || {};
+                                    
+                                    // Handle legacy absolute override conversion
+                                    let baseTotalAdj = currentAdj.mTotalAdj || 0;
+                                    let basePaidAdj = currentAdj.mPaidAdj || 0;
+                                    if (currentAdj.mTotal !== undefined && currentAdj.mTotalAdj === undefined) {
+                                       // It was a legacy absolute override, so we just start fresh with the new diffs 
+                                       // relative to the absolute value we just displayed.
+                                       // Actually, the simplest is to just start adjusting from whatever they type.
+                                       baseTotalAdj = diffTotal;
+                                       basePaidAdj = diffPaid;
+                                    } else {
+                                       baseTotalAdj += diffTotal;
+                                       basePaidAdj += diffPaid;
+                                    }
+
+                                    return {
+                                      ...prev,
+                                      [selectedUser.mobile]: {
+                                        ...userOverrides,
+                                        [filterMonth]: {
+                                          mTotalAdj: baseTotalAdj,
+                                          mPaidAdj: basePaidAdj
+                                        }
+                                      }
+                                    };
+                                  });
+                                  setIsEditingSummary(false);
+                                }} style={{ padding: '0.5rem 1rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Save Changes</button>
+                                <button onClick={() => {
+                                  if(window.confirm('Reset to auto-calculated values?')) {
+                                    setMonthlyOverrides(prev => {
+                                      const next = { ...prev };
+                                      if (next[selectedUser.mobile]) {
+                                        delete next[selectedUser.mobile][filterMonth];
+                                      }
+                                      return next;
+                                    });
+                                    setIsEditingSummary(false);
+                                  }
+                                }} style={{ padding: '0.5rem 1rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Reset Auto</button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', position: 'relative' }}>
+                            <div style={{ flex: '1 1 120px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--text-secondary)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Month Bill</p>
+                              <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>₹{mTotal}</p>
+                            </div>
+                            <div style={{ flex: '1 1 120px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #10b981', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                              <p style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase' }}>Paid</p>
+                              <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#10b981' }}>₹{mPaid}</p>
+                            </div>
+                            <div style={{ flex: '1 1 120px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #ef4444', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                              <p style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 'bold', textTransform: 'uppercase' }}>Remaining</p>
+                              <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ef4444' }}>₹{mRemain}</p>
+                            </div>
+                            
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditSummaryValues({ mTotal, mPaid, mRemain });
+                                setIsEditingSummary(true);
+                              }}
+                              style={{ position: 'absolute', top: 0, right: 0, padding: '0.4rem', background: 'transparent', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}
+                              title="Edit summary"
+                            >
+                              ✏️ Edit
+                            </button>
+                            {monthlyOverrides?.[selectedUser.mobile]?.[filterMonth] && (
+                              <span style={{ position: 'absolute', bottom: '-20px', right: 0, fontSize: '0.7rem', color: '#f59e0b', fontWeight: 'bold' }}>* Manually Overridden</span>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    {/* Pending Payment Request in full page */}
+                    {paymentRequests[selectedUser.mobile] && (
+                      <div style={{ padding: '1.2rem', background: '#fffbeb', borderRadius: '12px', border: '1px solid #fbbf24' }} onClick={e => e.stopPropagation()}>
+                        <p style={{ fontSize: '0.8rem', color: '#d97706', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '0.5rem' }}>⚠ Pending Payment Request</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                          <div>
+                            <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#b45309', marginBottom: '0.3rem' }}>₹{paymentRequests[selectedUser.mobile].amount}</p>
+                            <p style={{ fontSize: '0.85rem', color: '#92400e' }}>UTR: {paymentRequests[selectedUser.mobile].utr}</p>
+                            <p style={{ fontSize: '0.85rem', color: '#92400e' }}>For: {paymentRequests[selectedUser.mobile].paymentMonth ? format(new Date(paymentRequests[selectedUser.mobile].paymentMonth + '-01'), 'MMMM yyyy') : 'N/A'}</p>
+                            <p style={{ fontSize: '0.8rem', color: '#92400e', marginTop: '0.2rem' }}>Submitted: {format(new Date(paymentRequests[selectedUser.mobile].timestamp), 'dd MMM yyyy, hh:mm a')}</p>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              onClick={() => { if(window.confirm(`Approve payment of ₹${paymentRequests[selectedUser.mobile].amount}?`)) onApprovePayment(selectedUser.mobile); }}
+                              style={{ padding: '0.7rem 1.2rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}
+                            >
+                              <CheckCircle size={16} /> Approve
+                            </button>
+                            <button 
+                              onClick={() => { if(window.confirm('Delete this payment request?')) onRejectPayment(selectedUser.mobile); }}
+                              style={{ padding: '0.7rem 1.2rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}
+                            >
+                              <Trash2 size={16} /> Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="order-history">
+                      <h4 style={{ marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid var(--primary-light)', display: 'inline-block' }}>Orders for {format(new Date(filterMonth + '-01'), 'MMMM yyyy')}</h4>
+                      {(() => {
+                        const monthlyOrders = Object.entries(globalOrders[selectedUser.mobile] || {})
+                          .filter(([date]) => date.startsWith(filterMonth))
+                          .sort((a, b) => new Date(b[0]) - new Date(a[0]));
+
+                        if (monthlyOrders.length === 0) {
+                          return <p className="no-data" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No orders in this month.</p>;
+                        }
+
+                        const displayedOrders = showAllOrders ? monthlyOrders : monthlyOrders.slice(0, 2);
+
+                        return (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            {displayedOrders.map(([date, order]) => {
+                              const totalForDay = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach;
+                          const isPending = order.status === 'pending';
+                          
+                          return (
+                            <div key={date} className={`history-item ${isPending ? 'pending' : ''}`} style={{ marginBottom: '1rem' }}>
+                              <div className="history-date">
+                                <span className="day">{format(new Date(date), 'dd')}</span>
+                                <span className="month">{format(new Date(date), 'MMM')}</span>
+                              </div>
+                              <div className="history-details" style={{ flex: 1 }}>
+                                {editingOrderDate === date ? (
+                                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>M: <input type="number" min="0" value={editOrderValues.milk} onChange={e => setEditOrderValues({...editOrderValues, milk: Number(e.target.value)})} style={{ width: '45px', padding: '0.3rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
+                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>G: <input type="number" min="0" value={editOrderValues.ghee} onChange={e => setEditOrderValues({...editOrderValues, ghee: Number(e.target.value)})} style={{ width: '45px', padding: '0.3rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
+                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>C: <input type="number" min="0" value={editOrderValues.chach} onChange={e => setEditOrderValues({...editOrderValues, chach: Number(e.target.value)})} style={{ width: '45px', padding: '0.3rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
+                                  </div>
+                                ) : (
+                                  <>
+                                    {order.milk > 0 && <span className="item-pill">{order.milk}L Milk</span>}
+                                    {order.ghee > 0 && <span className="item-pill">{order.ghee}Kg Ghee</span>}
+                                    {order.chach > 0 && <span className="item-pill">{order.chach}L Chach</span>}
+                                  </>
+                                )}
+                              </div>
+                              <div className="history-price" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+                                <span>₹{totalForDay}</span>
+                                {editingOrderDate === date ? (
+                                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                    <button onClick={() => saveEditOrder(selectedUser.mobile, date)} style={{ padding: '0.3rem 0.6rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>Save</button>
+                                    <button onClick={() => setEditingOrderDate(null)} style={{ padding: '0.3rem 0.6rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+                                  </div>
+                                ) : (
+                                  <div style={{ display: 'flex', gap: '0.4rem', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                    <button onClick={() => startEditOrder(date, order)} style={{ padding: '0.2rem 0.6rem', background: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '500' }}>Edit Data</button>
+                                    {isPending ? (
+                                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                        <button 
+                                          className="approve-btn"
+                                          onClick={() => onApproveOrder(selectedUser.mobile, date)}
+                                          style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.4rem 0.8rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                        >
+                                          <CheckCircle size={14} /> Approve
+                                        </button>
+                                        <button 
+                                          onClick={() => { if(window.confirm('Are you sure you want to delete this pending order?')) onRejectOrder(selectedUser.mobile, date); }}
+                                          style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.4rem 0.8rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: '#10b981', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                        <CheckCircle size={14} /> Approved
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                            {monthlyOrders.length > 2 && !showAllOrders && (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setShowAllOrders(true); }}
+                                style={{ width: '100%', padding: '0.8rem', background: 'var(--surface)', color: 'var(--primary)', border: '1px solid var(--border)', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}
+                              >
+                                View More ({monthlyOrders.length - 2})
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    <div className="payment-history">
+                      <h4 style={{ marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '2px solid #10b981', display: 'inline-block' }}>Payments for {format(new Date(filterMonth + '-01'), 'MMMM yyyy')}</h4>
+                      {(() => {
+                        const monthlyPayments = (globalPayments[selectedUser.mobile] || [])
+                          .filter(payment => {
+                            const pMonth = payment.paymentMonth || payment.timestamp.substring(0, 7);
+                            return pMonth === filterMonth;
+                          })
+                          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                        if (monthlyPayments.length === 0) {
+                          return <p className="no-data" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No payments approved in this month.</p>;
+                        }
+
+                        const displayedPayments = showAllPayments ? monthlyPayments : monthlyPayments.slice(0, 2);
+
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} onClick={(e) => e.stopPropagation()}>
+                            {displayedPayments.map((pay, i) => (
+                              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '1rem', borderRadius: '12px', borderLeft: '4px solid #10b981', borderRight: '1px solid var(--border)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+                                <div>
+                                  <span style={{ display: 'block', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '0.3rem', fontSize: '1.1rem' }}>₹{pay.amount}</span>
+                                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>UTR: {pay.utr}</span>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.3rem', color: '#10b981', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '0.3rem' }}><CheckCircle size={14} /> Paid</span>
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{format(new Date(pay.timestamp), 'dd MMM yyyy, hh:mm a')}</span>
+                                </div>
+                              </div>
+                            ))}
+                            {monthlyPayments.length > 2 && !showAllPayments && (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setShowAllPayments(true); }}
+                                style={{ width: '100%', padding: '0.8rem', background: 'var(--surface)', color: 'var(--primary)', border: '1px solid var(--border)', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}
+                              >
+                                View More ({monthlyPayments.length - 2})
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+          </div>
+        </div>
+      )}
+</div>
   );
 };
 

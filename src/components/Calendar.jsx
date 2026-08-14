@@ -57,11 +57,17 @@ const Calendar = ({ currentDate, setCurrentDate, orders, onDayClick, selectedDat
               onClick={() => onDayClick(day)}
             >
               <span className="day-number">{format(day, dateFormat)}</span>
-              {hasOrder && (
-                <div className="day-indicators">
-                  {dayOrder.milk > 0 && <div className="indicator milk"></div>}
-                  {dayOrder.ghee > 0 && <div className="indicator ghee"></div>}
-                  {dayOrder.chach > 0 && <div className="indicator chach"></div>}
+              {dayOrder && (
+                <div className="order-summary-dots">
+                  {dayOrder.status === 'pending' ? (
+                    <span style={{ fontSize: '0.75rem', marginTop: '2px' }} title="Pending Approval">⏳</span>
+                  ) : (
+                    <>
+                      {dayOrder.milk > 0 && <span className="dot milk" title="Milk" />}
+                      {dayOrder.ghee > 0 && <span className="dot ghee" title="Ghee" />}
+                      {dayOrder.chach > 0 && <span className="dot chach" title="Chach" />}
+                    </>
+                  )}
                 </div>
               )}
             </div>
