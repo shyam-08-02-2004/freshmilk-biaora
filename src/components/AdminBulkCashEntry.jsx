@@ -31,6 +31,33 @@ const AdminBulkCashEntry = ({ registeredUsers, onSubmit, onClose }) => {
 
   return (
     <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+      <style>
+        {`
+          .cash-entry-row {
+            display: grid;
+            grid-template-columns: auto 2fr 1.5fr auto;
+            gap: 0.8rem;
+            align-items: center;
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+          }
+          @media (max-width: 600px) {
+            .cash-entry-row {
+              grid-template-columns: auto 1fr auto;
+              grid-template-areas: 
+                "num select select"
+                ". amount delete";
+              gap: 0.6rem;
+            }
+            .ce-num { grid-area: num; }
+            .ce-select { grid-area: select; }
+            .ce-amount { grid-area: amount; }
+            .ce-delete { grid-area: delete; }
+          }
+        `}
+      </style>
       <div className="modal-content" style={{ background: 'var(--background)', width: '100%', maxWidth: '600px', borderRadius: '20px', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
         
         <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', borderRadius: '20px 20px 0 0' }}>
@@ -45,12 +72,12 @@ const AdminBulkCashEntry = ({ registeredUsers, onSubmit, onClose }) => {
 
         <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {entries.map((entry, index) => (
-            <div key={entry.id} style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', background: 'var(--surface)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-              <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.9rem', flexShrink: 0 }}>
+            <div key={entry.id} className="cash-entry-row">
+              <div className="ce-num" style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.9rem', flexShrink: 0 }}>
                 {index + 1}
               </div>
               
-              <div style={{ flex: 2 }}>
+              <div className="ce-select" style={{ width: '100%' }}>
                 <select 
                   value={entry.mobile}
                   onChange={(e) => handleEntryChange(entry.id, 'mobile', e.target.value)}
@@ -65,7 +92,7 @@ const AdminBulkCashEntry = ({ registeredUsers, onSubmit, onClose }) => {
                 </select>
               </div>
 
-              <div style={{ flex: 1.5, position: 'relative' }}>
+              <div className="ce-amount" style={{ width: '100%', position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>₹</span>
                 <input 
                   type="number" 
@@ -77,9 +104,10 @@ const AdminBulkCashEntry = ({ registeredUsers, onSubmit, onClose }) => {
               </div>
 
               <button 
+                className="ce-delete"
                 onClick={() => handleRemoveRow(entry.id)}
                 disabled={entries.length === 1}
-                style={{ background: 'none', border: 'none', color: entries.length === 1 ? 'var(--border)' : '#ef4444', cursor: entries.length === 1 ? 'not-allowed' : 'pointer', padding: '0.5rem' }}
+                style={{ background: 'none', border: 'none', color: entries.length === 1 ? 'var(--border)' : '#ef4444', cursor: entries.length === 1 ? 'not-allowed' : 'pointer', padding: '0.5rem', justifySelf: 'center' }}
               >
                 <Trash2 size={20} />
               </button>
