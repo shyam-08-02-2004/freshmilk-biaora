@@ -102,11 +102,11 @@ const OrderCard = ({
         </p>
       </div>
 
-      <div style={{ padding: '0.5rem 1.25rem' }}>
+      <div className="products-grid">
         {products.map((p, idx) => {
           const qty = localOrder[p.id] || 0;
           return (
-            <div key={p.id} className="order-item-card" style={{ borderBottom: idx < products.length - 1 ? '1px solid var(--border)' : 'none', borderRadius: 0, padding: '1rem 0', margin: 0, border: 'none', borderBottom: idx < products.length - 1 ? '1px solid var(--border)' : 'none' }}>
+            <div key={p.id} className="order-item-card">
               <img src={p.img} alt={p.name} className="order-item-img" />
               <div className="order-item-details">
                 <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
