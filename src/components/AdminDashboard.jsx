@@ -11,14 +11,24 @@ import AdminPaymentReminders from './AdminPaymentReminders';
 import AdminInventory from './AdminInventory';
 import { useLanguage } from '../LanguageContext';
 
-const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses, globalInventory, setGlobalInventory }) => {
+const AdminDashboard = ({ 
+  activeTab, setActiveTab,
+  prices, registeredUsers, globalOrders, 
+  onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser,
+  profileRequests, onApproveProfile, onRejectProfile,
+  paymentRequests, onApprovePayment, onRejectPayment,
+  globalPayments, adminLogs,
+  monthlyOverrides, setMonthlyOverrides,
+  broadcasts, setBroadcasts,
+  globalExpenses, setGlobalExpenses,
+  globalInventory, setGlobalInventory
+}) => {
   const { t } = useLanguage();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [showAllMoreFeatures, setShowAllMoreFeatures] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses' | 'analytics'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   React.useEffect(() => {

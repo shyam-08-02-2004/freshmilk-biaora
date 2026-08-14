@@ -85,8 +85,8 @@ function App() {
   const [isAdminContactOpen, setIsAdminContactOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isQuickMilkOpen, setIsQuickMilkOpen] = useState(false);
-  const [isAdminRevenueOpen, setIsAdminRevenueOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
+  const [adminActiveTab, setAdminActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users');
   
   const [isLoggedIn, setIsLoggedIn] = useState(() => JSON.parse(localStorage.getItem('biaora_isLoggedIn')) || false);
   const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('biaora_currentUser')) || null);
@@ -474,10 +474,14 @@ function App() {
   }
 
   if (currentUser?.role === 'admin') {
+    const isMobile = window.innerWidth <= 768;
+    const hideHeader = isMobile && adminActiveTab !== 'users';
+
     return (
-      <div className="app-container">
-        <Header 
-          totalBill={adminTotalReceived} 
+      <div className="app-container" style={{ paddingBottom: '0' }}>
+        {!hideHeader && (
+          <Header 
+            totalBill={adminTotalReceived} 
           monthTotalBill={0}
           monthPaidBill={0}
           billUpdated={false} 
@@ -487,8 +491,11 @@ function App() {
           onOpenAdminRevenue={() => setIsAdminRevenueOpen(true)}
           currentUser={currentUser}
         />
+        )}
         <main className="app-layout" style={{ padding: 0 }}>
           <AdminDashboard 
+            activeTab={adminActiveTab}
+            setActiveTab={setAdminActiveTab}
             prices={PRICES} 
             registeredUsers={registeredUsers}
             globalOrders={globalOrders} 
