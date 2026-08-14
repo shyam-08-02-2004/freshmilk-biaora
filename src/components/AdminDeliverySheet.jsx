@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Printer, MapPin, CheckCircle, Save, Download } from 'lucide-react';
+import { Printer, MapPin, Download, ChevronDown } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
+const AdminDeliverySheet = ({ registeredUsers, globalOrders, prices }) => {
   const [targetDate, setTargetDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [expandedItems, setExpandedItems] = useState({});
 
   const deliveries = registeredUsers.map(user => {
     const todayOrder = globalOrders[user.mobile]?.[targetDate];
@@ -17,6 +18,20 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const calculateTotal = (order) => {
+    let total = 0;
+    if (order.milk && prices?.milk) total += order.milk * prices.milk;
+    if (order.ghee && prices?.ghee) total += order.ghee * prices.ghee;
+    if (order.chach && prices?.chach) total += order.chach * prices.chach;
+    if (order.paneer && prices?.paneer) total += order.paneer * prices.paneer;
+    if (order.curd && prices?.curd) total += order.curd * prices.curd;
+    return total;
+  };
+
+  const toggleExpand = (mobile) => {
+    setExpandedItems(prev => ({...prev, [mobile]: !prev[mobile]}));
   };
 
   const handleDownloadPDF = () => {
@@ -93,6 +108,13 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
 
       <style>
         {`
+          .accordion-details {
+            display: none;
+          }
+          .accordion-details.expanded {
+            display: grid;
+          }
+          
           @media print {
             body * {
               visibility: hidden;
@@ -108,10 +130,23 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
               padding: 0 !important;
               border: none !important;
             }
-            .table-responsive {
-              overflow-x: visible !important;
+            .accordion-details {
+              display: grid !important;
+              border-top: 1px dashed #ccc !important;
+              padding: 1rem 0 !important;
+            }
+            .accordion-card {
+              border: none !important;
+              border-bottom: 2px solid #000 !important;
+              border-radius: 0 !important;
+              margin-bottom: 1rem !important;
+              page-break-inside: avoid;
+            }
+            .chevron-icon {
+              display: none !important;
             }
           }
+          
           @media (max-width: 768px) {
             .delivery-container {
               padding: 1rem !important;
@@ -130,67 +165,6 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
               justify-content: center;
               padding: 0.8rem !important;
             }
-            /* Table to Card Mobile View */
-            .responsive-table, .responsive-table thead, .responsive-table tbody, .responsive-table th, .responsive-table td, .responsive-table tr {
-              display: block;
-            }
-            .responsive-table thead tr {
-              position: absolute;
-              top: -9999px;
-              left: -9999px;
-            }
-            .responsive-table tr {
-              border: 1px solid var(--border) !important;
-              border-radius: 12px;
-              margin-bottom: 1.5rem;
-              padding: 0.5rem;
-              background: #f8fafc;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            }
-            .responsive-table td {
-              border: none !important;
-              border-bottom: 1px dashed var(--border) !important;
-              position: relative;
-              padding: 0.8rem 1rem 0.8rem 50% !important;
-              text-align: right !important;
-              display: flex;
-              justify-content: flex-end;
-              align-items: center;
-              min-height: 40px;
-            }
-            .responsive-table td:last-child {
-              border-bottom: 0 !important;
-            }
-            .responsive-table td::before {
-              position: absolute;
-              top: 50%;
-              left: 1rem;
-              width: 45%;
-              padding-right: 10px;
-              white-space: nowrap;
-              text-align: left;
-              font-weight: 600;
-              color: var(--text-secondary);
-              transform: translateY(-50%);
-            }
-            .responsive-table td:nth-of-type(1)::before { content: "Customer Name"; }
-            .responsive-table td:nth-of-type(2)::before { content: "Location / Flat"; }
-            .responsive-table td:nth-of-type(3)::before { content: "Milk (L)"; }
-            .responsive-table td:nth-of-type(4)::before { content: "Ghee (Kg)"; }
-            .responsive-table td:nth-of-type(5)::before { content: "Chach (L)"; }
-            .responsive-table td:nth-of-type(6)::before { content: "Extras"; }
-            .responsive-table td:nth-of-type(7)::before { content: "Status"; }
-            
-            .responsive-table {
-              min-width: 100% !important;
-            }
-            .table-responsive {
-              overflow-x: hidden !important;
-            }
-            /* Adjust content to right on mobile */
-            .responsive-table td > div {
-              justify-content: flex-end;
-            }
           }
         `}
       </style>
@@ -203,46 +177,90 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders }) => {
         {deliveries.length === 0 ? (
           <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No deliveries scheduled for this date.</p>
         ) : (
-          <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
-            <table className="responsive-table" style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', marginTop: '1rem' }}>
-              <thead>
-              <tr style={{ background: 'var(--background)', textAlign: 'left' }}>
-                <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Customer Name</th>
-                <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Location / Flat</th>
-                <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Milk (L)</th>
-                <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Ghee (Kg)</th>
-                <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Chach (L)</th>
-                <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Extras</th>
-                <th style={{ padding: '1rem', borderBottom: '2px solid var(--border)' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deliveries.map((d, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: 'transparent' }}>
-                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>
-                    {d.user.name}
-                  </td>
-                  <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <MapPin size={14} />
-                      {d.user.flat}, {d.user.location}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {deliveries.map((d, i) => {
+              const isExpanded = expandedItems[d.user.mobile];
+              const totalAmount = calculateTotal(d.order);
+              
+              return (
+                <div key={i} className="accordion-card" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                  {/* Header - Always visible */}
+                  <div 
+                    onClick={() => toggleExpand(d.user.mobile)}
+                    style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: isExpanded ? '#f8fafc' : 'transparent', transition: 'background 0.2s' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                       <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', flexShrink: 0 }}>
+                          {i + 1}
+                       </div>
+                       <div>
+                         <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>{d.user.name}</h4>
+                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{d.user.mobile}</div>
+                       </div>
                     </div>
-                  </td>
-                  <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--primary)' }}>{d.order.milk || 0}</td>
-                  <td style={{ padding: '1rem', fontWeight: 'bold', color: '#d97706' }}>{d.order.ghee || 0}</td>
-                  <td style={{ padding: '1rem', fontWeight: 'bold', color: '#10b981' }}>{d.order.chach || 0}</td>
-                  <td style={{ padding: '1rem', fontWeight: 'bold', color: '#047857', fontSize: '0.8rem' }}>
-                    {d.order.paneer > 0 && <div>Paneer: {d.order.paneer}kg</div>}
-                    {d.order.curd > 0 && <div>Curd: {d.order.curd}kg</div>}
-                    {!d.order.paneer && !d.order.curd && '-'}
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ width: '20px', height: '20px', border: '2px solid var(--border)', borderRadius: '4px' }}></div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                       <div style={{ textAlign: 'right' }}>
+                         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total</span>
+                         <div style={{ fontWeight: 'bold', color: 'var(--primary)', fontSize: '1.1rem' }}>₹{totalAmount}</div>
+                       </div>
+                       <div className="chevron-icon" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s', color: 'var(--text-secondary)' }}>
+                          <ChevronDown size={20} />
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Details - Collapsible */}
+                  <div 
+                    className={`accordion-details ${isExpanded ? 'expanded' : ''}`}
+                    style={{ padding: '1.5rem', borderTop: '1px solid var(--border)', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1.5rem', background: 'var(--background)' }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>LOCATION / FLAT</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                        <MapPin size={16} color="var(--primary)" /> {d.user.flat}, {d.user.location}
+                      </div>
+                    </div>
+                    
+                    {d.order.milk > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>MILK</span>
+                        <span style={{ fontWeight: 'bold', color: 'var(--primary)', fontSize: '1.1rem' }}>{d.order.milk} L</span>
+                      </div>
+                    )}
+                    
+                    {d.order.ghee > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>GHEE</span>
+                        <span style={{ fontWeight: 'bold', color: '#d97706', fontSize: '1.1rem' }}>{d.order.ghee} Kg</span>
+                      </div>
+                    )}
+                    
+                    {d.order.chach > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>CHACH</span>
+                        <span style={{ fontWeight: 'bold', color: '#10b981', fontSize: '1.1rem' }}>{d.order.chach} L</span>
+                      </div>
+                    )}
+                    
+                    {(d.order.paneer > 0 || d.order.curd > 0) && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>EXTRAS</span>
+                        <div style={{ fontWeight: 'bold', color: '#047857', fontSize: '1rem' }}>
+                          {d.order.paneer > 0 && <div>Paneer: {d.order.paneer}kg</div>}
+                          {d.order.curd > 0 && <div>Curd: {d.order.curd}kg</div>}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>STATUS</span>
+                      <div style={{ width: '28px', height: '28px', border: '2px solid var(--text-secondary)', borderRadius: '6px' }}></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

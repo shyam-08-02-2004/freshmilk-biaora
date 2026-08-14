@@ -864,7 +864,8 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
       {activeTab === 'delivery' && (
         <AdminDeliverySheet 
           registeredUsers={registeredUsers} 
-          globalOrders={globalOrders} 
+          globalOrders={globalOrders}
+          prices={prices}
         />
       )}
       
