@@ -33,11 +33,8 @@ function useFirestoreSync(docName, initialState) {
      return cached ? JSON.parse(cached) : initialState;
   });
 
-  // Track whether the last setState came from Firestore (remote) so we don't echo it back
   const isRemote = useRef(false);
   const isFirstRender = useRef(true);
-  // Buffer for writes that happen inside a setState updater (async timing fix)
-  const pendingWriteRef = useRef(null);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "store", docName), (docSnap) => {
@@ -62,34 +59,11 @@ function useFirestoreSync(docName, initialState) {
       isRemote.current = false;
       return;
     }
-    // Always write local changes to Firestore
     localStorage.setItem(`biaora_${docName}`, JSON.stringify(state));
     setDoc(doc(db, "store", docName), { data: state });
   }, [state, docName]);
 
-  // Wrap setState so writes queued inside functional updaters are also flushed
-  const setStateWithWrite = useCallback((updater) => {
-    if (typeof updater === 'function') {
-      setState(prev => {
-        const next = updater(prev);
-        // Schedule immediate Firestore write outside the render cycle
-        pendingWriteRef.current = next;
-        Promise.resolve().then(() => {
-          if (pendingWriteRef.current !== null) {
-            const toWrite = pendingWriteRef.current;
-            pendingWriteRef.current = null;
-            localStorage.setItem(`biaora_${docName}`, JSON.stringify(toWrite));
-            setDoc(doc(db, "store", docName), { data: toWrite });
-          }
-        });
-        return next;
-      });
-    } else {
-      setState(updater);
-    }
-  }, [docName]);
-
-  return [state, setStateWithWrite];
+  return [state, setState];
 }
 
 
@@ -400,9 +374,14 @@ function App() {
   };
 
   const handleSaveDayOrder = (date, localOrder, replaceMode = false) => {
+    if (!currentUser) return;
     const dateKey = format(date, 'yyyy-MM-dd');
-    setOrders(prev => {
-      const prevDayOrder = prev[dateKey] || { milk: 0, ghee: 0, chach: 0, status: 'pending' };
+    const mobile = currentUser.mobile;
+
+    setGlobalOrders(prev => {
+      const prevUserOrders = prev[mobile] || {};
+      const prevDayOrder = prevUserOrders[dateKey] || { milk: 0, ghee: 0, chach: 0, status: 'pending' };
+
       const newDayOrder = replaceMode ? {
         milk: localOrder.milk || 0,
         ghee: localOrder.ghee || 0,
@@ -419,23 +398,34 @@ function App() {
         status: 'pending'
       };
 
+      let newGlobalOrders;
       if (newDayOrder.milk === 0 && newDayOrder.ghee === 0 && newDayOrder.chach === 0 && newDayOrder.paneer === 0 && newDayOrder.curd === 0) {
-        const newOrders = { ...prev };
-        delete newOrders[dateKey];
-        return newOrders;
+        const newUserOrders = { ...prevUserOrders };
+        delete newUserOrders[dateKey];
+        newGlobalOrders = { ...prev, [mobile]: newUserOrders };
+      } else {
+        newGlobalOrders = { ...prev, [mobile]: { ...prevUserOrders, [dateKey]: newDayOrder } };
       }
 
-      return { ...prev, [dateKey]: newDayOrder };
+      // Write directly to Firestore immediately — don't wait for useEffect
+      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+
+      return newGlobalOrders;
     });
   };
 
   const handleClearDayOrder = (date) => {
     if (!currentUser) return;
     const dateKey = format(date, 'yyyy-MM-dd');
-    setOrders(prev => {
-      const newOrders = { ...prev };
-      delete newOrders[dateKey];
-      return newOrders;
+    const mobile = currentUser.mobile;
+    setGlobalOrders(prev => {
+      const newUserOrders = { ...(prev[mobile] || {}) };
+      delete newUserOrders[dateKey];
+      const newGlobalOrders = { ...prev, [mobile]: newUserOrders };
+      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+      return newGlobalOrders;
     });
   };
 
