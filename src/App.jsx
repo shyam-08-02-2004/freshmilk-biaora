@@ -98,6 +98,7 @@ function App() {
   const [monthlyOverrides, setMonthlyOverrides] = useFirestoreSync('monthlyOverrides', {});
   const [globalExpenses, setGlobalExpenses] = useFirestoreSync('globalExpenses', []);
   const [broadcasts, setBroadcasts] = useFirestoreSync('broadcasts', []);
+  const [globalInventory, setGlobalInventory] = useFirestoreSync('globalInventory', {});
   const adminTotalReceived = useMemo(() => {
     let total = 0;
     Object.values(globalPayments).forEach(userPayments => {
@@ -509,6 +510,8 @@ function App() {
             setBroadcasts={setBroadcasts}
             globalExpenses={globalExpenses}
             setGlobalExpenses={setGlobalExpenses}
+            globalInventory={globalInventory}
+            setGlobalInventory={setGlobalInventory}
           />
         </main>
         {isProfileOpen && (

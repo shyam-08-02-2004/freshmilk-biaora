@@ -6,13 +6,12 @@ import AdminDeliverySheet from './AdminDeliverySheet';
 import AdminBroadcasts from './AdminBroadcasts';
 import AdminExpenses from './AdminExpenses';
 import AdminAnalytics from './AdminAnalytics';
-import AdminDeliveryStaff from './AdminDeliveryStaff';
 import AdminExportData from './AdminExportData';
 import AdminPaymentReminders from './AdminPaymentReminders';
 import AdminInventory from './AdminInventory';
 import { useLanguage } from '../LanguageContext';
 
-const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses }) => {
+const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder, onRejectOrder, onEditUserOrder, onDeleteUser, profileRequests, onApproveProfile, onRejectProfile, paymentRequests, onApprovePayment, onRejectPayment, globalPayments, adminLogs, monthlyOverrides, setMonthlyOverrides, broadcasts, setBroadcasts, globalExpenses, setGlobalExpenses, globalInventory, setGlobalInventory }) => {
   const { t } = useLanguage();
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
@@ -200,12 +199,6 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
             className={`admin-sidebar-btn ${activeTab === 'analytics' ? 'active' : ''}`}
           >
             <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>🗺️</span> Analytics Map
-          </button>
-          <button 
-            onClick={() => handleTabClick('delivery-staff')}
-            className={`admin-sidebar-btn ${activeTab === 'delivery-staff' ? 'active' : ''}`}
-          >
-            <Truck size={20} /> Delivery Staff
           </button>
           <button 
             onClick={() => handleTabClick('export')}
@@ -929,10 +922,30 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
         />
       )}
 
-      {activeTab === 'delivery-staff' && <AdminDeliveryStaff />}
-      {activeTab === 'export' && <AdminExportData />}
-      {activeTab === 'reminders' && <AdminPaymentReminders />}
-      {activeTab === 'inventory' && <AdminInventory />}
+      {activeTab === 'export' && (
+        <AdminExportData 
+          registeredUsers={registeredUsers} 
+          globalOrders={globalOrders} 
+          globalPayments={globalPayments} 
+          prices={prices} 
+        />
+      )}
+      {activeTab === 'reminders' && (
+        <AdminPaymentReminders 
+          registeredUsers={registeredUsers} 
+          globalOrders={globalOrders} 
+          globalPayments={globalPayments} 
+          prices={prices} 
+        />
+      )}
+      {activeTab === 'inventory' && (
+        <AdminInventory 
+          globalOrders={globalOrders} 
+          globalInventory={globalInventory} 
+          setGlobalInventory={setGlobalInventory} 
+          prices={prices} 
+        />
+      )}
       </div>
 
       {/* Mobile Bottom Nav */}
