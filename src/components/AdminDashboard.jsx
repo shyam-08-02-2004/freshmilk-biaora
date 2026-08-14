@@ -15,7 +15,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('users'); // 'users' | 'orders' | 'profiles' | 'payments' | 'delivery' | 'broadcasts' | 'expenses' | 'analytics'
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
@@ -107,8 +107,11 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
 
   return (
     <div className="admin-container">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && <div className="admin-mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />}
+
       {/* LEFT SIDEBAR */}
-      <div className={`admin-sidebar ${!isMobileMenuOpen ? 'hidden-mobile' : ''}`}>
+      <div className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="admin-sidebar-header">
           <img src="/assets/admin_photo.jpg" alt="Admin Avatar" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', marginBottom: '1rem' }} />
           <h2 style={{ fontSize: '1.2rem', margin: '0 0 0.3rem', color: 'var(--text-primary)' }}>Super Admin Panel</h2>
@@ -192,10 +195,10 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
       </div>
 
       {/* RIGHT CONTENT AREA */}
-      <div className={`admin-content-area ${isMobileMenuOpen ? 'hidden-mobile' : ''}`}>
+      <div className="admin-content-area">
         <div className="admin-content-header">
-          <button className="admin-back-btn" onClick={() => setIsMobileMenuOpen(true)}>
-            <ArrowLeft size={24} />
+          <button className="admin-back-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <span style={{fontSize:'1.5rem', lineHeight:1}}>☰</span>
           </button>
           <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
             {activeTab} Management
@@ -887,6 +890,27 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           globalOrders={globalOrders}
         />
       )}
+      </div>
+
+      {/* Mobile Bottom Nav */}
+      <div className="admin-bottom-nav">
+        <button className={`admin-bnav-btn ${activeTab==='users'?'active':''}`} onClick={()=>handleTabClick('users')}>
+          <Users size={22}/><span>Customers</span>
+        </button>
+        <button className={`admin-bnav-btn ${activeTab==='orders'?'active':''}`} onClick={()=>handleTabClick('orders')} style={{position:'relative'}}>
+          <Milk size={22}/><span>Orders</span>
+          {pendingOrdersCount > 0 && <span className="bnav-badge">{pendingOrdersCount}</span>}
+        </button>
+        <button className={`admin-bnav-btn ${activeTab==='payments'?'active':''}`} onClick={()=>handleTabClick('payments')} style={{position:'relative'}}>
+          <span style={{fontSize:'1.3rem',lineHeight:1}}>₹</span><span>Payments</span>
+          {Object.keys(paymentRequests||{}).length > 0 && <span className="bnav-badge">{Object.keys(paymentRequests).length}</span>}
+        </button>
+        <button className={`admin-bnav-btn ${activeTab==='delivery'?'active':''}`} onClick={()=>handleTabClick('delivery')}>
+          <span style={{fontSize:'1.2rem'}}>📦</span><span>Delivery</span>
+        </button>
+        <button className={`admin-bnav-btn`} onClick={()=>setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <span style={{fontSize:'1.2rem'}}>☰</span><span>More</span>
+        </button>
       </div>
     </div>
   );
