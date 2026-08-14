@@ -32,9 +32,9 @@ const OrderCard = ({
   }
 
   const isPast1130AM = now.getHours() > 11 || (now.getHours() === 11 && now.getMinutes() >= 30);
-  const isEmergencyMode = isTodayDate && isPast1130AM;
+  const isLockedToday = isTodayDate && isPast1130AM;
   const isApproved = currentOrder?.status === 'approved';
-  const isOrderable = !isPastDate && !isApproved && !isFutureBeyondTomorrow && !isOnVacation;
+  const isOrderable = !isPastDate && !isLockedToday && !isApproved && !isFutureBeyondTomorrow && !isOnVacation;
 
   const [localOrder, setLocalOrder] = useState({
     milk: currentOrder?.milk || 0,
@@ -73,7 +73,7 @@ const OrderCard = ({
                         ((localOrder.paneer || 0) * prices.paneer) + 
                         ((localOrder.curd || 0) * prices.curd);
                         
-  const totalWithEmergency = isEmergencyMode ? localDayTotal + 20 : localDayTotal;
+  const totalWithEmergency = localDayTotal;
                         
   const hasChanges = localOrder.milk !== (currentOrder?.milk || 0) ||
                      localOrder.ghee !== (currentOrder?.ghee || 0) ||
@@ -84,10 +84,6 @@ const OrderCard = ({
   const handleConfirm = () => {
     if (!isOrderable || !hasChanges) return;
     const orderToSave = { ...localOrder };
-    if (isEmergencyMode) {
-      orderToSave.isEmergency = true;
-      orderToSave.emergencyFee = 20;
-    }
     onSaveOrder(selectedDate, orderToSave, true); // replaceMode = true
   };
 
@@ -98,7 +94,7 @@ const OrderCard = ({
           <ShoppingBag size={20} color="var(--text-primary)" /> Select Items
         </h3>
         <p style={{ margin: '0.2rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-          {isTomorrowDate ? "Add items for tomorrow's delivery" : isTodayDate ? (isEmergencyMode ? "🚨 Emergency Order" : "Add items for today's delivery") : `Orders for ${format(selectedDate, 'do MMM yyyy')}`}
+          {isTomorrowDate ? "Add items for tomorrow's delivery" : isTodayDate ? "Add items for today's delivery" : `Orders for ${format(selectedDate, 'do MMM yyyy')}`}
         </p>
       </div>
 
@@ -160,17 +156,13 @@ const OrderCard = ({
         )}
       </div>
 
-      {isEmergencyMode && isOrderable && (
-        <div style={{ padding: '0.8rem 1.25rem', background: '#fef2f2', borderTop: '1px solid #fecaca', borderBottom: '1px solid #fecaca', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem' }}>Emergency Delivery Fee</span>
-          <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '1rem' }}>+₹20</span>
-        </div>
-      )}
+
 
       {!isOrderable && (
         <div style={{ padding: '1rem 1.25rem', background: '#f8fafc', borderTop: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           {isApproved ? '🔒 Order is approved and locked'
             : isPastDate ? '📅 Past date — cannot modify'
+            : isLockedToday ? '⏰ Time over — cannot order for today'
             : isFutureBeyondTomorrow ? '📆 Only Today & Tomorrow orders allowed'
             : isOnVacation ? '🏖️ Vacation mode is active'
             : '🔒 Order locked'}

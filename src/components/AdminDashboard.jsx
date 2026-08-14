@@ -103,9 +103,7 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
     return total + Object.values(userOrders || {}).filter(order => order.status === 'pending').length;
   }, 0);
 
-  const emergencyOrdersCount = Object.values(globalOrders || {}).reduce((total, userOrders) => {
-    return total + Object.values(userOrders || {}).filter(order => order.status === 'pending' && order.isEmergency).length;
-  }, 0);
+
 
   return (
     <div className="admin-container">
@@ -204,23 +202,6 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
           </h2>
         </div>
         
-        {emergencyOrdersCount > 0 && activeTab !== 'orders' && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '1rem', margin: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ color: '#dc2626', margin: '0 0 0.3rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ animation: 'pulse 2s infinite' }}>🚨</span> Emergency Orders Pending
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: '#991b1b' }}>There are {emergencyOrdersCount} instant orders waiting for approval.</p>
-            </div>
-            <button 
-              onClick={() => handleTabClick('orders')}
-              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              View
-            </button>
-          </div>
-        )}
-
         <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
         {activeTab === 'users' && (
           <div style={{ padding: '1rem' }}>
@@ -299,24 +280,22 @@ const AdminDashboard = ({ prices, registeredUsers, globalOrders, onApproveOrder,
                 }
 
                 return pendingOrderUsers.map(user => {
-                  const hasEmergency = Object.values(globalOrders[user.mobile] || {}).some(order => order.status === 'pending' && order.isEmergency);
                   return (
                   <div 
                     key={user.mobile}
-                    className={`user-card ${hasEmergency ? 'emergency-card' : ''}`}
+                    className={`user-card`}
                     onClick={() => {
                       setSelectedUser(user);
                       setShowAllOrders(false);
                       setShowAllPayments(false);
                     }}
-                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', border: hasEmergency ? '2px solid #ef4444' : '' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}
                   >
                     <div style={{ position: 'relative' }}>
                       <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
-                      {hasEmergency && <span style={{ position: 'absolute', top: -5, right: -5, fontSize: '1rem' }}>🚨</span>}
                     </div>
                     <div className="user-info">
-                      <h4 style={{ color: hasEmergency ? '#ef4444' : '' }}>{user.name} {hasEmergency && '(Emergency)'}</h4>
+                      <h4>{user.name}</h4>
                       <p>{user.mobile}</p>
                     </div>
                     <div className="user-due">
