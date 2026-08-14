@@ -145,10 +145,7 @@ const CustomerLayout = ({
           <User size={22} />
           <span>Profile</span>
         </button>
-        <button className="bottom-nav-item" onClick={() => handleNavClick('vacation')}>
-          <Plane size={22} />
-          <span>Vacation</span>
-        </button>
+
       </nav>
     </div>
   );
