@@ -13,6 +13,7 @@ import CustomerDashboard from './components/CustomerDashboard';
 import CustomerLayout from './components/CustomerLayout';
 import CustomerPassbook from './components/CustomerPassbook';
 import CustomerVacationModal from './components/CustomerVacationModal';
+import SuccessAnimation from './components/SuccessAnimation';
 import { format } from 'date-fns';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -91,6 +92,7 @@ function App() {
   const [isAdminRevenueOpen, setIsAdminRevenueOpen] = useState(false);
   const [isPassbookOpen, setIsPassbookOpen] = useState(false);
   const [isVacationOpen, setIsVacationOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   const [adminActiveTab, setAdminActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users');
   
@@ -171,6 +173,29 @@ function App() {
     }
   }, [registeredUsers, isLoggedIn, currentUser, usersLoaded]);
 
+  // Effect for triggering animation when a new payment is approved for the customer
+  useEffect(() => {
+    if (isLoggedIn && currentUser && currentUser.role !== 'admin' && globalPayments[currentUser.mobile]) {
+      const userPayments = globalPayments[currentUser.mobile];
+      const approvedCount = userPayments.filter(p => p.status === 'approved').length;
+      
+      const lastCountStr = localStorage.getItem(`biaora_lastApprovedCount_${currentUser.mobile}`);
+      const lastCount = lastCountStr ? parseInt(lastCountStr, 10) : 0;
+      
+      if (approvedCount > lastCount) {
+        // Find the latest approved payment amount for the message
+        const approvedPayments = userPayments.filter(p => p.status === 'approved');
+        const latestPayment = approvedPayments[approvedPayments.length - 1];
+        
+        setSuccessMessage(`₹${latestPayment.amount} Payment Received Successfully!`);
+        localStorage.setItem(`biaora_lastApprovedCount_${currentUser.mobile}`, approvedCount.toString());
+      } else if (approvedCount < lastCount) {
+        // Just in case it was reset or deleted
+        localStorage.setItem(`biaora_lastApprovedCount_${currentUser.mobile}`, approvedCount.toString());
+      }
+    }
+  }, [globalPayments, currentUser, isLoggedIn]);
+
   const handleProfileRequest = (mobile, updates) => {
     setProfileRequests(prev => ({ ...prev, [mobile]: updates }));
   };
@@ -219,6 +244,7 @@ function App() {
         timestamp: new Date().toISOString()
       }
     }));
+    setSuccessMessage(`₹${amount} Payment Request Sent!`);
   };
 
   const logAdminAction = (type, mobile, name, action, details) => {
@@ -586,6 +612,7 @@ function App() {
             setGlobalExpenses={setGlobalExpenses}
             globalInventory={globalInventory}
             setGlobalInventory={setGlobalInventory}
+            onSuccessAnimation={setSuccessMessage}
           />
         </main>
         {isProfileOpen && (
@@ -731,6 +758,13 @@ function App() {
           onSaveOrder={handleSaveDayOrder}
           currentOrders={orders}
           prices={PRICES}
+        />
+      )}
+
+      {successMessage && (
+        <SuccessAnimation 
+          message={successMessage} 
+          onClose={() => setSuccessMessage(null)} 
         />
       )}
     </>

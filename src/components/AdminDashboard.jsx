@@ -29,7 +29,8 @@ const AdminDashboard = ({
   monthlyOverrides, setMonthlyOverrides,
   broadcasts, setBroadcasts,
   globalExpenses, setGlobalExpenses,
-  globalInventory, setGlobalInventory
+  globalInventory, setGlobalInventory,
+  onSuccessAnimation
 }) => {
   const { t } = useLanguage();
   const [selectedUser, setSelectedUser] = useState(null);
@@ -954,7 +955,13 @@ const AdminDashboard = ({
                               </div>
                               <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, alignSelf: 'center' }}>
                                 <button 
-                                  onClick={(e) => { e.stopPropagation(); if(window.confirm(`Approve payment of ₹${req.amount}?`)) onApprovePayment(user.mobile); }}
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    if(window.confirm(`Approve payment of ₹${req.amount}?`)) {
+                                      onApprovePayment(user.mobile);
+                                      if (onSuccessAnimation) onSuccessAnimation(`₹${req.amount} Payment Approved!`);
+                                    }
+                                  }}
                                   style={{ padding: '0.6rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem' }}
                                 >
                                   <CheckCircle size={15} /> Approve
@@ -1196,7 +1203,12 @@ const AdminDashboard = ({
                           </div>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button 
-                              onClick={() => { if(window.confirm(`Approve payment of ₹${paymentRequests[selectedUser.mobile].amount}?`)) onApprovePayment(selectedUser.mobile); }}
+                              onClick={() => { 
+                                if(window.confirm(`Approve payment of ₹${paymentRequests[selectedUser.mobile].amount}?`)) {
+                                  onApprovePayment(selectedUser.mobile);
+                                  if (onSuccessAnimation) onSuccessAnimation(`₹${paymentRequests[selectedUser.mobile].amount} Payment Approved!`);
+                                }
+                              }}
                               style={{ padding: '0.7rem 1.2rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}
                             >
                               <CheckCircle size={16} /> Approve
