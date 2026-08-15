@@ -38,7 +38,8 @@ const OrderCard = ({
   
   const isApproved = currentOrder?.status === 'approved';
   const isDelivered = currentOrder?.status === 'delivered';
-  const isLocked = isApproved || isDelivered;
+  // Allow editing approved orders (it will turn back to pending)
+  const isLocked = isDelivered;
   const isOrderable = !isPastDate && !isLockedToday && !isLocked && !isFutureBeyondTomorrow && !isOnVacation;
 
   const hasExistingOrder = (currentOrder?.milk > 0) || (currentOrder?.ghee > 0) || (currentOrder?.chach > 0) || (currentOrder?.paneer > 0) || (currentOrder?.curd > 0);
@@ -212,7 +213,6 @@ const OrderCard = ({
       {!isOrderable && (
         <div style={{ padding: '1rem 1.25rem', background: '#f8fafc', borderTop: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           {isDelivered ? '✅ Order is Delivered & Billed'
-            : isApproved ? '🚚 Order is Approved (Out for Delivery)'
             : isPastDate ? '📅 Past date — cannot modify'
             : isLockedToday ? '⏰ Time over — cannot order for today'
             : isFutureBeyondTomorrow ? '📆 Only Today & Tomorrow orders allowed'
