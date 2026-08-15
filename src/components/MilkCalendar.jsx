@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, isToday, isFuture } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, Droplets, Pause, X, Clock } from 'lucide-react';
 
 const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
   const [viewMonth, setViewMonth] = useState(new Date());
@@ -33,11 +33,11 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'delivered': return { bg: '#dcfce7', color: '#16a34a', emoji: '✅', label: 'Delivered' };
-      case 'paused':   return { bg: '#f3f4f6', color: '#6b7280', emoji: '⏸', label: 'Paused' };
-      case 'pending':  return { bg: '#fef9c3', color: '#ca8a04', emoji: '⏳', label: 'Pending' };
-      case 'future':   return { bg: 'transparent', color: '#cbd5e1', emoji: '', label: '' };
-      default:         return { bg: '#fef2f2', color: '#ef4444', emoji: '✗', label: 'No Order' };
+      case 'delivered': return { bg: '#ebfdf0', color: '#16a34a', dotColor: '#16a34a', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#16a34a'}}></div> };
+      case 'paused':   return { bg: '#f3f4f6', color: '#6b7280', dotColor: '#9ca3af', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#9ca3af'}}></div> };
+      case 'pending':  return { bg: '#fef9c3', color: '#d97706', dotColor: '#d97706', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#d97706'}}></div> };
+      case 'future':   return { bg: 'transparent', color: '#9ca3af', dotColor: 'transparent', icon: null };
+      default:         return { bg: '#fef2f2', color: '#ef4444', dotColor: '#ef4444', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#ef4444'}}></div> };
     }
   };
 
@@ -61,88 +61,99 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
 
   return (
     <div style={{
-      background: 'var(--surface)',
-      borderRadius: '20px',
-      border: '1px solid var(--border)',
+      background: 'white',
+      borderRadius: '24px',
       overflow: 'hidden',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      {/* Header */}
+      {/* Dark Green Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #2563eb, #1e40af)',
-        padding: '1.2rem 1.5rem',
+        background: 'linear-gradient(to right, #064e3b, #15803d)',
+        padding: '1.5rem 1.2rem',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        position: 'relative',
+        borderBottomLeftRadius: '24px',
+        borderBottomRightRadius: '24px'
       }}>
+        {/* Subtle background decoration */}
+        <div style={{ position: 'absolute', right: '10%', opacity: 0.1, fontSize: '4rem', pointerEvents: 'none' }}>🥛</div>
+
         <button
           onClick={() => setViewMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}
-          style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}
+          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}
         >
           <ChevronLeft size={20} />
         </button>
-        <div style={{ textAlign: 'center' }}>
-          <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>
+        <div style={{ textAlign: 'center', zIndex: 1 }}>
+          <h3 style={{ margin: 0, color: 'white', fontSize: '1.25rem', fontWeight: 'bold' }}>
             {format(viewMonth, 'MMMM yyyy')}
           </h3>
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem' }}>
+          <p style={{ margin: '0.2rem 0 0 0', color: 'rgba(255,255,255,0.9)', fontSize: '0.85rem', fontWeight: '500' }}>
             Doodh Delivery Calendar
           </p>
         </div>
         <button
           onClick={() => setViewMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}
-          style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}
+          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}
         >
           <ChevronRight size={20} />
         </button>
       </div>
 
-      {/* Stats Row */}
+      {/* Stats Cards Row */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
-        borderBottom: '1px solid var(--border)',
-        background: 'var(--background)'
+        gap: '0.5rem',
+        padding: '1rem',
+        marginTop: '-1rem', // Pull up slightly
+        position: 'relative',
+        zIndex: 2
       }}>
         {[
-          { label: 'Delivered', value: monthOrders.length, color: '#16a34a', bg: '#dcfce7' },
-          { label: 'Total Litres', value: `${totalLiters}L`, color: '#2563eb', bg: '#dbeafe' },
-          { label: 'Paused Days', value: pausedDays.length, color: '#6b7280', bg: '#f3f4f6' }
+          { label: 'Delivered', value: monthOrders.length, color: '#16a34a', bg: '#f0fdf4', icon: <Truck size={18} color="#16a34a"/>, iconBg: '#dcfce7' },
+          { label: 'Total Litres', value: `${totalLiters}L`, color: '#2563eb', bg: '#eff6ff', icon: <Droplets size={18} color="#2563eb"/>, iconBg: '#dbeafe' },
+          { label: 'Paused Days', value: pausedDays.length, color: '#d97706', bg: '#fffbeb', icon: <Pause size={18} color="#d97706"/>, iconBg: '#fef3c7' }
         ].map((stat, i) => (
           <div key={i} style={{
+            background: 'white',
             padding: '0.8rem 0.5rem',
-            textAlign: 'center',
-            borderRight: i < 2 ? '1px solid var(--border)' : 'none'
+            borderRadius: '16px',
+            border: '1px solid var(--border)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
           }}>
-            <div style={{
-              display: 'inline-block',
-              background: stat.bg,
-              color: stat.color,
-              fontWeight: 'bold',
-              fontSize: '1.1rem',
-              padding: '0.2rem 0.6rem',
-              borderRadius: '8px',
-              marginBottom: '0.2rem'
-            }}>{stat.value}</div>
-            <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{stat.label}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+              <div style={{ background: stat.iconBg, padding: '0.4rem', borderRadius: '50%', display: 'flex' }}>
+                {stat.icon}
+              </div>
+              <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: stat.color }}>{stat.value}</span>
+            </div>
+            <span style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.label}</span>
           </div>
         ))}
       </div>
 
-      <div style={{ padding: '1rem' }}>
+      <div style={{ padding: '0.5rem 1rem 1.5rem 1rem' }}>
         {/* Week Day Labels */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: '4px',
-          marginBottom: '6px'
+          gap: '6px',
+          marginBottom: '10px'
         }}>
           {weekDays.map(d => (
             <div key={d} style={{
               textAlign: 'center',
-              fontSize: '0.68rem',
-              fontWeight: 'bold',
-              color: 'var(--text-secondary)',
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              color: '#374151',
               padding: '4px 0'
             }}>{d}</div>
           ))}
@@ -152,7 +163,7 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: '4px'
+          gap: '8px'
         }}>
           {/* Empty cells for first week */}
           {Array.from({ length: startDayOfWeek }).map((_, i) => (
@@ -164,65 +175,72 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
             const status = getDayStatus(date);
             const style = getStatusStyle(status);
             const today = isToday(date);
+            
+            // Special styling for Today if delivered
+            const isTodayDelivered = today && status === 'delivered';
 
             return (
               <div
                 key={date.toISOString()}
                 title={style.label}
                 style={{
-                  background: today ? '#2563eb' : style.bg,
-                  borderRadius: '10px',
-                  padding: '6px 2px',
-                  textAlign: 'center',
-                  border: today ? '2px solid #1e40af' : '1px solid transparent',
-                  transition: 'transform 0.15s',
+                  background: isTodayDelivered ? '#15803d' : (status === 'future' ? '#f8fafc' : style.bg),
+                  borderRadius: '12px',
+                  padding: '8px 2px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  height: '46px',
                   cursor: 'default'
                 }}
               >
                 <div style={{
-                  fontSize: '0.72rem',
-                  fontWeight: today ? 'bold' : '500',
-                  color: today ? 'white' : style.color,
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  color: isTodayDelivered ? 'white' : '#374151',
                   lineHeight: 1
                 }}>
                   {format(date, 'd')}
                 </div>
-                {status !== 'future' && style.emoji && (
-                  <div style={{ fontSize: '0.65rem', lineHeight: 1.2 }}>{style.emoji}</div>
+                {status !== 'future' && (
+                  isTodayDelivered ? 
+                    <div style={{ fontSize: '0.6rem', color: 'white', lineHeight: 1 }}>✓</div> :
+                    style.icon
                 )}
               </div>
             );
           })}
         </div>
 
-        {/* Legend */}
+        {/* Legend Pill Container */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '0.6rem',
-          marginTop: '1rem',
-          paddingTop: '0.8rem',
-          borderTop: '1px solid var(--border)',
-          justifyContent: 'center'
+          gap: '1rem',
+          marginTop: '1.5rem',
+          padding: '0.8rem 1rem',
+          border: '1px solid var(--border)',
+          borderRadius: '20px',
+          justifyContent: 'center',
+          background: '#fafafa'
         }}>
           {[
-            { emoji: '✅', label: 'Delivered', bg: '#dcfce7', color: '#16a34a' },
-            { emoji: '⏸', label: 'Paused', bg: '#f3f4f6', color: '#6b7280' },
-            { emoji: '✗', label: 'No Order', bg: '#fef2f2', color: '#ef4444' },
-            { emoji: '⏳', label: 'Pending', bg: '#fef9c3', color: '#ca8a04' },
+            { color: '#16a34a', icon: <div style={{width:'8px',height:'8px',borderRadius:'50%',background:'#16a34a'}}></div>, label: 'Delivered' },
+            { color: '#2563eb', icon: <Pause size={10} color="#2563eb" fill="#2563eb"/>, label: 'Paused' },
+            { color: '#ef4444', icon: <X size={10} color="#ef4444"/>, label: 'No Order' },
+            { color: '#d97706', icon: <Clock size={10} color="#d97706"/>, label: 'Pending' },
           ].map((item, i) => (
             <div key={i} style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.3rem',
-              background: item.bg,
+              gap: '0.4rem',
               color: item.color,
-              fontSize: '0.72rem',
-              fontWeight: '600',
-              padding: '0.25rem 0.6rem',
-              borderRadius: '20px'
+              fontSize: '0.75rem',
+              fontWeight: '600'
             }}>
-              <span>{item.emoji}</span> {item.label}
+              {item.icon} <span style={{color: '#4b5563'}}>{item.label}</span>
             </div>
           ))}
         </div>
