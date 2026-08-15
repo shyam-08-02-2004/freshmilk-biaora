@@ -612,51 +612,6 @@ function App() {
           currentUser={currentUser}
         />
         )}
-        <button 
-          onClick={() => {
-            if(window.confirm('PERMANENTLY DELETE Shyam (9755334721) AND CLEAR ADMIN LOGS?')) {
-              // 1. Delete user from registeredUsers
-              setRegisteredUsers(prev => {
-                const next = prev.filter(u => u.mobile !== '9755334721');
-                setDoc(doc(db, 'store', 'users'), { data: next });
-                return next;
-              });
-              
-              // 2. Clear orders
-              setGlobalOrders(prev => {
-                const next = { ...prev };
-                delete next['9755334721'];
-                setDoc(doc(db, 'store', 'globalOrders'), { data: next });
-                return next;
-              });
-              
-              // 3. Clear payments
-              setGlobalPayments(prev => {
-                const next = { ...prev };
-                delete next['9755334721'];
-                setDoc(doc(db, 'store', 'globalPayments'), { data: next });
-                return next;
-              });
-              
-              // 4. Clear overrides
-              setMonthlyOverrides(prev => {
-                const next = { ...prev };
-                delete next['9755334721'];
-                setDoc(doc(db, 'store', 'monthlyOverrides'), { data: next });
-                return next;
-              });
-              
-              // 5. Clear Admin Logs
-              setAdminLogs([]);
-              setDoc(doc(db, 'store', 'adminLogs'), { data: [] });
-              
-              alert('Account and Admin Logs deleted permanently! You can now create a new account.');
-            }
-          }}
-          style={{ background: '#b91c1c', color: 'white', padding: '15px', width: '100%', fontWeight: 'bold', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
-        >
-          TEMPORARY: DELETE SHYAM ACCOUNT & CLEAR LOGS
-        </button>
         <main className="app-layout" style={{ padding: 0 }}>
           <AdminDashboard 
             activeTab={adminActiveTab}
