@@ -9,9 +9,10 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
   const [screenshot, setScreenshot] = useState(null);
+  const [showQR, setShowQR] = useState(false);
   const [error, setError] = useState('');
   const upiId = "shyamdangi084@okicici";
-  const upiLink = `upi://pay?pa=${upiId}&pn=FreshMilk&am=${totalBill > 0 ? totalBill : 0}&cu=INR`;
+  const upiLink = `upi://pay?pa=${upiId}&pn=FreshMilk&mc=0000&mode=02&purpose=00&am=${totalBill > 0 ? Number(totalBill).toFixed(2) : '1.00'}&cu=INR`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(upiId);
@@ -62,13 +63,6 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.3rem' }}>Amount Due: <strong style={{ color: '#10b981', fontSize: '1.1rem' }}>₹{totalBill}</strong></p>
         </div>
 
-        <div style={{ background: 'var(--surface)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', display: 'inline-block' }}>
-            <QRCode value={upiLink} size={180} level="H" />
-          </div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.8rem', textAlign: 'center' }}>Scan to pay exact <strong>₹{totalBill}</strong></p>
-        </div>
-
         <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
           <a href={upiLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#5f259f', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
             <Smartphone size={18} /> PhonePe
@@ -77,6 +71,22 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
             <Smartphone size={18} /> GPay / Other
           </a>
         </div>
+
+        {showQR ? (
+          <div style={{ background: 'var(--surface)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1.5rem' }}>
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', display: 'inline-block' }}>
+              <QRCode value={upiLink} size={180} level="H" />
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.8rem', textAlign: 'center' }}>Scan to pay exact <strong>₹{totalBill}</strong></p>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setShowQR(true)}
+            style={{ width: '100%', marginTop: '1.5rem', padding: '0.8rem', background: 'var(--surface)', color: 'var(--text-primary)', border: '1px dashed var(--border)', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <QrCode size={18} /> Show QR Code for another device
+          </button>
+        )}
 
         <div style={{ marginTop: '1rem', background: 'var(--background)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid var(--primary-light)' }}>
