@@ -16,18 +16,24 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const order = orders[dateStr];
     
-    if (isFuture(date) && !isToday(date)) return 'future';
-    
     // Check if it's a vacation/pause day
     if (currentUser?.vacationStart && currentUser?.vacationEnd) {
       const vStart = new Date(currentUser.vacationStart);
+      vStart.setHours(0,0,0,0);
       const vEnd = new Date(currentUser.vacationEnd);
+      vEnd.setHours(23,59,59,999);
       if (date >= vStart && date <= vEnd) return 'paused';
     }
     
-    if (!order) return 'no-order';
-    if (order.status === 'approved') return 'delivered';
-    if (order.status === 'pending') return 'pending';
+    // If there is an order, show its status even if it's a future date
+    if (order) {
+      if (order.status === 'approved') return 'delivered';
+      if (order.status === 'pending') return 'pending';
+    }
+    
+    // If no order and it's in the future, mark as future (empty/white)
+    if (isFuture(date) && !isToday(date)) return 'future';
+    
     return 'no-order';
   };
 
