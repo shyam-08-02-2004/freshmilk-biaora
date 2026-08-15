@@ -220,20 +220,6 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
           </div>
         </div>
 
-        {/* Summary Card */}
-        <div style={{ padding: '1rem 1.5rem', background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ background: currentDue <= 0 ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #b91c1c)', padding: '1.2rem', borderRadius: '12px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-            <div>
-              <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.9, marginBottom: '0.2rem' }}>
-                Total Due Amount
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-                ₹{Math.max(0, currentDue).toFixed(2)}
-              </div>
-            </div>
-            <Wallet size={48} opacity={0.2} />
-          </div>
-        </div>
 
         {/* Ledger List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0' }}>
