@@ -750,6 +750,9 @@ function App() {
           pendingRequest={paymentRequests[currentUser?.mobile]}
           currentUser={currentUser}
           selectedDate={selectedDate}
+          userOrders={globalOrders[currentUser?.mobile]}
+          userPayments={globalPayments[currentUser?.mobile]}
+          prices={PRICES}
         />
       )}
 

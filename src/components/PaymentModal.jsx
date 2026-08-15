@@ -1,18 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Copy, QrCode, Clock, CheckCircle, Upload, Smartphone } from 'lucide-react';
 import upiQrImage from '../assets/upi-qr.jpg';
 
-const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, currentUser, selectedDate }) => {
+const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, currentUser, selectedDate, userOrders, userPayments, prices }) => {
   const [utr, setUtr] = useState('');
   const [paymentMonth, setPaymentMonth] = useState(() => {
     const d = selectedDate || new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
+  
+  const [displayAmount, setDisplayAmount] = useState(totalBill);
+  
+  useEffect(() => {
+    if (!userOrders || !prices) {
+      setDisplayAmount(totalBill);
+      return;
+    }
+    
+    let monthTotal = 0;
+    Object.entries(userOrders).forEach(([dateStr, order]) => {
+      if (order.status !== 'delivered') return;
+      if (dateStr.startsWith(paymentMonth)) {
+         let dTotal = order.totalPrice;
+         if (dTotal === undefined) {
+             dTotal = 0;
+             if (order.milk) dTotal += order.milk * prices.milk;
+             if (order.ghee) dTotal += order.ghee * prices.ghee;
+             if (order.chach) dTotal += order.chach * prices.chach;
+             if (order.paneer) dTotal += order.paneer * prices.paneer;
+             if (order.curd) dTotal += order.curd * prices.curd;
+         }
+         monthTotal += dTotal;
+      }
+    });
+
+    let monthPaid = 0;
+    if (userPayments) {
+      userPayments.forEach(p => {
+         if (p.status === 'approved' && p.paymentMonth === paymentMonth) {
+            monthPaid += p.amount;
+         }
+      });
+    }
+
+    let remainingForMonth = monthTotal - monthPaid;
+    setDisplayAmount(Math.max(0, remainingForMonth));
+  }, [paymentMonth, userOrders, userPayments, prices, totalBill]);
+
   const [screenshot, setScreenshot] = useState(null);
   const [showQR, setShowQR] = useState(false);
   const [error, setError] = useState('');
   const upiId = "shyamdangi084@okicici";
-  const payAmount = totalBill > 0 ? Number(totalBill).toFixed(2) : '1.00';
+  const payAmount = displayAmount > 0 ? Number(displayAmount).toFixed(2) : '1.00';
   const upiLink = `upi://pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
   const phonePeLink = `phonepe://pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
   const gpayLink = `tez://upi/pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
@@ -47,7 +86,7 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
       setError("Please upload the payment screenshot.");
       return;
     }
-    onSubmitPayment(currentUser.mobile, utr, totalBill, paymentMonth, screenshot);
+    onSubmitPayment(currentUser.mobile, utr, displayAmount, paymentMonth, screenshot);
     setError('');
   };
 
@@ -63,7 +102,21 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
             <QrCode size={30} />
           </div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--text-primary)' }}>Pay Bill</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.3rem' }}>Amount Due: <strong style={{ color: '#10b981', fontSize: '1.1rem' }}>₹{totalBill}</strong></p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.3rem' }}>
+            Amount Due for {paymentMonth}: <strong style={{ color: '#10b981', fontSize: '1.1rem' }}>₹{displayAmount.toFixed(2)}</strong>
+            {displayAmount !== totalBill && <div style={{ fontSize: '0.75rem', marginTop: '0.2rem', color: '#ef4444' }}>(Overall Due: ₹{totalBill})</div>}
+          </p>
+        </div>
+
+        <div style={{ padding: '0 1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Select Month to Pay:</label>
+          <input 
+            type="month" 
+            value={paymentMonth}
+            onChange={(e) => setPaymentMonth(e.target.value)}
+            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--primary)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '0.5rem', fontWeight: 'bold' }}
+            required
+          />
         </div>
 
         <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
@@ -83,7 +136,7 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
             <div style={{ background: 'white', padding: '0.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <img src={upiQrImage} alt="UPI QR Code" style={{ width: '200px', height: 'auto', borderRadius: '8px' }} />
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.8rem', textAlign: 'center' }}>Scan to pay exact <strong>₹{totalBill}</strong></p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.8rem', textAlign: 'center' }}>Scan to pay exact <strong>₹{displayAmount.toFixed(2)}</strong></p>
           </div>
         ) : (
           <button 
@@ -114,14 +167,6 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
         ) : (
           <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Paying For Month:</label>
-              <input 
-                type="month" 
-                value={paymentMonth}
-                onChange={(e) => setPaymentMonth(e.target.value)}
-                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '0.8rem' }}
-                required
-              />
               <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Enter 12-digit UTR Number after payment:</label>
               <input 
                 type="text" 
