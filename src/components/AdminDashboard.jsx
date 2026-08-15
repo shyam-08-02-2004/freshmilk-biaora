@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt, Camera, FileText, Plane, Plus } from 'lucide-react';
+import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt, Camera, FileText, Plane, Plus, MessageCircle, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import AdminHistoryModal from './AdminHistoryModal';
 import AdminDeliverySheet from './AdminDeliverySheet';
@@ -41,6 +41,7 @@ const AdminDashboard = ({
   const [isPassbookOpen, setIsPassbookOpen] = useState(false);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [isBulkCashOpen, setIsBulkCashOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   React.useEffect(() => {
     sessionStorage.setItem('admin_activeTab', activeTab);
@@ -351,15 +352,28 @@ const AdminDashboard = ({
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-              <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>All Registered Customers ({registeredUsers.length})</h3>
-              <button 
-                onClick={() => setIsQRScannerOpen(true)}
-                style={{ background: '#2563eb', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)' }}
-              >
-                <Camera size={18} /> Scan QR
-              </button>
+            <div style={{ position: 'sticky', top: '0', zIndex: 10, background: 'var(--surface)', padding: '1rem', borderBottom: '1px solid var(--border)', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>All Customers ({registeredUsers.length})</h3>
+                <button 
+                  onClick={() => setIsQRScannerOpen(true)}
+                  style={{ background: '#2563eb', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(37, 99, 235, 0.2)' }}
+                >
+                  <Camera size={18} /> Scan QR
+                </button>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <Search size={18} color="var(--text-secondary)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input 
+                  type="text" 
+                  placeholder="Search by name, mobile, or flat..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.5rem', borderRadius: '12px', border: '1px solid var(--border)', outline: 'none', fontSize: '0.95rem' }}
+                />
+              </div>
             </div>
+
             {registeredUsers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                 <Users size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
@@ -367,7 +381,13 @@ const AdminDashboard = ({
               </div>
             ) : (
               <div className="customers-grid">
-                {registeredUsers.map(user => {
+                {registeredUsers.filter(user => {
+                  if (!searchQuery) return true;
+                  const query = searchQuery.toLowerCase();
+                  return (user.name?.toLowerCase() || '').includes(query) || 
+                         (user.mobile || '').includes(query) || 
+                         (user.flat?.toLowerCase() || '').includes(query);
+                }).map(user => {
                   const due = calculateUserDue(user);
                   const userPayments = globalPayments[user.mobile] || [];
                   const lastPayment = userPayments.length > 0 ? userPayments[userPayments.length - 1] : null;
@@ -387,9 +407,14 @@ const AdminDashboard = ({
                           >
                             {user.name}
                           </h4>
-                          <a href={`tel:${user.mobile}`} style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', background: 'var(--background)', border: '1px solid var(--border)', padding: '0.3rem 0.6rem', borderRadius: '12px', marginTop: '0.3rem' }}>
-                            <Phone size={14} color="#2563eb" /> {user.mobile}
-                          </a>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
+                            <a href={`tel:${user.mobile}`} style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', background: 'var(--background)', border: '1px solid var(--border)', padding: '0.3rem 0.6rem', borderRadius: '12px' }}>
+                              <Phone size={14} color="#2563eb" /> Call
+                            </a>
+                            <a href={`https://wa.me/91${user.mobile}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', background: 'var(--background)', border: '1px solid var(--border)', padding: '0.3rem 0.6rem', borderRadius: '12px' }}>
+                              <MessageCircle size={14} color="#25D366" /> WhatsApp
+                            </a>
+                          </div>
                         </div>
                       </div>
                       <div style={{ background: isDefaulter ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: isDefaulter ? '#ef4444' : '#10b981', padding: '0.4rem 0.8rem', borderRadius: '8px', fontWeight: 'bold' }}>
@@ -449,16 +474,6 @@ const AdminDashboard = ({
             <div className="users-list">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h3 style={{ margin: 0 }}>Order Requests & Delivery</h3>
-                <button 
-                  onClick={() => {
-                    if (window.confirm('Mark all approved orders as Delivered?')) {
-                      onDeliverAll();
-                    }
-                  }}
-                  style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
-                >
-                  <CheckCircle size={16} /> Deliver All Approved
-                </button>
               </div>
               
               {(() => {
@@ -554,6 +569,36 @@ const AdminDashboard = ({
                 });
               })()}
             </div>
+            
+            {/* Floating Action Button for Orders */}
+            <button
+              onClick={() => {
+                if (window.confirm('Mark all approved orders as Delivered?')) {
+                  onDeliverAll();
+                }
+              }}
+              style={{
+                position: 'fixed',
+                bottom: '80px',
+                right: '20px',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50px',
+                padding: '1rem 1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
+                cursor: 'pointer',
+                zIndex: 100,
+                transition: 'transform 0.2s',
+              }}
+            >
+              <CheckCircle size={20} /> Deliver All Approved
+            </button>
           </>
         )}
         {activeTab === 'profiles' && (
