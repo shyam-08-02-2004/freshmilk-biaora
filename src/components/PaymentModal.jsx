@@ -10,6 +10,7 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
   });
   
   const [displayAmount, setDisplayAmount] = useState(totalBill);
+  const [step, setStep] = useState(1);
   
   useEffect(() => {
     if (!userOrders || !prices) {
@@ -97,159 +98,193 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
         <button onClick={onClose} className="close-btn" style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
           <X size={20} />
         </button>
-        
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-            <QrCode size={30} />
-          </div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--text-primary)' }}>Pay Bill</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.3rem' }}>
-            Amount Due for {paymentMonth}: <strong style={{ color: '#10b981', fontSize: '1.1rem' }}>₹{displayAmount.toFixed(2)}</strong>
-            {displayAmount !== totalBill && <div style={{ fontSize: '0.75rem', marginTop: '0.2rem', color: '#ef4444' }}>(Overall Due: ₹{totalBill})</div>}
-          </p>
-        </div>
-
         <div style={{ padding: '0 1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Select Month to Pay:</label>
-          <input 
-            type="month" 
-            value={paymentMonth}
-            onChange={(e) => setPaymentMonth(e.target.value)}
-            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--primary)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '0.5rem', fontWeight: 'bold' }}
-            required
-          />
-        </div>
-
-        <div style={{ marginTop: '1.5rem', padding: '0 1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.8rem' }}>
-          <a 
-            href={phonePeLink} 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: '0.6rem', 
-              width: '100%', 
-              padding: '0.9rem', 
-              background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', 
-              color: 'white', 
-              textDecoration: 'none', 
-              borderRadius: '12px', 
-              fontWeight: 'bold', 
-              fontSize: '1rem',
-              boxShadow: '0 4px 12px rgba(91, 33, 182, 0.3)',
-            }}
-          >
-            <Smartphone size={20} /> PhonePe
-          </a>
-
-          <a 
-            href={gpayLink} 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: '0.6rem', 
-              width: '100%', 
-              padding: '0.9rem', 
-              background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', 
-              color: 'white', 
-              textDecoration: 'none', 
-              borderRadius: '12px', 
-              fontWeight: 'bold', 
-              fontSize: '1rem',
-              boxShadow: '0 4px 12px rgba(29, 78, 216, 0.3)',
-            }}
-          >
-            <Smartphone size={20} /> Google Pay
-          </a>
-
-          <a 
-            href={upiLink} 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: '0.6rem', 
-              width: '100%', 
-              padding: '0.9rem', 
-              background: 'linear-gradient(135deg, #475569, #334155)', 
-              color: 'white', 
-              textDecoration: 'none', 
-              borderRadius: '12px', 
-              fontWeight: 'bold', 
-              fontSize: '1rem',
-              boxShadow: '0 4px 12px rgba(51, 65, 85, 0.3)',
-            }}
-          >
-            <QrCode size={20} /> Other UPI App
-          </a>
-        </div>
-
-        {showQR ? (
-          <div style={{ background: 'var(--surface)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1.5rem' }}>
-            <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', display: 'inline-block' }}>
-              <QRCode value={upiLink} size={180} level="H" />
-            </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.8rem', textAlign: 'center' }}>Scan to pay exact <strong>₹{displayAmount.toFixed(2)}</strong></p>
-          </div>
-        ) : (
-          <button 
-            onClick={() => setShowQR(true)}
-            style={{ width: '100%', marginTop: '1.5rem', padding: '0.8rem', background: 'var(--surface)', color: 'var(--text-primary)', border: '1px dashed var(--border)', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-          >
-            <QrCode size={18} /> Show QR Code for another device
-          </button>
-        )}
-
-        <div style={{ marginTop: '1rem', background: 'var(--background)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid var(--primary-light)' }}>
-            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{upiId}</span>
-            <button onClick={handleCopy} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold' }}>
-              <Copy size={16} /> Copy
-            </button>
-          </div>
-        </div>
-
-        {pendingRequest ? (
-          <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fef3c7', borderRadius: '12px', textAlign: 'center', border: '1px solid #fde68a' }}>
-            <Clock size={24} color="#d97706" style={{ margin: '0 auto 0.5rem' }} />
-            <p style={{ color: '#d97706', fontWeight: 'bold', marginBottom: '0.3rem' }}>Payment Verification Pending</p>
-            <p style={{ color: '#92400e', fontSize: '0.85rem' }}>UTR: {pendingRequest.utr}</p>
-            <p style={{ color: '#92400e', fontSize: '0.85rem' }}>Amount: ₹{pendingRequest.amount}</p>
-            <p style={{ color: '#92400e', fontSize: '0.85rem' }}>For Month: {pendingRequest.paymentMonth}</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Enter 12-digit UTR Number after payment:</label>
+          {step === 1 ? (
+            <div style={{ textAlign: 'center', padding: '1rem 0 2rem 0' }}>
+              <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                <Clock size={34} />
+              </div>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Select Billing Month</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '2rem' }}>Choose the month to clear your dues</p>
+              
               <input 
-                type="text" 
-                value={utr}
-                onChange={(e) => setUtr(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                placeholder="e.g. 123456789012"
-                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '0.8rem' }}
-                maxLength={12}
-              />
-              <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Upload Payment Screenshot:</label>
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={handleFileChange}
-                style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px dashed var(--primary)', background: 'rgba(16, 185, 129, 0.05)', color: 'var(--text-primary)' }}
+                type="month" 
+                value={paymentMonth}
+                onChange={(e) => setPaymentMonth(e.target.value)}
+                style={{ width: '100%', padding: '1.2rem', borderRadius: '14px', border: '2px solid var(--primary)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.3rem', textAlign: 'center', outline: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)' }}
                 required
               />
-              {screenshot && <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><CheckCircle size={14}/> Image selected</div>}
-              {error && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem' }}>{error}</p>}
+              
+              <div style={{ background: 'var(--background)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid var(--border)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                 <span style={{ color: 'var(--text-secondary)', fontSize: '1rem', display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Amount Due for {paymentMonth}</span>
+                 <strong style={{ color: displayAmount > 0 ? '#10b981' : 'var(--text-primary)', fontSize: '2.5rem', display: 'block' }}>₹{displayAmount.toFixed(2)}</strong>
+                 {displayAmount === 0 && <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', display: 'block', marginTop: '0.5rem' }}>(No pending dues for this month)</span>}
+              </div>
+
+              <button 
+                onClick={() => {
+                    if(displayAmount <= 0) {
+                        alert('There is no pending amount for this month!');
+                        return;
+                    }
+                    setStep(2);
+                }}
+                style={{ width: '100%', padding: '1.2rem', background: displayAmount > 0 ? 'var(--primary)' : 'var(--border)', color: displayAmount > 0 ? 'white' : 'var(--text-secondary)', border: 'none', borderRadius: '14px', fontWeight: 'bold', cursor: displayAmount > 0 ? 'pointer' : 'not-allowed', fontSize: '1.2rem', boxShadow: displayAmount > 0 ? '0 4px 14px rgba(16, 185, 129, 0.3)' : 'none', transition: 'all 0.2s' }}
+              >
+                Proceed to Pay ₹{displayAmount.toFixed(2)}
+              </button>
             </div>
-            <button 
-              type="submit" 
-              disabled={utr.length !== 12 || !screenshot}
-              style={{ width: '100%', padding: '0.8rem', background: (utr.length === 12 && screenshot) ? 'var(--primary)' : 'var(--border)', color: (utr.length === 12 && screenshot) ? 'white' : 'var(--text-secondary)', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: (utr.length === 12 && screenshot) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
-            >
-              <CheckCircle size={18} /> Submit UTR
-            </button>
-          </form>
-        )}
+          ) : (
+            <>
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem', position: 'relative' }}>
+                <button 
+                  onClick={() => setStep(1)} 
+                  style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+                >
+                  ← Back
+                </button>
+                <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.8rem' }}>
+                  <QrCode size={26} />
+                </div>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: '700', color: 'var(--text-primary)' }}>Pay Bill</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.3rem' }}>
+                  Amount Due for {paymentMonth}: <strong style={{ color: '#10b981', fontSize: '1.1rem' }}>₹{displayAmount.toFixed(2)}</strong>
+                </p>
+              </div>
+
+              <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.8rem' }}>
+                <a 
+                  href={phonePeLink} 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '0.6rem', 
+                    width: '100%', 
+                    padding: '0.9rem', 
+                    background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', 
+                    color: 'white', 
+                    textDecoration: 'none', 
+                    borderRadius: '12px', 
+                    fontWeight: 'bold', 
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 12px rgba(91, 33, 182, 0.3)',
+                  }}
+                >
+                  <Smartphone size={20} /> PhonePe
+                </a>
+
+                <a 
+                  href={gpayLink} 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '0.6rem', 
+                    width: '100%', 
+                    padding: '0.9rem', 
+                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', 
+                    color: 'white', 
+                    textDecoration: 'none', 
+                    borderRadius: '12px', 
+                    fontWeight: 'bold', 
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 12px rgba(29, 78, 216, 0.3)',
+                  }}
+                >
+                  <Smartphone size={20} /> Google Pay
+                </a>
+
+                <a 
+                  href={upiLink} 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '0.6rem', 
+                    width: '100%', 
+                    padding: '0.9rem', 
+                    background: 'linear-gradient(135deg, #475569, #334155)', 
+                    color: 'white', 
+                    textDecoration: 'none', 
+                    borderRadius: '12px', 
+                    fontWeight: 'bold', 
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 12px rgba(51, 65, 85, 0.3)',
+                  }}
+                >
+                  <QrCode size={20} /> Other UPI App
+                </a>
+              </div>
+
+              {showQR ? (
+                <div style={{ background: 'var(--surface)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1.5rem' }}>
+                  <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', display: 'inline-block' }}>
+                    <QRCode value={upiLink} size={180} level="H" />
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.8rem', textAlign: 'center' }}>Scan to pay exact <strong>₹{displayAmount.toFixed(2)}</strong></p>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setShowQR(true)}
+                  style={{ width: '100%', marginTop: '1.5rem', padding: '0.8rem', background: 'var(--surface)', color: 'var(--text-primary)', border: '1px dashed var(--border)', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  <QrCode size={18} /> Show QR Code for another device
+                </button>
+              )}
+
+              <div style={{ marginTop: '1rem', background: 'var(--background)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid var(--primary-light)' }}>
+                  <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{upiId}</span>
+                  <button onClick={handleCopy} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold' }}>
+                    <Copy size={16} /> Copy
+                  </button>
+                </div>
+              </div>
+
+              {pendingRequest ? (
+                <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fef3c7', borderRadius: '12px', textAlign: 'center', border: '1px solid #fde68a' }}>
+                  <Clock size={24} color="#d97706" style={{ margin: '0 auto 0.5rem' }} />
+                  <p style={{ color: '#d97706', fontWeight: 'bold', marginBottom: '0.3rem' }}>Payment Verification Pending</p>
+                  <p style={{ color: '#92400e', fontSize: '0.85rem' }}>UTR: {pendingRequest.utr}</p>
+                  <p style={{ color: '#92400e', fontSize: '0.85rem' }}>Amount: ₹{pendingRequest.amount}</p>
+                  <p style={{ color: '#92400e', fontSize: '0.85rem' }}>For Month: {pendingRequest.paymentMonth}</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Enter 12-digit UTR Number after payment:</label>
+                    <input 
+                      type="text" 
+                      value={utr}
+                      onChange={(e) => setUtr(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                      placeholder="e.g. 123456789012"
+                      style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '0.8rem' }}
+                      maxLength={12}
+                    />
+                    <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Upload Payment Screenshot:</label>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px dashed var(--primary)', background: 'rgba(16, 185, 129, 0.05)', color: 'var(--text-primary)' }}
+                      required
+                    />
+                    {screenshot && <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><CheckCircle size={14}/> Image selected</div>}
+                    {error && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem' }}>{error}</p>}
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={utr.length !== 12 || !screenshot}
+                    style={{ width: '100%', padding: '0.8rem', background: (utr.length === 12 && screenshot) ? 'var(--primary)' : 'var(--border)', color: (utr.length === 12 && screenshot) ? 'white' : 'var(--text-secondary)', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: (utr.length === 12 && screenshot) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', marginBottom: '1rem' }}
+                  >
+                    <CheckCircle size={18} /> Submit UTR
+                  </button>
+                </form>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
