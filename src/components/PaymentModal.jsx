@@ -51,7 +51,7 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
   const [screenshot, setScreenshot] = useState(null);
   const [showQR, setShowQR] = useState(false);
   const [error, setError] = useState('');
-  const upiId = "shyamdangi084@okicici";
+  const upiId = "shyamdangi084-1@okicici";
   const payAmount = displayAmount > 0 ? Number(displayAmount).toFixed(2) : '1.00';
   const upiLink = `upi://pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
   const phonePeLink = `phonepe://pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
