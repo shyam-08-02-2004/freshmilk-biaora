@@ -12,7 +12,7 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
 
     // Process Orders
     Object.entries(userOrders).forEach(([dateStr, order]) => {
-      if (order.status !== 'approved') return;
+      if (order.status !== 'delivered') return;
       
       let dailyTotal = 0;
       const details = [];

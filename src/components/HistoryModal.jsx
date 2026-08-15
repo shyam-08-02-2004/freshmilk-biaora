@@ -92,7 +92,7 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
 
                 chronologicalDates.forEach(dateStr => {
                   const order = orders[dateStr];
-                  if (order.status === 'approved') {
+                  if (order.status === 'delivered') {
                     const dayTotal = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach + (order.paneer || 0) * prices.paneer + (order.curd || 0) * prices.curd;
                     totalBill += dayTotal;
                     totalMilk += (order.milk || 0);
@@ -191,7 +191,7 @@ const HistoryModal = ({ orders, payments = [], pendingPayment, onClose, prices, 
                 + (order.chach || 0) * prices.chach
                 + (order.paneer || 0) * prices.paneer
                 + (order.curd || 0) * prices.curd;
-              const isPending = order.status !== 'approved';
+              const isPending = order.status !== 'delivered';
 
               return (
                 <div key={dateStr} className="history-item" style={{ background: 'var(--surface)', borderRadius: '12px', border: `1px solid ${isPending ? '#fde68a' : 'var(--border)'}`, overflow: 'hidden', marginBottom: '1rem' }}>

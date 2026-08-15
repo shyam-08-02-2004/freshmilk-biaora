@@ -95,7 +95,7 @@ const HorizontalCalendar = ({
           let statusColor = '';
           
           if (dayOrder && (dayOrder.milk > 0 || dayOrder.ghee > 0 || dayOrder.chach > 0 || dayOrder.paneer > 0 || dayOrder.curd > 0)) {
-            if (dayOrder.status === 'approved') {
+            if (dayOrder.status === 'delivered') {
               StatusIcon = CheckCircle;
               statusColor = '#10b981';
             } else if (dayOrder.status === 'pending') {

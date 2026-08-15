@@ -299,7 +299,7 @@ function App() {
     Object.entries(orders).forEach(([dateStr, dayOrder]) => {
       const [y, m] = dateStr.split('-');
       if (parseInt(m, 10) === currentMonth && parseInt(y, 10) === currentYear) {
-        if (dayOrder.status === 'approved') {
+        if (dayOrder.status === 'delivered') {
           bill += (dayOrder.milk || 0) * PRICES.milk;
           bill += (dayOrder.ghee || 0) * PRICES.ghee;
           bill += (dayOrder.chach || 0) * PRICES.chach;
@@ -406,12 +406,46 @@ function App() {
     setGlobalOrders(newGlobalOrders);
     setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
     localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+  };
+
+  const handleDeliverUserOrder = (userMobile, dateKey) => {
+    const userOrders = globalOrders[userMobile] || {};
+    const dayOrder = userOrders[dateKey];
+    if (!dayOrder) return;
+    const newGlobalOrders = {
+      ...globalOrders,
+      [userMobile]: { ...userOrders, [dateKey]: { ...dayOrder, status: 'delivered' } }
+    };
+    setGlobalOrders(newGlobalOrders);
+    setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+    localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
     const user = registeredUsers.find(u => u.mobile === userMobile);
     const parts = [];
     if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
     if (dayOrder.ghee) parts.push(`${dayOrder.ghee}Kg Ghee`);
     if (dayOrder.chach) parts.push(`${dayOrder.chach}L Chach`);
-    logAdminAction('order', userMobile, user?.name || 'Unknown', 'approved', `Date: ${dateKey}, Items: ${parts.join(', ')}`);
+    logAdminAction('order', userMobile, user?.name || 'Unknown', 'approved', `Delivered: ${dateKey}, Items: ${parts.join(', ')}`);
+  };
+
+  const handleDeliverAllApproved = () => {
+    let newGlobalOrders = { ...globalOrders };
+    let changed = false;
+    Object.entries(newGlobalOrders).forEach(([mobile, userOrders]) => {
+      Object.entries(userOrders).forEach(([dateKey, order]) => {
+        if (order.status === 'approved') {
+          newGlobalOrders[mobile] = {
+            ...newGlobalOrders[mobile],
+            [dateKey]: { ...order, status: 'delivered' }
+          };
+          changed = true;
+        }
+      });
+    });
+    if (changed) {
+      setGlobalOrders(newGlobalOrders);
+      setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
+      localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+    }
   };
 
   const handleRejectUserOrder = (userMobile, dateKey) => {
@@ -506,6 +540,8 @@ function App() {
             registeredUsers={registeredUsers}
             globalOrders={globalOrders} 
             onApproveOrder={handleApproveUserOrder} 
+            onDeliverOrder={handleDeliverUserOrder}
+            onDeliverAll={handleDeliverAllApproved}
             onRejectOrder={handleRejectUserOrder}
             onEditUserOrder={handleEditUserOrder}
             onDeleteUser={handleDeleteUser}

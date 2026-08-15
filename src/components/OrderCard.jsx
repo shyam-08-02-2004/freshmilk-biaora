@@ -37,7 +37,9 @@ const OrderCard = ({
   const isDecreaseLocked = isTodayDate && isPast7AM;
   
   const isApproved = currentOrder?.status === 'approved';
-  const isOrderable = !isPastDate && !isLockedToday && !isApproved && !isFutureBeyondTomorrow && !isOnVacation;
+  const isDelivered = currentOrder?.status === 'delivered';
+  const isLocked = isApproved || isDelivered;
+  const isOrderable = !isPastDate && !isLockedToday && !isLocked && !isFutureBeyondTomorrow && !isOnVacation;
 
   const hasExistingOrder = (currentOrder?.milk > 0) || (currentOrder?.ghee > 0) || (currentOrder?.chach > 0) || (currentOrder?.paneer > 0) || (currentOrder?.curd > 0);
   const canDelete = isOrderable && hasExistingOrder && !isDecreaseLocked;
@@ -148,7 +150,7 @@ const OrderCard = ({
       </div>
 
       <div className="products-grid">
-        {!isOrderable && (isPastDate || isApproved) && products.filter(p => (localOrder[p.id] || 0) > 0).length === 0 ? (
+        {!isOrderable && (isPastDate || isLocked) && products.filter(p => (localOrder[p.id] || 0) > 0).length === 0 ? (
           <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🍽️</div>
             <p>No items were ordered on this date.</p>
@@ -158,7 +160,7 @@ const OrderCard = ({
             const qty = localOrder[p.id] || 0;
             
             // If it's a historical/locked date and qty is 0, don't show the product
-            if (!isOrderable && (isPastDate || isApproved) && qty === 0) return null;
+            if (!isOrderable && (isPastDate || isLocked) && qty === 0) return null;
 
             return (
               <div key={p.id} className="order-item-card">
@@ -209,7 +211,8 @@ const OrderCard = ({
 
       {!isOrderable && (
         <div style={{ padding: '1rem 1.25rem', background: '#f8fafc', borderTop: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          {isApproved ? '🔒 Order is approved and locked'
+          {isDelivered ? '✅ Order is Delivered & Billed'
+            : isApproved ? '🚚 Order is Approved (Out for Delivery)'
             : isPastDate ? '📅 Past date — cannot modify'
             : isLockedToday ? '⏰ Time over — cannot order for today'
             : isFutureBeyondTomorrow ? '📆 Only Today & Tomorrow orders allowed'

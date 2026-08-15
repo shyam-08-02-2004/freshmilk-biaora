@@ -28,7 +28,7 @@ const AdminAnalytics = ({ registeredUsers, globalOrders }) => {
 
       const userOrders = globalOrders[user.mobile] || {};
       Object.entries(userOrders).forEach(([dateStr, order]) => {
-        if (dateStr.startsWith(filterMonth) && order.status === 'approved') {
+        if (dateStr.startsWith(filterMonth) && order.status === 'delivered') {
           locationData[cleanLoc].milk += (order.milk || 0);
           locationData[cleanLoc].ghee += (order.ghee || 0);
           locationData[cleanLoc].paneer += (order.paneer || 0);

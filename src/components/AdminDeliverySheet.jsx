@@ -14,7 +14,7 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, prices }) => {
       user,
       order: todayOrder
     };
-  }).filter(d => d.order && (d.order.milk > 0 || d.order.ghee > 0 || d.order.chach > 0 || d.order.paneer > 0 || d.order.curd > 0) && d.order.status === 'approved');
+  }).filter(d => d.order && (d.order.milk > 0 || d.order.ghee > 0 || d.order.chach > 0 || d.order.paneer > 0 || d.order.curd > 0) && (d.order.status === 'approved' || d.order.status === 'delivered'));
 
   const handlePrint = () => {
     window.print();

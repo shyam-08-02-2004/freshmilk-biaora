@@ -27,7 +27,8 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
     
     // If there is an order, show its status even if it's a future date
     if (order) {
-      if (order.status === 'approved') return 'delivered';
+      if (order.status === 'delivered') return 'delivered';
+      if (order.status === 'approved') return 'approved';
       if (order.status === 'pending') return 'pending';
     }
     
@@ -40,6 +41,7 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
   const getStatusStyle = (status) => {
     switch (status) {
       case 'delivered': return { bg: '#ebfdf0', color: '#16a34a', dotColor: '#16a34a', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#16a34a'}}></div> };
+      case 'approved': return { bg: '#eff6ff', color: '#2563eb', dotColor: '#2563eb', icon: <Truck size={10} color="#2563eb"/> };
       case 'paused':   return { bg: '#f3f4f6', color: '#6b7280', dotColor: '#9ca3af', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#9ca3af'}}></div> };
       case 'pending':  return { bg: '#fef9c3', color: '#d97706', dotColor: '#d97706', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#d97706'}}></div> };
       case 'future':   return { bg: 'transparent', color: '#9ca3af', dotColor: 'transparent', icon: null };
@@ -50,7 +52,7 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
   // Stats
   const monthOrders = daysInMonth.filter(d => {
     const dateStr = format(d, 'yyyy-MM-dd');
-    return orders[dateStr]?.status === 'approved';
+    return orders[dateStr]?.status === 'delivered';
   });
   const pausedDays = daysInMonth.filter(d => {
     if (!currentUser?.vacationStart || !currentUser?.vacationEnd) return false;
@@ -234,7 +236,8 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
         }}>
           {[
             { color: '#16a34a', icon: <div style={{width:'8px',height:'8px',borderRadius:'50%',background:'#16a34a'}}></div>, label: 'Delivered' },
-            { color: '#2563eb', icon: <Pause size={10} color="#2563eb" fill="#2563eb"/>, label: 'Paused' },
+            { color: '#2563eb', icon: <Truck size={10} color="#2563eb"/>, label: 'Approved' },
+            { color: '#6b7280', icon: <Pause size={10} color="#6b7280" fill="#6b7280"/>, label: 'Paused' },
             { color: '#ef4444', icon: <X size={10} color="#ef4444"/>, label: 'No Order' },
             { color: '#d97706', icon: <Clock size={10} color="#d97706"/>, label: 'Pending' },
           ].map((item, i) => (
