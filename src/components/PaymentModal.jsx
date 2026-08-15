@@ -44,9 +44,9 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
       });
     }
 
-    let remainingForMonth = monthTotal - monthPaid;
-    let safeTotalBill = Math.max(0, totalBill);
-    setDisplayAmount(Math.min(safeTotalBill, Math.max(0, remainingForMonth)));
+    // Show remaining balance for the selected month only (independent of overall dues)
+    const remainingForMonth = Math.max(0, monthTotal - monthPaid);
+    setDisplayAmount(remainingForMonth);
   }, [paymentMonth, userOrders, userPayments, prices, totalBill]);
 
   const [screenshot, setScreenshot] = useState(null);
