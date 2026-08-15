@@ -178,23 +178,23 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
             </button>
           </div>
           
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem', alignItems: 'center' }}>
             <input 
               type="month" 
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
-              style={{ padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none', flex: 1, minWidth: '150px' }}
+              style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
             />
             <button 
               onClick={handleDownloadPDF}
-              style={{ background: '#f3e8ff', color: '#9333ea', border: '1px solid #d8b4fe', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', flex: 1, minWidth: '150px', justifyContent: 'center' }}
+              style={{ width: '100%', background: '#f3e8ff', color: '#9333ea', border: '1px solid #d8b4fe', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', cursor: 'pointer' }}
             >
               <Download size={18} /> Download PDF
             </button>
             {filterMonth && (
               <button 
                 onClick={() => setFilterMonth('')} 
-                style={{ padding: '0.6rem 1rem', background: '#f1f5f9', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ width: '100%', padding: '0.6rem 1rem', background: '#f1f5f9', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 Clear Filter
               </button>

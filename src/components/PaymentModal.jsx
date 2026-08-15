@@ -3,7 +3,6 @@ import { X, Copy, QrCode, Clock, CheckCircle } from 'lucide-react';
 
 const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, currentUser, selectedDate }) => {
   const [utr, setUtr] = useState('');
-  const [paymentAmount, setPaymentAmount] = useState(totalBill > 0 ? totalBill : '');
   const [paymentMonth, setPaymentMonth] = useState(() => {
     const d = selectedDate || new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -22,11 +21,7 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
       setError("Please enter a valid 12-digit UTR number.");
       return;
     }
-    if (!paymentAmount || Number(paymentAmount) <= 0) {
-      setError("Please enter a valid amount.");
-      return;
-    }
-    onSubmitPayment(currentUser.mobile, utr, Number(paymentAmount), paymentMonth);
+    onSubmitPayment(currentUser.mobile, utr, totalBill, paymentMonth);
     setError('');
   };
 
@@ -78,15 +73,6 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
                 style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '0.8rem' }}
                 required
               />
-              <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Amount Paid (₹):</label>
-              <input 
-                type="number" 
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder={`e.g. ${totalBill > 0 ? totalBill : 1000}`}
-                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '0.8rem' }}
-                required
-              />
               <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Enter 12-digit UTR Number after payment:</label>
               <input 
                 type="text" 
@@ -100,8 +86,8 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
             </div>
             <button 
               type="submit" 
-              disabled={utr.length !== 12 || !paymentAmount}
-              style={{ width: '100%', padding: '0.8rem', background: (utr.length === 12 && paymentAmount) ? 'var(--primary)' : 'var(--border)', color: (utr.length === 12 && paymentAmount) ? 'white' : 'var(--text-secondary)', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: (utr.length === 12 && paymentAmount) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
+              disabled={utr.length !== 12}
+              style={{ width: '100%', padding: '0.8rem', background: utr.length === 12 ? 'var(--primary)' : 'var(--border)', color: utr.length === 12 ? 'white' : 'var(--text-secondary)', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: utr.length === 12 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
             >
               <CheckCircle size={18} /> Submit UTR
             </button>
