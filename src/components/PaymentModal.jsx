@@ -120,26 +120,68 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
           />
         </div>
 
-        <div style={{ marginTop: '1.5rem', padding: '0 1rem' }}>
+        <div style={{ marginTop: '1.5rem', padding: '0 1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.8rem' }}>
+          <a 
+            href={phonePeLink} 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '0.6rem', 
+              width: '100%', 
+              padding: '0.9rem', 
+              background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', 
+              color: 'white', 
+              textDecoration: 'none', 
+              borderRadius: '12px', 
+              fontWeight: 'bold', 
+              fontSize: '1rem',
+              boxShadow: '0 4px 12px rgba(91, 33, 182, 0.3)',
+            }}
+          >
+            <Smartphone size={20} /> PhonePe
+          </a>
+
+          <a 
+            href={gpayLink} 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '0.6rem', 
+              width: '100%', 
+              padding: '0.9rem', 
+              background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', 
+              color: 'white', 
+              textDecoration: 'none', 
+              borderRadius: '12px', 
+              fontWeight: 'bold', 
+              fontSize: '1rem',
+              boxShadow: '0 4px 12px rgba(29, 78, 216, 0.3)',
+            }}
+          >
+            <Smartphone size={20} /> Google Pay
+          </a>
+
           <a 
             href={upiLink} 
             style={{ 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
-              gap: '0.8rem', 
+              gap: '0.6rem', 
               width: '100%', 
-              padding: '1rem', 
-              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', 
+              padding: '0.9rem', 
+              background: 'linear-gradient(135deg, #475569, #334155)', 
               color: 'white', 
               textDecoration: 'none', 
               borderRadius: '12px', 
               fontWeight: 'bold', 
-              fontSize: '1.1rem',
-              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)',
+              fontSize: '1rem',
+              boxShadow: '0 4px 12px rgba(51, 65, 85, 0.3)',
             }}
           >
-            <Smartphone size={22} /> Pay via UPI (GPay, PhonePe, Paytm)
+            <QrCode size={20} /> Other UPI App
           </a>
         </div>
 
