@@ -207,7 +207,7 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
           <div style={{ background: currentDue <= 0 ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #b91c1c)', padding: '1.2rem', borderRadius: '12px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
             <div>
               <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.9, marginBottom: '0.2rem' }}>
-                {currentDue <= 0 ? 'Advance Balance' : 'Total Due Amount'}
+                {currentDue <= 0 ? 'Extra Paid / Balance' : 'Total Due Amount'}
               </div>
               <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
                 ₹{Math.abs(currentDue).toFixed(2)}
@@ -223,7 +223,7 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
             <div style={{ padding: '1rem 1.5rem', background: '#fffbeb', borderBottom: '1px solid #fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 'bold', color: '#b45309' }}>Opening Balance (Pichla Baki):</span>
               <strong style={{ fontSize: '1.1rem', color: openingBalance > 0 ? '#ef4444' : '#10b981' }}>
-                {openingBalance > 0 ? `₹${openingBalance} Due` : `₹${Math.abs(openingBalance)} Advance`}
+                {openingBalance > 0 ? `₹${openingBalance} Due` : `₹${Math.abs(openingBalance)} Extra Paid`}
               </strong>
             </div>
           )}
@@ -262,7 +262,7 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'flex-end', borderTop: '1px dashed var(--border)', paddingTop: '0.4rem' }}>
                         Balance: <strong style={{ color: t.balance > 0 ? '#ef4444' : '#10b981', marginLeft: '0.3rem' }}>
-                           {t.balance > 0 ? `₹${t.balance} Due` : `₹${Math.abs(t.balance)} Advance`}
+                           {t.balance > 0 ? `₹${t.balance} Due` : `₹${Math.abs(t.balance)} Extra Paid`}
                         </strong>
                       </div>
                     </div>
