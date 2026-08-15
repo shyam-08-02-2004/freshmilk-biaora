@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Search, Calendar, User, Clock, CheckCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, User, Clock, CheckCircle, Trash2, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 
 const AdminHistoryModal = ({ onClose, adminLogs, filterMonth, setFilterMonth }) => {
+  const [filterType, setFilterType] = useState('all');
+
   const filteredLogs = adminLogs.filter(log => {
     // The timestamp of the action itself
     const logMonth = format(new Date(log.timestamp), 'yyyy-MM');
-    return logMonth === filterMonth;
+    const matchMonth = logMonth === filterMonth;
+    const matchType = filterType === 'all' || log.type === filterType;
+    return matchMonth && matchType;
   });
 
   return (
@@ -41,16 +45,36 @@ const AdminHistoryModal = ({ onClose, adminLogs, filterMonth, setFilterMonth }) 
 
         {/* Filters */}
         <div style={{ padding: '1.5rem 1rem' }}>
-          <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Search size={16} /> Search by Month
-            </label>
-            <input 
-              type="month" 
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
-              style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--background)', color: 'var(--text-primary)', fontWeight: 'bold' }}
-            />
+          <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            
+            <div style={{ flex: 1, minWidth: '140px' }}>
+              <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                <Calendar size={16} /> Month
+              </label>
+              <input 
+                type="month" 
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--background)', color: 'var(--text-primary)', fontWeight: 'bold' }}
+              />
+            </div>
+
+            <div style={{ flex: 1, minWidth: '140px' }}>
+              <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                <Filter size={16} /> Activity Type
+              </label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--background)', color: 'var(--text-primary)', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                <option value="all">All Activity</option>
+                <option value="order">Orders</option>
+                <option value="payment">Payments</option>
+                <option value="profile">Profile Updates</option>
+              </select>
+            </div>
+
           </div>
         </div>
 
@@ -58,8 +82,8 @@ const AdminHistoryModal = ({ onClose, adminLogs, filterMonth, setFilterMonth }) 
         <div style={{ padding: '0 1rem 2rem' }}>
           {filteredLogs.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)' }}>
-              <Calendar size={48} style={{ color: 'var(--border)', margin: '0 auto 1rem' }} />
-              <p>No activity recorded in this month.</p>
+              <Search size={48} style={{ color: 'var(--border)', margin: '0 auto 1rem' }} />
+              <p>No {filterType !== 'all' ? filterType : 'activity'} logs found.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
