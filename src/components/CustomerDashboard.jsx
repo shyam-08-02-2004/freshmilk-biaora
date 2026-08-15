@@ -16,6 +16,7 @@ const CustomerDashboard = ({
   monthTotalBill,
   monthPaidBill,
   totalBill,
+  previousDues,
   onOpenPayment,
   onOpenPassbook
 }) => {
@@ -34,22 +35,36 @@ const CustomerDashboard = ({
       <div className="left-column">
         {/* Top Widgets Row */}
         <div className="widget-row">
-          <div className="widget-card" style={{ flex: 1.2, background: '#f0fdf4', border: '1px solid #dcfce7' }}>
-            <h4 style={{ margin: '0 0 1rem 0', color: 'var(--secondary)' }}>Total This Month</h4>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--secondary)', lineHeight: 1 }}>₹{totalBill}</span>
+          <div className="widget-card" style={{ flex: 1.2, background: '#f0fdf4', border: '1px solid #dcfce7', padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+              <h4 style={{ margin: 0, color: 'var(--secondary)' }}>Total Payable</h4>
               <button 
                 onClick={onOpenPayment}
-                style={{ background: 'var(--secondary)', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', cursor: 'pointer' }}
+                style={{ background: 'var(--secondary)', color: 'white', border: 'none', padding: '0.5rem 0.8rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}
               >
-                <CreditCard size={18} /> Pay Bill
+                <CreditCard size={16} /> Pay
               </button>
             </div>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <span>Paid: ₹{monthPaidBill}</span>
-              <span style={{ borderLeft: '1px solid var(--border)', paddingLeft: '1rem' }}>Remaining: ₹{totalBill}</span>
+            <span style={{ fontSize: '2.2rem', fontWeight: 'bold', color: 'var(--secondary)', lineHeight: 1, display: 'block', marginBottom: '1rem' }}>₹{totalBill}</span>
+            
+            <div style={{ background: 'rgba(255,255,255,0.6)', borderRadius: '8px', padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Pichla Baki (Arrears):</span>
+                <span style={{ color: previousDues > 0 ? '#ef4444' : 'var(--text-primary)', fontWeight: 'bold' }}>₹{previousDues}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Is Mahine Ka Bill:</span>
+                <span style={{ fontWeight: 'bold' }}>₹{monthTotalBill}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Paid (Is Mahine):</span>
+                <span style={{ color: '#10b981', fontWeight: 'bold' }}>- ₹{monthPaidBill}</span>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: '0.8rem', display: 'flex', justifyContent: 'flex-end' }}>
               <span 
-                style={{ marginLeft: 'auto', color: 'var(--secondary)', cursor: 'pointer', fontWeight: 600 }}
+                style={{ color: 'var(--secondary)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
                 onClick={onOpenPassbook}
               >
                 View Passbook &gt;

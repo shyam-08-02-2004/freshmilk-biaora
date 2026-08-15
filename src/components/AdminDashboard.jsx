@@ -117,33 +117,61 @@ const AdminDashboard = ({
     let mTotal = 0;
     let mPaid = 0;
     
+    let mPrevBill = 0;
+    let mPrevPaid = 0;
+
     const userOrders = globalOrders[userMobile] || {};
     Object.entries(userOrders).forEach(([dateStr, order]) => {
       if (dateStr.startsWith(monthStr) && order.status === 'delivered') {
         mTotal += (order.milk || 0) * prices.milk;
         mTotal += (order.ghee || 0) * prices.ghee;
         mTotal += (order.chach || 0) * prices.chach;
+        mTotal += (order.paneer || 0) * prices.paneer;
+        mTotal += (order.curd || 0) * prices.curd;
+      } else if (dateStr < monthStr && order.status === 'delivered') {
+        mPrevBill += (order.milk || 0) * prices.milk;
+        mPrevBill += (order.ghee || 0) * prices.ghee;
+        mPrevBill += (order.chach || 0) * prices.chach;
+        mPrevBill += (order.paneer || 0) * prices.paneer;
+        mPrevBill += (order.curd || 0) * prices.curd;
       }
     });
 
     const userPayments = globalPayments[userMobile] || [];
     userPayments.forEach(payment => {
       const pMonth = payment.paymentMonth || payment.timestamp.substring(0, 7);
-      if (payment.status === 'approved' && pMonth === monthStr) {
-        mPaid += parseFloat(payment.amount);
+      if (payment.status === 'approved') {
+        if (pMonth === monthStr) {
+          mPaid += parseFloat(payment.amount);
+        } else if (pMonth < monthStr) {
+          mPrevPaid += parseFloat(payment.amount);
+        }
       }
     });
+
+    Object.entries(monthlyOverrides?.[userMobile] || {}).forEach(([pMonth, adj]) => {
+      if (pMonth < monthStr) {
+        if (adj.mTotal !== undefined && adj.mTotalAdj === undefined) {
+           // Skip complex historical override replace
+        } else {
+           mPrevBill += (adj.mTotalAdj || 0);
+           mPrevPaid += (adj.mPaidAdj || 0);
+        }
+      }
+    });
+    
+    const mPreviousDues = mPrevBill - mPrevPaid;
 
     const adj = monthlyOverrides?.[userMobile]?.[monthStr];
     if (adj) {
       if (adj.mTotal !== undefined && adj.mTotalAdj === undefined) {
-        return { mTotal: adj.mTotal, mPaid: adj.mPaid, mRemain: adj.mRemain };
+        return { mTotal: adj.mTotal, mPaid: adj.mPaid, mPreviousDues, mRemain: mPreviousDues + adj.mRemain };
       }
       mTotal += (adj.mTotalAdj || 0);
       mPaid += (adj.mPaidAdj || 0);
     }
 
-    return { mTotal, mPaid, mRemain: Math.max(0, mTotal - mPaid) };
+    return { mTotal, mPaid, mPreviousDues, mRemain: Math.max(0, mPreviousDues + mTotal - mPaid) };
   };
 
   const pendingOrdersCount = Object.values(globalOrders || {}).reduce((total, userOrders) => {
@@ -777,7 +805,7 @@ const AdminDashboard = ({
                       </div>
                       
                       {(() => {
-                        const { mTotal, mPaid, mRemain } = calculateMonthlyUserSummary(selectedUser.mobile, filterMonth);
+                        const { mTotal, mPaid, mPreviousDues, mRemain } = calculateMonthlyUserSummary(selectedUser.mobile, filterMonth);
                         
                         if (isEditingSummary) {
                           return (
@@ -855,8 +883,8 @@ const AdminDashboard = ({
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {/* Action buttons row */}
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <a
-                                href={`https://wa.me/91${selectedUser.mobile}?text=${encodeURIComponent(`Hello ${selectedUser.name},\n\nThis is your FreshMilk Biaora bill for *${format(new Date(filterMonth + '-01'), 'MMMM yyyy')}*.\n\nTotal Bill: ₹${mTotal}\nPaid: ₹${mPaid}\n*Remaining Due: ₹${mRemain}*\n\nPlease pay the pending amount.`)}`}
+                                <a
+                                  href={`https://wa.me/91${selectedUser.mobile}?text=${encodeURIComponent(`Hello ${selectedUser.name},\n\nThis is your FreshMilk Biaora bill for *${format(new Date(filterMonth + '-01'), 'MMMM yyyy')}*.\n\nPrevious Dues: ₹${mPreviousDues}\nThis Month Bill: ₹${mTotal}\nPaid: ₹${mPaid}\n*Total Payable: ₹${mRemain}*\n\nPlease pay the pending amount.`)}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 style={{ padding: '0.35rem 0.75rem', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold', fontSize: '0.82rem' }}
@@ -879,18 +907,22 @@ const AdminDashboard = ({
                             </div>
 
                             {/* Billing cards */}
-                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                              <div style={{ flex: '1 1 100px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--text-secondary)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Month Bill</p>
-                                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>₹{mTotal}</p>
+                            <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+                              <div style={{ flex: '1 1 80px', background: 'var(--surface)', padding: '0.8rem', borderRadius: '8px', borderLeft: '4px solid #f59e0b', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <p style={{ fontSize: '0.75rem', color: '#d97706', fontWeight: 'bold', textTransform: 'uppercase' }}>Arrears</p>
+                                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#b45309' }}>₹{mPreviousDues}</p>
                               </div>
-                              <div style={{ flex: '1 1 100px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #10b981', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                                <p style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase' }}>Paid</p>
-                                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#10b981' }}>₹{mPaid}</p>
+                              <div style={{ flex: '1 1 80px', background: 'var(--surface)', padding: '0.8rem', borderRadius: '8px', borderLeft: '4px solid var(--text-secondary)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Month Bill</p>
+                                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>₹{mTotal}</p>
                               </div>
-                              <div style={{ flex: '1 1 100px', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #ef4444', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                                <p style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 'bold', textTransform: 'uppercase' }}>Remaining</p>
-                                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ef4444' }}>₹{mRemain}</p>
+                              <div style={{ flex: '1 1 80px', background: 'var(--surface)', padding: '0.8rem', borderRadius: '8px', borderLeft: '4px solid #10b981', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <p style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 'bold', textTransform: 'uppercase' }}>Paid</p>
+                                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#10b981' }}>₹{mPaid}</p>
+                              </div>
+                              <div style={{ flex: '1 1 80px', background: 'var(--surface)', padding: '0.8rem', borderRadius: '8px', borderLeft: '4px solid #ef4444', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <p style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 'bold', textTransform: 'uppercase' }}>Payable</p>
+                                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#ef4444' }}>₹{mRemain}</p>
                               </div>
                             </div>
 

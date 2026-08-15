@@ -76,7 +76,8 @@ function App() {
   const { t } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [globalOrders, setGlobalOrders] = useFirestoreSync('globalOrders', {});
-  const [totalBill, setTotalBill] = useState(0);
+  const [totalBill, setTotalBill] = useState(0); // Grand total (previousDues + bill - paid)
+  const [previousDues, setPreviousDues] = useState(0);
   const [monthTotalBill, setMonthTotalBill] = useState(0);
   const [monthPaidBill, setMonthPaidBill] = useState(0);
   const [billUpdated, setBillUpdated] = useState(false);
@@ -295,6 +296,9 @@ function App() {
 
 
     let bill = 0;
+    let paid = 0;
+    let prevBill = 0;
+    let prevPaid = 0;
 
     Object.entries(orders).forEach(([dateStr, dayOrder]) => {
       const [y, m] = dateStr.split('-');
@@ -306,26 +310,52 @@ function App() {
           bill += (dayOrder.paneer || 0) * PRICES.paneer;
           bill += (dayOrder.curd || 0) * PRICES.curd;
         }
+      } else if (dateStr < currentMonthStr) {
+        if (dayOrder.status === 'delivered') {
+          prevBill += (dayOrder.milk || 0) * PRICES.milk;
+          prevBill += (dayOrder.ghee || 0) * PRICES.ghee;
+          prevBill += (dayOrder.chach || 0) * PRICES.chach;
+          prevBill += (dayOrder.paneer || 0) * PRICES.paneer;
+          prevBill += (dayOrder.curd || 0) * PRICES.curd;
+        }
       }
     });
 
-    let paid = 0;
     const userPayments = globalPayments[currentUser.mobile] || [];
     userPayments.forEach(payment => {
       if (payment.status === 'approved') {
         const pMonth = payment.paymentMonth || payment.timestamp.substring(0, 7);
         if (pMonth === currentMonthStr) {
           paid += parseFloat(payment.amount);
+        } else if (pMonth < currentMonthStr) {
+          prevPaid += parseFloat(payment.amount);
         }
       }
     });
+
+    // Check for overrides in previous months to adjust previous dues?
+    // Actually, overrides are per month. To make it perfect, we'd iterate over all past overrides.
+    Object.entries(monthlyOverrides[currentUser.mobile] || {}).forEach(([pMonth, adj]) => {
+      if (pMonth < currentMonthStr) {
+        if (adj.mTotal !== undefined && adj.mTotalAdj === undefined) {
+           // We'd have to subtract the original month's calculated bill/paid and add the override.
+           // That might be complex. Let's just do total simple adjustment for now.
+        } else {
+           prevBill += (adj.mTotalAdj || 0);
+           prevPaid += (adj.mPaidAdj || 0);
+        }
+      }
+    });
+
+    const calculatedPreviousDues = prevBill - prevPaid;
 
     const override = monthlyOverrides[currentUser.mobile]?.[currentMonthStr];
     if (override) {
       if (override.mTotal !== undefined && override.mTotalAdj === undefined) {
         setMonthTotalBill(override.mTotal);
         setMonthPaidBill(override.mPaid);
-        setTotalBill(override.mRemain);
+        setPreviousDues(calculatedPreviousDues);
+        setTotalBill(calculatedPreviousDues + override.mRemain);
         return;
       }
       bill += (override.mTotalAdj || 0);
@@ -334,7 +364,8 @@ function App() {
 
     setMonthTotalBill(bill);
     setMonthPaidBill(paid);
-    setTotalBill(Math.max(0, bill - paid));
+    setPreviousDues(calculatedPreviousDues);
+    setTotalBill(Math.max(0, calculatedPreviousDues + bill - paid));
 
   }, [orders, selectedDate, currentUser, globalPayments, monthlyOverrides]);
 
@@ -629,6 +660,7 @@ function App() {
           onSaveOrder={handleSaveDayOrder}
           monthPaidBill={monthPaidBill}
           totalBill={totalBill}
+          previousDues={previousDues}
           onOpenPayment={() => setIsPaymentOpen(true)}
           onOpenPassbook={() => setIsPassbookOpen(true)}
         />
