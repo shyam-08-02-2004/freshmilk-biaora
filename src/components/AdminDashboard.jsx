@@ -477,93 +477,170 @@ const AdminDashboard = ({
               </div>
               
               {(() => {
-                const orderUsers = registeredUsers.filter(user => {
-                  return Object.values(globalOrders[user.mobile] || {}).some(order => order.status === 'pending' || order.status === 'approved');
+                // 1. Collect all pending/approved orders across all users
+                const allActiveOrders = [];
+                registeredUsers.forEach(user => {
+                  Object.entries(globalOrders[user.mobile] || {}).forEach(([dateStr, order]) => {
+                    if (order.status === 'pending' || order.status === 'approved') {
+                      allActiveOrders.push({
+                        date: dateStr,
+                        user: user,
+                        order: order
+                      });
+                    }
+                  });
                 });
-                
-                if (orderUsers.length === 0) {
-                  return <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>No pending or approved order requests.</p>;
+
+                if (allActiveOrders.length === 0) {
+                  return <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}><Package size={48} color="var(--border)" style={{ marginBottom: '1rem' }} /><p>No pending or approved order requests.</p></div>;
                 }
 
-                return orderUsers.map(user => {
-                  const activeOrders = Object.entries(globalOrders[user.mobile] || {})
-                    .filter(([, order]) => order.status === 'pending' || order.status === 'approved')
-                    .sort((a, b) => new Date(b[0]) - new Date(a[0]));
+                // 2. Group by date
+                const groupedByDate = {};
+                allActiveOrders.forEach(item => {
+                  if (!groupedByDate[item.date]) groupedByDate[item.date] = [];
+                  groupedByDate[item.date].push(item);
+                });
 
-                  const pendingCount = activeOrders.filter(([, o]) => o.status === 'pending').length;
-                  const approvedCount = activeOrders.filter(([, o]) => o.status === 'approved').length;
+                // Sort dates ascending
+                const sortedDates = Object.keys(groupedByDate).sort();
+                
+                return sortedDates.map(dateStr => {
+                  const ordersForDate = groupedByDate[dateStr];
+                  const dateObj = new Date(dateStr + 'T00:00:00');
+                  
+                  // Check if this date is strictly in the future (tomorrow or later)
+                  const todayStr = format(new Date(), 'yyyy-MM-dd');
+                  const isFuture = dateStr > todayStr;
+                  const isPast = dateStr < todayStr;
+                  
+                  const pendingCount = ordersForDate.filter(item => item.order.status === 'pending').length;
+                  const approvedCount = ordersForDate.filter(item => item.order.status === 'approved').length;
 
                   return (
-                    <div key={user.mobile} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', marginBottom: '1rem' }}>
-                      {/* User header - clickable to open full detail */}
-                      <div
-                        onClick={() => { setSelectedUser(user); setShowAllOrders(false); setShowAllPayments(false); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', cursor: 'pointer', background: '#f8fafc', borderBottom: '1px solid var(--border)' }}
-                      >
-                        <img src={user.avatar || '/assets/babu_logo.png'} alt="User Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
-                        <div style={{ flex: 1 }}>
-                          <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {user.name}
-                          </h4>
-                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            {user.mobile} 
-                            {pendingCount > 0 && ` · ${pendingCount} pending`}
-                            {approvedCount > 0 && ` · ${approvedCount} approved`}
-                          </p>
+                    <div key={dateStr} style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1.25rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '2px solid var(--border)', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ background: isFuture ? '#eff6ff' : (isPast ? '#fef3c7' : '#dcfce7'), padding: '0.6rem 1.2rem', borderRadius: '12px', textAlign: 'center', border: `1px solid ${isFuture ? '#bfdbfe' : (isPast ? '#fde68a' : '#bbf7d0')}` }}>
+                            <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: isFuture ? 'var(--primary)' : (isPast ? '#d97706' : '#16a34a'), lineHeight: 1.1 }}>{format(dateObj, 'dd')}</div>
+                            <div style={{ fontSize: '0.85rem', color: isFuture ? '#3b82f6' : (isPast ? '#d97706' : '#16a34a'), fontWeight: 'bold' }}>{format(dateObj, 'MMM')}</div>
+                          </div>
+                          <div>
+                            <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem' }}>{format(dateObj, 'EEEE')}</h3>
+                            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                              <span style={{ color: pendingCount > 0 ? '#ef4444' : 'inherit', fontWeight: pendingCount > 0 ? 'bold' : 'normal' }}>{pendingCount} pending</span> • <span style={{ color: approvedCount > 0 ? '#10b981' : 'inherit', fontWeight: approvedCount > 0 ? 'bold' : 'normal' }}>{approvedCount} approved</span>
+                            </p>
+                          </div>
                         </div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold' }}>View Details →</span>
+                        
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          {pendingCount > 0 && (
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Approve all ${pendingCount} pending orders for ${format(dateObj, 'dd MMM')}?`)) {
+                                  ordersForDate.forEach(item => {
+                                    if (item.order.status === 'pending') onApproveOrder(item.user.mobile, dateStr);
+                                  });
+                                }
+                              }}
+                              style={{ padding: '0.6rem 1.2rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                            >
+                              <CheckCircle size={18} /> Approve All
+                            </button>
+                          )}
+                          
+                          {approvedCount > 0 && (
+                            <button
+                              onClick={() => {
+                                if (isFuture) {
+                                  alert(`You cannot deliver future orders. Wait until ${format(dateObj, 'dd MMM')}!`);
+                                  return;
+                                }
+                                if (window.confirm(`Mark all ${approvedCount} approved orders as Delivered for ${format(dateObj, 'dd MMM')}?`)) {
+                                  ordersForDate.forEach(item => {
+                                    if (item.order.status === 'approved') onDeliverOrder(item.user.mobile, dateStr);
+                                  });
+                                }
+                              }}
+                              style={{ padding: '0.6rem 1.2rem', background: isFuture ? '#cbd5e1' : '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: isFuture ? 'not-allowed' : 'pointer', fontSize: '0.9rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                              title={isFuture ? "Cannot deliver future orders" : "Mark Delivered"}
+                            >
+                              <Truck size={18} /> Deliver All
+                            </button>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Orders list */}
-                      {activeOrders.map(([date, order]) => {
-                        const total = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach + (order.paneer || 0) * prices.paneer + (order.curd || 0) * prices.curd;
-                        const items = [];
-                        if (order.milk) items.push(`${order.milk}L Milk`);
-                        if (order.ghee) items.push(`${order.ghee}Kg Ghee`);
-                        if (order.chach) items.push(`${order.chach}L Chach`);
-                        if (order.paneer) items.push(`${order.paneer} Paneer`);
-                        if (order.curd) items.push(`${order.curd} Curd`);
-                        
-                        const isPending = order.status === 'pending';
-                        
-                        return (
-                          <div key={date} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9', flexWrap: 'wrap', background: isPending ? 'white' : '#f0fdf4' }}>
-                            <div style={{ background: isPending ? '#eff6ff' : '#dcfce7', padding: '0.4rem 0.7rem', borderRadius: '8px', textAlign: 'center', minWidth: '48px' }}>
-                              <div style={{ fontSize: '1rem', fontWeight: 'bold', color: isPending ? 'var(--primary)' : '#16a34a' }}>{format(new Date(date + 'T00:00:00'), 'dd')}</div>
-                              <div style={{ fontSize: '0.65rem', color: isPending ? '#3b82f6' : '#16a34a', fontWeight: 'bold' }}>{format(new Date(date + 'T00:00:00'), 'MMM')}</div>
-                            </div>
-                            <div style={{ flex: 1, minWidth: '120px' }}>
-                              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>{items.join(', ')}</div>
-                              <div style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: 'bold' }}>₹{total} {order.status === 'approved' && <span style={{fontSize: '0.7rem', color: '#16a34a', marginLeft: '0.5rem'}}>(Out for Delivery)</span>}</div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '0.4rem' }}>
-                              {isPending ? (
-                                <>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); onApproveOrder(user.mobile, date); }}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.4rem 0.8rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                        {ordersForDate.map((item, idx) => {
+                          const { user, order } = item;
+                          const total = (order.milk || 0) * prices.milk + (order.ghee || 0) * prices.ghee + (order.chach || 0) * prices.chach + (order.paneer || 0) * prices.paneer + (order.curd || 0) * prices.curd;
+                          const itemsList = [];
+                          if (order.milk) itemsList.push(`${order.milk}L Milk`);
+                          if (order.ghee) itemsList.push(`${order.ghee}Kg Ghee`);
+                          if (order.chach) itemsList.push(`${order.chach}L Chach`);
+                          if (order.paneer) itemsList.push(`${order.paneer} Paneer`);
+                          if (order.curd) itemsList.push(`${order.curd} Curd`);
+                          
+                          const isPending = order.status === 'pending';
+
+                          return (
+                            <div key={user.mobile + dateStr + idx} style={{ background: 'white', border: `1px solid ${isPending ? 'var(--border)' : '#bbf7d0'}`, borderRadius: '12px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <img src={user.avatar || '/assets/babu_logo.png'} alt="Avatar" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                                <div>
+                                  <h4 
+                                    onClick={() => { setSelectedUser(user); setShowAllOrders(false); setShowAllPayments(false); }}
+                                    style={{ margin: 0, fontSize: '1.1rem', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
                                   >
-                                    <CheckCircle size={14} /> Approve
-                                  </button>
+                                    {user.name}
+                                  </h4>
+                                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.3rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                    <Phone size={12} /> {user.mobile} {user.flat && `• Flat: ${user.flat}`}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div style={{ flex: 1, minWidth: '200px', padding: '0 1rem' }}>
+                                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>{itemsList.join(', ')}</div>
+                                <div style={{ fontSize: '0.9rem', color: '#10b981', fontWeight: 'bold', marginTop: '0.2rem' }}>₹{total} {order.status === 'approved' && <span style={{fontSize: '0.75rem', color: '#16a34a', marginLeft: '0.5rem', background: '#dcfce7', padding: '0.1rem 0.4rem', borderRadius: '8px'}}>Approved</span>}</div>
+                              </div>
+                              
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                {isPending ? (
+                                  <>
+                                    <button
+                                      onClick={() => onApproveOrder(user.mobile, dateStr)}
+                                      style={{ padding: '0.5rem 1rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                    >
+                                      <CheckCircle size={16} /> Approve
+                                    </button>
+                                    <button
+                                      onClick={() => onRejectOrder(user.mobile, dateStr)}
+                                      style={{ padding: '0.5rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </>
+                                ) : (
                                   <button
-                                    onClick={(e) => { e.stopPropagation(); onRejectOrder(user.mobile, date); }}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.4rem 0.7rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
+                                    onClick={() => {
+                                      if (isFuture) {
+                                        alert(`Cannot deliver future orders. Wait until ${format(dateObj, 'dd MMM')}`);
+                                        return;
+                                      }
+                                      onDeliverOrder(user.mobile, dateStr);
+                                    }}
+                                    style={{ padding: '0.5rem 1rem', background: isFuture ? '#cbd5e1' : '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: isFuture ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                                   >
-                                    <Trash2 size={14} />
+                                    <Truck size={16} /> Mark Delivered
                                   </button>
-                                </>
-                              ) : (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); onDeliverOrder(user.mobile, date); }}
-                                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}
-                                >
-                                  🚚 Mark Delivered
-                                </button>
-                              )}
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   );
                 });
@@ -573,8 +650,19 @@ const AdminDashboard = ({
             {/* Floating Action Button for Orders */}
             <button
               onClick={() => {
-                if (window.confirm('Mark all approved orders as Delivered?')) {
-                  onDeliverAll();
+                const todayStr = format(new Date(), 'yyyy-MM-dd');
+                if (window.confirm(`Mark all approved orders for TODAY (${todayStr}) and PAST as Delivered?`)) {
+                  // We only deliver for <= today
+                  let count = 0;
+                  registeredUsers.forEach(user => {
+                    Object.entries(globalOrders[user.mobile] || {}).forEach(([dateStr, order]) => {
+                      if (order.status === 'approved' && dateStr <= todayStr) {
+                        onDeliverOrder(user.mobile, dateStr);
+                        count++;
+                      }
+                    });
+                  });
+                  if (count === 0) alert("No approved orders found for today or past dates.");
                 }
               }}
               style={{
@@ -597,7 +685,7 @@ const AdminDashboard = ({
                 transition: 'transform 0.2s',
               }}
             >
-              <CheckCircle size={20} /> Deliver All Approved
+              <CheckCircle size={20} /> Deliver All Today
             </button>
           </>
         )}
