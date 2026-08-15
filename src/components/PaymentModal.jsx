@@ -152,7 +152,7 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
                 </p>
               </div>
 
-              <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.8rem' }}>
+              <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 <a 
                   href={phonePeLink} 
                   style={{ 
