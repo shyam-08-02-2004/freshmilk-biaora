@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { X, ArrowDownRight, ArrowUpRight, FileText, Wallet, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders, globalPayments, prices }) => {
   const [filterMonth, setFilterMonth] = useState('');
@@ -141,7 +141,7 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
       ]);
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 65,
       head: [['Date', 'Description', 'Bill Amount', 'Paid Amount', 'Balance']],
       body: tableRows,
