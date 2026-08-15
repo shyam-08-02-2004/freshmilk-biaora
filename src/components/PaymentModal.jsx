@@ -44,7 +44,8 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
     }
 
     let remainingForMonth = monthTotal - monthPaid;
-    setDisplayAmount(Math.max(0, remainingForMonth));
+    let safeTotalBill = Math.max(0, totalBill);
+    setDisplayAmount(Math.min(safeTotalBill, Math.max(0, remainingForMonth)));
   }, [paymentMonth, userOrders, userPayments, prices, totalBill]);
 
   const [screenshot, setScreenshot] = useState(null);
