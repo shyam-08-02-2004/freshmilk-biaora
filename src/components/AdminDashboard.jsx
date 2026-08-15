@@ -42,6 +42,81 @@ const AdminDashboard = ({
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [isBulkCashOpen, setIsBulkCashOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedOrders, setSelectedOrders] = useState([]);
+
+  const touchTimer = React.useRef(null);
+
+  const handleTouchStart = (e, orderKey) => {
+    touchTimer.current = setTimeout(() => {
+      toggleOrderSelection(orderKey);
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+  };
+
+  const handleTouchMove = () => {
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+  };
+
+  const toggleOrderSelection = (orderKey) => {
+    setSelectedOrders(prev => {
+      if (prev.includes(orderKey)) return prev.filter(k => k !== orderKey);
+      return [...prev, orderKey];
+    });
+  };
+
+  const handleBulkApprove = () => {
+    if (!window.confirm(`Approve ${selectedOrders.length} selected orders?`)) return;
+    selectedOrders.forEach(key => {
+      const [mobile, date] = key.split('_');
+      // Only approve if it's currently pending (status check is done in parent, but safe to call)
+      onApproveOrder(mobile, date);
+    });
+    setSelectedOrders([]);
+  };
+
+  const handleBulkDeliver = () => {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    let hasFuture = false;
+    let countToDeliver = 0;
+
+    selectedOrders.forEach(key => {
+      const [, date] = key.split('_');
+      if (date > todayStr) {
+        hasFuture = true;
+      } else {
+        countToDeliver++;
+      }
+    });
+
+    if (hasFuture) {
+      alert('One or more selected orders are for a future date. They cannot be delivered today. They will be skipped.');
+    }
+
+    if (countToDeliver === 0) return;
+
+    if (!window.confirm(`Mark ${countToDeliver} selected orders as Delivered?`)) return;
+    
+    selectedOrders.forEach(key => {
+      const [mobile, date] = key.split('_');
+      if (date <= todayStr) {
+        onDeliverOrder(mobile, date);
+      }
+    });
+    setSelectedOrders([]);
+  };
+
+  const handleBulkDelete = () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedOrders.length} selected orders completely?`)) return;
+    selectedOrders.forEach(key => {
+      const [mobile, date] = key.split('_');
+      onRejectOrder(mobile, date);
+    });
+    setSelectedOrders([]);
+  };
 
   React.useEffect(() => {
     sessionStorage.setItem('admin_activeTab', activeTab);
@@ -476,6 +551,23 @@ const AdminDashboard = ({
                 <h3 style={{ margin: 0 }}>Order Requests & Delivery</h3>
               </div>
               
+              {selectedOrders.length > 0 && (
+                <div style={{ position: 'sticky', top: '0', zIndex: 100, background: 'white', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', border: '1px solid var(--primary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ background: 'var(--primary)', color: 'white', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                      {selectedOrders.length}
+                    </div>
+                    <strong style={{ color: 'var(--text-primary)' }}>Selected</strong>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button onClick={handleBulkApprove} style={{ padding: '0.5rem 1rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CheckCircle size={16}/> Approve</button>
+                    <button onClick={handleBulkDeliver} style={{ padding: '0.5rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Truck size={16}/> Deliver</button>
+                    <button onClick={handleBulkDelete} style={{ padding: '0.5rem 1rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Trash2 size={16}/> Reject</button>
+                    <button onClick={() => setSelectedOrders([])} style={{ padding: '0.5rem 1rem', background: 'var(--surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
+                  </div>
+                </div>
+              )}
+
               {(() => {
                 // 1. Collect all pending/approved orders across all users
                 const allActiveOrders = [];
@@ -583,10 +675,28 @@ const AdminDashboard = ({
                           if (order.curd) itemsList.push(`${order.curd} Curd`);
                           
                           const isPending = order.status === 'pending';
+                          const orderKey = `${user.mobile}_${dateStr}`;
+                          const isSelected = selectedOrders.includes(orderKey);
+                          const isSelectionMode = selectedOrders.length > 0;
 
                           return (
-                            <div key={user.mobile + dateStr + idx} style={{ background: 'white', border: `1px solid ${isPending ? 'var(--border)' : '#bbf7d0'}`, borderRadius: '12px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                            <div 
+                              key={orderKey + idx} 
+                              style={{ background: isSelected ? '#eff6ff' : 'white', border: `2px solid ${isSelected ? 'var(--primary)' : isPending ? 'transparent' : 'transparent'}`, borderRadius: '12px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', cursor: isSelectionMode ? 'pointer' : 'default', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
+                              onTouchStart={(e) => handleTouchStart(e, orderKey)}
+                              onTouchEnd={handleTouchEnd}
+                              onTouchMove={handleTouchMove}
+                              onClick={() => {
+                                if (isSelectionMode) toggleOrderSelection(orderKey);
+                              }}
+                            >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div 
+                                  onClick={(e) => { e.stopPropagation(); toggleOrderSelection(orderKey); }}
+                                  style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`, background: isSelected ? 'var(--primary)' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                >
+                                  {isSelected && <CheckCircle size={14} color="white" />}
+                                </div>
                                 <img src={user.avatar || '/assets/babu_logo.png'} alt="Avatar" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
                                 <div>
                                   <h4 
@@ -610,13 +720,13 @@ const AdminDashboard = ({
                                 {isPending ? (
                                   <>
                                     <button
-                                      onClick={() => onApproveOrder(user.mobile, dateStr)}
+                                      onClick={(e) => { e.stopPropagation(); onApproveOrder(user.mobile, dateStr); }}
                                       style={{ padding: '0.5rem 1rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                                     >
                                       <CheckCircle size={16} /> Approve
                                     </button>
                                     <button
-                                      onClick={() => onRejectOrder(user.mobile, dateStr)}
+                                      onClick={(e) => { e.stopPropagation(); onRejectOrder(user.mobile, dateStr); }}
                                       style={{ padding: '0.5rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                                     >
                                       <Trash2 size={18} />
@@ -624,7 +734,8 @@ const AdminDashboard = ({
                                   </>
                                 ) : (
                                   <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       if (isFuture) {
                                         alert(`Cannot deliver future orders. Wait until ${format(dateObj, 'dd MMM')}`);
                                         return;
