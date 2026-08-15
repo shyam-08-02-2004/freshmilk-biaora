@@ -22,7 +22,7 @@ const AdminDashboard = ({
   onApproveOrder, 
   onDeliverOrder,
   onDeliverAll,
-  onRejectOrder, onEditUserOrder, onDeleteUser,
+  onRejectOrder, onEditUserOrder, onToggleUserStatus,
   profileRequests, onApproveProfile, onRejectProfile,
   paymentRequests, onApprovePayment, onRejectPayment,
   globalPayments, setGlobalPayments, adminLogs,
@@ -487,7 +487,9 @@ const AdminDashboard = ({
                       >
                         <img src={user.avatar || '/assets/babu_logo.png'} alt="User Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
                         <div style={{ flex: 1 }}>
-                          <h4 style={{ margin: 0 }}>{user.name}</h4>
+                          <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {user.name}
+                          </h4>
                           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                             {user.mobile} 
                             {pendingCount > 0 && ` · ${pendingCount} pending`}
@@ -782,14 +784,15 @@ const AdminDashboard = ({
                       </div>
                       <button 
                         onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this user?')) {
-                            onDeleteUser(selectedUser.mobile);
-                            setSelectedUser(null);
+                          if (window.confirm(selectedUser.isActive === false ? 'Are you sure you want to activate this user?' : 'Are you sure you want to deactivate this user? Their login will be blocked, but data will be safe.')) {
+                            onToggleUserStatus(selectedUser.mobile);
+                            setSelectedUser({...selectedUser, isActive: selectedUser.isActive === false ? true : false});
                           }
                         }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#fee2e2', color: '#ef4444', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: selectedUser.isActive === false ? '#dcfce7' : '#fef3c7', color: selectedUser.isActive === false ? '#15803d' : '#b45309', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
                       >
-                        <Trash2 size={16} /> Delete Account
+                        {selectedUser.isActive === false ? <UserCheck size={16} /> : <XCircle size={16} />} 
+                        {selectedUser.isActive === false ? 'Activate Account' : 'Deactivate Account'}
                       </button>
                     </div>
 

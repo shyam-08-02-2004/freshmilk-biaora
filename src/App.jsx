@@ -123,23 +123,13 @@ function App() {
     localStorage.setItem('biaora_currentUser', JSON.stringify(currentUser));
   }, [currentUser]);
 
-  const handleDeleteUser = (mobile) => {
-    setRegisteredUsers(prev => prev.filter(u => u.mobile !== mobile));
-    setGlobalOrders(prev => {
-      const newOrders = { ...prev };
-      delete newOrders[mobile];
-      return newOrders;
-    });
-    setGlobalPayments(prev => {
-      const next = { ...prev };
-      delete next[mobile];
-      return next;
-    });
-    setPaymentRequests(prev => {
-      const next = { ...prev };
-      delete next[mobile];
-      return next;
-    });
+  const handleToggleUserStatus = (mobile) => {
+    setRegisteredUsers(prev => prev.map(u => {
+      if (u.mobile === mobile) {
+        return { ...u, isActive: u.isActive === false ? true : false };
+      }
+      return u;
+    }));
   };
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -530,6 +520,9 @@ function App() {
       
       const user = registeredUsers.find(u => u.mobile === data.mobile && u.password === data.password);
       if (user) {
+        if (user.isActive === false) {
+          return { success: false, error: 'Aapka account deactivate kar diya gaya hai. Kripya Admin se sampark karein.' };
+        }
         setCurrentUser(user);
         setIsLoggedIn(true);
         return { success: true };
@@ -575,7 +568,7 @@ function App() {
             onDeliverAll={handleDeliverAllApproved}
             onRejectOrder={handleRejectUserOrder}
             onEditUserOrder={handleEditUserOrder}
-            onDeleteUser={handleDeleteUser}
+            onToggleUserStatus={handleToggleUserStatus}
             profileRequests={profileRequests}
             onApproveProfile={handleApproveProfile}
             onRejectProfile={handleRejectProfile} 

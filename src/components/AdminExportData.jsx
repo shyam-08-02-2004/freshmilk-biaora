@@ -61,6 +61,25 @@ const AdminExportData = ({ registeredUsers, globalOrders, globalPayments, prices
     downloadCSV("All_Payments.csv", rows);
   };
 
+  const exportFullBackup = () => {
+    const data = {
+      registeredUsers,
+      globalOrders,
+      globalPayments,
+      prices,
+      timestamp: new Date().toISOString()
+    };
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Biaora_Backup_${format(new Date(), 'yyyy-MM-dd')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div style={{ padding: '1rem', paddingBottom: '80px', maxWidth: '800px', margin: '0 auto' }}>
       <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 1.5rem', color: 'var(--text-primary)' }}>
@@ -87,6 +106,13 @@ const AdminExportData = ({ registeredUsers, globalOrders, globalPayments, prices
             <IndianRupee size={32} />
           </div>
           <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>Export All Payments</span>
+        </button>
+
+        <button onClick={exportFullBackup} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', cursor: 'pointer', transition: 'transform 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+          <div style={{ background: '#f3e8ff', padding: '1rem', borderRadius: '50%', color: '#a855f7' }}>
+            <DownloadCloud size={32} />
+          </div>
+          <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>Download Full Backup (JSON)</span>
         </button>
       </div>
     </div>
