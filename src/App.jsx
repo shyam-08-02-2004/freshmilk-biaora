@@ -627,6 +627,12 @@ function App() {
                 setDoc(doc(db, 'store', 'globalPayments'), { data: next });
                 return next;
               });
+              setMonthlyOverrides(prev => {
+                const next = { ...prev };
+                next['9755334721'] = {};
+                setDoc(doc(db, 'store', 'monthlyOverrides'), { data: next });
+                return next;
+              });
               alert('Shyam data cleared successfully!');
             }
           }}
