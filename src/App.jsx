@@ -612,6 +612,28 @@ function App() {
           currentUser={currentUser}
         />
         )}
+        <button 
+          onClick={() => {
+            if(window.confirm('Clear all orders and payments for Shyam (9755334721)?')) {
+              setGlobalOrders(prev => {
+                const next = { ...prev };
+                next['9755334721'] = {};
+                setDoc(doc(db, 'store', 'globalOrders'), { data: next });
+                return next;
+              });
+              setGlobalPayments(prev => {
+                const next = { ...prev };
+                next['9755334721'] = [];
+                setDoc(doc(db, 'store', 'globalPayments'), { data: next });
+                return next;
+              });
+              alert('Shyam data cleared successfully!');
+            }
+          }}
+          style={{ background: 'red', color: 'white', padding: '15px', width: '100%', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+        >
+          TEMPORARY: CLEAR SHYAM DATA
+        </button>
         <main className="app-layout" style={{ padding: 0 }}>
           <AdminDashboard 
             activeTab={adminActiveTab}
