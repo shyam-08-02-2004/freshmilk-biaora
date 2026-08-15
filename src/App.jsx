@@ -319,21 +319,24 @@ function App() {
 
     Object.entries(orders).forEach(([dateStr, dayOrder]) => {
       const [y, m] = dateStr.split('-');
+      
+      let dTotal = dayOrder.totalPrice;
+      if (dTotal === undefined) {
+        dTotal = 0;
+        dTotal += (dayOrder.milk || 0) * PRICES.milk;
+        dTotal += (dayOrder.ghee || 0) * PRICES.ghee;
+        dTotal += (dayOrder.chach || 0) * PRICES.chach;
+        dTotal += (dayOrder.paneer || 0) * PRICES.paneer;
+        dTotal += (dayOrder.curd || 0) * PRICES.curd;
+      }
+
       if (parseInt(m, 10) === currentMonth && parseInt(y, 10) === currentYear) {
         if (dayOrder.status === 'delivered') {
-          bill += (dayOrder.milk || 0) * PRICES.milk;
-          bill += (dayOrder.ghee || 0) * PRICES.ghee;
-          bill += (dayOrder.chach || 0) * PRICES.chach;
-          bill += (dayOrder.paneer || 0) * PRICES.paneer;
-          bill += (dayOrder.curd || 0) * PRICES.curd;
+          bill += dTotal;
         }
       } else if (dateStr < currentMonthStr) {
         if (dayOrder.status === 'delivered') {
-          prevBill += (dayOrder.milk || 0) * PRICES.milk;
-          prevBill += (dayOrder.ghee || 0) * PRICES.ghee;
-          prevBill += (dayOrder.chach || 0) * PRICES.chach;
-          prevBill += (dayOrder.paneer || 0) * PRICES.paneer;
-          prevBill += (dayOrder.curd || 0) * PRICES.curd;
+          prevBill += dTotal;
         }
       }
     });
