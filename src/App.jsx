@@ -234,13 +234,14 @@ function App() {
     setCurrentUser(prev => ({ ...prev, avatar: base64Image }));
   };
 
-  const handlePaymentSubmit = (mobile, utr, amount, paymentMonth) => {
+  const handlePaymentSubmit = (mobile, utr, amount, paymentMonth, screenshot) => {
     setPaymentRequests(prev => ({
       ...prev,
       [mobile]: {
         utr,
         amount,
         paymentMonth,
+        screenshot,
         timestamp: new Date().toISOString()
       }
     }));

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Copy, QrCode, Clock, CheckCircle } from 'lucide-react';
+import { X, Copy, QrCode, Clock, CheckCircle, Upload, Smartphone } from 'lucide-react';
+import QRCode from 'react-qr-code';
 
 const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, currentUser, selectedDate }) => {
   const [utr, setUtr] = useState('');
@@ -7,12 +8,29 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
     const d = selectedDate || new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [screenshot, setScreenshot] = useState(null);
   const [error, setError] = useState('');
   const upiId = "shyamdangi084@okicici";
+  const upiLink = `upi://pay?pa=${upiId}&pn=FreshMilk&am=${totalBill > 0 ? totalBill : 0}&cu=INR`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(upiId);
     alert("UPI ID copied to clipboard!");
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setError("Screenshot size should be less than 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshot(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -21,7 +39,11 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
       setError("Please enter a valid 12-digit UTR number.");
       return;
     }
-    onSubmitPayment(currentUser.mobile, utr, totalBill, paymentMonth);
+    if (!screenshot) {
+      setError("Please upload the payment screenshot.");
+      return;
+    }
+    onSubmitPayment(currentUser.mobile, utr, totalBill, paymentMonth, screenshot);
     setError('');
   };
 
@@ -40,12 +62,23 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.3rem' }}>Amount Due: <strong style={{ color: '#10b981', fontSize: '1.1rem' }}>₹{totalBill}</strong></p>
         </div>
 
-        <div style={{ background: 'var(--surface)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-          <img src="/assets/payment_qr.jpg" alt="Payment QR Code" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        <div style={{ background: 'var(--surface)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', display: 'inline-block' }}>
+            <QRCode value={upiLink} size={180} level="H" />
+          </div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.8rem', textAlign: 'center' }}>Scan to pay exact <strong>₹{totalBill}</strong></p>
         </div>
 
-        <div style={{ marginTop: '1.5rem', background: 'var(--background)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem', textAlign: 'center' }}>Or pay using UPI ID</p>
+        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+          <a href={upiLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#5f259f', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+            <Smartphone size={18} /> PhonePe
+          </a>
+          <a href={upiLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#1a73e8', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+            <Smartphone size={18} /> GPay / Other
+          </a>
+        </div>
+
+        <div style={{ marginTop: '1rem', background: 'var(--background)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface)', padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid var(--primary-light)' }}>
             <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{upiId}</span>
             <button onClick={handleCopy} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold' }}>
@@ -79,15 +112,24 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
                 value={utr}
                 onChange={(e) => setUtr(e.target.value.replace(/\D/g, '').slice(0, 12))}
                 placeholder="e.g. 123456789012"
-                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)' }}
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '0.8rem' }}
                 maxLength={12}
               />
-              {error && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.3rem' }}>{error}</p>}
+              <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Upload Payment Screenshot:</label>
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px dashed var(--primary)', background: 'rgba(16, 185, 129, 0.05)', color: 'var(--text-primary)' }}
+                required
+              />
+              {screenshot && <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><CheckCircle size={14}/> Image selected</div>}
+              {error && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem' }}>{error}</p>}
             </div>
             <button 
               type="submit" 
-              disabled={utr.length !== 12}
-              style={{ width: '100%', padding: '0.8rem', background: utr.length === 12 ? 'var(--primary)' : 'var(--border)', color: utr.length === 12 ? 'white' : 'var(--text-secondary)', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: utr.length === 12 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
+              disabled={utr.length !== 12 || !screenshot}
+              style={{ width: '100%', padding: '0.8rem', background: (utr.length === 12 && screenshot) ? 'var(--primary)' : 'var(--border)', color: (utr.length === 12 && screenshot) ? 'white' : 'var(--text-secondary)', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: (utr.length === 12 && screenshot) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
             >
               <CheckCircle size={18} /> Submit UTR
             </button>

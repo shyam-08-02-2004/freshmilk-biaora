@@ -952,6 +952,12 @@ const AdminDashboard = ({
                                 <p style={{ fontSize: '0.8rem', color: '#92400e' }}>UTR: {req.utr}</p>
                                 <p style={{ fontSize: '0.8rem', color: '#92400e' }}>For: {req.paymentMonth ? format(new Date(req.paymentMonth + '-01'), 'MMMM yyyy') : 'N/A'}</p>
                                 <p style={{ fontSize: '0.75rem', color: '#92400e', marginTop: '0.2rem' }}>{format(new Date(req.timestamp), 'dd MMM yyyy, hh:mm a')}</p>
+                                {req.screenshot && (
+                                  <div style={{ marginTop: '0.5rem' }}>
+                                    <p style={{ fontSize: '0.7rem', color: '#b45309', marginBottom: '0.2rem' }}>Screenshot:</p>
+                                    <img src={req.screenshot} alt="Screenshot" style={{ height: '80px', borderRadius: '6px', border: '1px solid #d97706', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); const w = window.open(); w.document.write(`<img src="${req.screenshot}" style="max-width:100%;display:block;margin:auto;" />`); }} />
+                                  </div>
+                                )}
                               </div>
                               <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, alignSelf: 'center' }}>
                                 <button 
@@ -1200,6 +1206,12 @@ const AdminDashboard = ({
                             <p style={{ fontSize: '0.85rem', color: '#92400e' }}>UTR: {paymentRequests[selectedUser.mobile].utr}</p>
                             <p style={{ fontSize: '0.85rem', color: '#92400e' }}>For: {paymentRequests[selectedUser.mobile].paymentMonth ? format(new Date(paymentRequests[selectedUser.mobile].paymentMonth + '-01'), 'MMMM yyyy') : 'N/A'}</p>
                             <p style={{ fontSize: '0.8rem', color: '#92400e', marginTop: '0.2rem' }}>Submitted: {format(new Date(paymentRequests[selectedUser.mobile].timestamp), 'dd MMM yyyy, hh:mm a')}</p>
+                            {paymentRequests[selectedUser.mobile].screenshot && (
+                              <div style={{ marginTop: '0.8rem' }}>
+                                <p style={{ fontSize: '0.8rem', color: '#b45309', marginBottom: '0.3rem', fontWeight: 'bold' }}>Payment Screenshot:</p>
+                                <img src={paymentRequests[selectedUser.mobile].screenshot} alt="Screenshot" style={{ height: '120px', borderRadius: '8px', border: '1px solid #d97706', cursor: 'zoom-in' }} onClick={(e) => { e.stopPropagation(); const w = window.open(); w.document.write(`<img src="${paymentRequests[selectedUser.mobile].screenshot}" style="max-width:100%;display:block;margin:auto;" />`); }} />
+                              </div>
+                            )}
                           </div>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button 
