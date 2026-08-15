@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, TrendingUp, TrendingDown, Database, Save } from 'lucide-react';
+import { Package, TrendingUp, TrendingDown, Database, Save, Power } from 'lucide-react';
 import { format } from 'date-fns';
 
 const AdminInventory = ({ globalOrders, globalInventory, setGlobalInventory, prices }) => {
@@ -26,6 +26,13 @@ const AdminInventory = ({ globalOrders, globalInventory, setGlobalInventory, pri
       [todayStr]: { ...prev[todayStr], milkBrought: isNaN(val) ? 0 : val }
     }));
     setTimeout(() => setIsSaving(false), 500);
+  };
+
+  const toggleItemStock = (itemKey) => {
+    setGlobalInventory(prev => ({
+      ...prev,
+      [itemKey]: prev[itemKey] === false ? true : false
+    }));
   };
 
   const milkBrought = parseFloat(todayInventory.milkBrought) || 0;
@@ -77,6 +84,23 @@ const AdminInventory = ({ globalOrders, globalInventory, setGlobalInventory, pri
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>{remainingStock} <span style={{ fontSize: '1rem', opacity: 0.8 }}>L</span></div>
         </div>
+      </div>
+
+      <h3 style={{ marginTop: '3rem', marginBottom: '1.5rem', color: 'var(--text-primary)', borderBottom: '2px solid var(--border)', paddingBottom: '0.5rem' }}>Out of Stock Control (Applies to Customers)</h3>
+      <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+        {['milk', 'ghee', 'chach', 'paneer', 'curd'].map(item => {
+          // If not strictly false, consider it true (in stock)
+          const isAvailable = globalInventory[item] !== false; 
+          return (
+            <div key={item} style={{ background: isAvailable ? 'white' : '#f8fafc', border: `2px solid ${isAvailable ? '#10b981' : 'var(--border)'}`, borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', cursor: 'pointer', transition: 'all 0.2s', opacity: isAvailable ? 1 : 0.6 }} onClick={() => toggleItemStock(item)}>
+              <div style={{ textTransform: 'capitalize', fontWeight: 'bold', fontSize: '1.1rem', color: isAvailable ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{item}</div>
+              <div style={{ background: isAvailable ? '#dcfce7' : '#e2e8f0', color: isAvailable ? '#15803d' : '#64748b', padding: '0.5rem 1rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Power size={14} />
+                {isAvailable ? 'IN STOCK' : 'SOLD OUT'}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

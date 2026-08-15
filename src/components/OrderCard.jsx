@@ -8,7 +8,8 @@ const OrderCard = ({
   currentOrder, 
   onSaveOrder, 
   prices, 
-  currentUser 
+  currentUser,
+  globalInventory
 }) => {
   const { t } = useLanguage();
   const today = startOfDay(new Date());
@@ -159,28 +160,30 @@ const OrderCard = ({
         ) : (
           products.map((p, idx) => {
             const qty = localOrder[p.id] || 0;
+            const isOutOfStock = globalInventory && globalInventory[p.id] === false;
             
             // If it's a historical/locked date and qty is 0, don't show the product
             if (!isOrderable && (isPastDate || isLocked) && qty === 0) return null;
 
             return (
               <div key={p.id} className="order-item-card">
-                <img src={p.img} alt={p.name} className="order-item-img" />
+                <img src={p.img} alt={p.name} className="order-item-img" style={{ filter: isOutOfStock && qty === 0 ? 'grayscale(100%)' : 'none', opacity: isOutOfStock && qty === 0 ? 0.6 : 1 }} />
                 <div className="order-item-details">
                   <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     {p.name} {currentOrder?.[p.id] > 0 && <span style={{ background: '#10b981', color: 'white', borderRadius: '50%', width: '14px', height: '14px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>✓</span>}
                   </h4>
                   <p>{p.desc}</p>
                   <p style={{ marginTop: '0.2rem', color: 'var(--text-primary)', fontWeight: 500 }}>₹{p.price} / {p.unit}</p>
+                  {isOutOfStock && <span style={{display: 'inline-block', marginTop: '0.3rem', background: '#f1f5f9', color: '#64748b', fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '12px', fontWeight: 'bold', border: '1px solid #e2e8f0'}}>Sold Out Today</span>}
                 </div>
                 
                 <div className="order-item-controls">
                   {isOrderable || isFutureBeyondTomorrow || isOnVacation ? (
-                    <div className="qty-control" style={{ opacity: isOrderable ? 1 : 0.5 }}>
+                    <div className="qty-control" style={{ opacity: isOrderable && !isOutOfStock ? 1 : 0.5 }}>
                       <button 
                         className="qty-btn" 
                         onClick={() => updateLocalQty(p.id, Math.max(0, qty - p.step))}
-                        disabled={!isOrderable || (isDecreaseLocked && qty <= (currentOrder?.[p.id] || 0))}
+                        disabled={!isOrderable || (isDecreaseLocked && qty <= (currentOrder?.[p.id] || 0)) || (isOutOfStock && qty === 0)}
                       >
                         <Minus size={16} />
                       </button>
@@ -188,7 +191,7 @@ const OrderCard = ({
                       <button 
                         className="qty-btn" 
                         onClick={() => updateLocalQty(p.id, qty + p.step)}
-                        disabled={!isOrderable}
+                        disabled={!isOrderable || isOutOfStock}
                       >
                         <Plus size={16} />
                       </button>

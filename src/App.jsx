@@ -104,7 +104,7 @@ function App() {
   const [monthlyOverrides, setMonthlyOverrides] = useFirestoreSync('monthlyOverrides', {});
   const [globalExpenses, setGlobalExpenses] = useFirestoreSync('globalExpenses', []);
   const [broadcasts, setBroadcasts] = useFirestoreSync('broadcasts', []);
-  const [globalInventory, setGlobalInventory] = useFirestoreSync('globalInventory', {});
+  const [globalInventory, setGlobalInventory] = useFirestoreSync('globalInventory', { milk: true, ghee: true, chach: true, paneer: true, curd: true });
   const adminTotalReceived = useMemo(() => {
     let total = 0;
     Object.values(globalPayments).forEach(userPayments => {
@@ -656,6 +656,7 @@ function App() {
           previousDues={previousDues}
           onOpenPayment={() => setIsPaymentOpen(true)}
           onOpenPassbook={() => setIsPassbookOpen(true)}
+          globalInventory={globalInventory}
         />
       </CustomerLayout>
 

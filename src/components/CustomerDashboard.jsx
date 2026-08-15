@@ -18,7 +18,8 @@ const CustomerDashboard = ({
   totalBill,
   previousDues,
   onOpenPayment,
-  onOpenPassbook
+  onOpenPassbook,
+  globalInventory
 }) => {
   const tomorrow = format(addDays(startOfDay(new Date()), 1), 'yyyy-MM-dd');
   const tomorrowOrder = orders[tomorrow] || { milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 };
@@ -93,13 +94,13 @@ const CustomerDashboard = ({
           currentUser={currentUser}
         />
 
-        {/* Order Card */}
         <OrderCard 
           selectedDate={selectedDate}
           currentOrder={orders[format(selectedDate, 'yyyy-MM-dd')] || {}}
           onSaveOrder={onSaveOrder}
           prices={prices}
           currentUser={currentUser}
+          globalInventory={globalInventory || {}}
         />
       </div>
 
