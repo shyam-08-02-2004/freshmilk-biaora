@@ -13,6 +13,7 @@ import AdminVacations from './AdminVacations';
 import CustomerPassbook from './CustomerPassbook';
 import QRScannerModal from './QRScannerModal';
 import AdminBulkCashEntry from './AdminBulkCashEntry';
+import MilkCalendar from './MilkCalendar';
 import { useLanguage } from '../LanguageContext';
 
 const AdminDashboard = ({ 
@@ -696,6 +697,16 @@ const AdminDashboard = ({
           </div>
           
           <div style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem' }} onClick={(e) => { e.stopPropagation(); setShowAllOrders(false); setShowAllPayments(false); setIsEditingSummary(false); }}>
+
+            {/* Milk Delivery Calendar for Admin */}
+            <div style={{ marginBottom: '1.5rem' }} onClick={e => e.stopPropagation()}>
+              <MilkCalendar
+                orders={globalOrders[selectedUser.mobile] || {}}
+                currentUser={selectedUser}
+                isAdmin={true}
+              />
+            </div>
+
 <div className="detail-header" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                       <div>

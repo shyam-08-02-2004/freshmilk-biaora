@@ -3,6 +3,7 @@ import { format, addDays, startOfDay } from 'date-fns';
 import { Clock, CreditCard, ShieldCheck } from 'lucide-react';
 import HorizontalCalendar from './HorizontalCalendar';
 import OrderCard from './OrderCard';
+import MilkCalendar from './MilkCalendar';
 
 const CustomerDashboard = ({
   selectedDate,
@@ -190,9 +191,17 @@ const CustomerDashboard = ({
           <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8, maxWidth: '140px', position: 'relative', zIndex: 1 }}>We deliver purity at your doorstep.</p>
           <img src="/assets/milk.png" style={{ position: 'absolute', right: '-20px', bottom: '-20px', height: '140px', transform: 'rotate(-15deg)' }} />
         </div>
+
+        {/* Milk Delivery Calendar */}
+        <MilkCalendar
+          orders={orders}
+          currentUser={currentUser}
+        />
+
       </div>
     </div>
   );
+};
 };
 
 export default CustomerDashboard;
