@@ -528,6 +528,32 @@ function App() {
     localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
   };
 
+  const handleDeleteUser = (mobile) => {
+    const user = registeredUsers.find(u => u.mobile === mobile);
+    if (!user) return;
+    
+    // Remove from registered users
+    setRegisteredUsers(prev => prev.filter(u => u.mobile !== mobile));
+    
+    // Remove orders
+    setGlobalOrders(prev => {
+      const next = { ...prev };
+      delete next[mobile];
+      setDoc(doc(db, 'store', 'globalOrders'), { data: next });
+      return next;
+    });
+    
+    // Remove payments
+    setGlobalPayments(prev => {
+      const next = { ...prev };
+      delete next[mobile];
+      setDoc(doc(db, 'store', 'globalPayments'), { data: next });
+      return next;
+    });
+    
+    logAdminAction('profile', mobile, user.name, 'deleted', 'Account permanently deleted');
+  };
+
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
   const currentOrder = orders[selectedDateStr] || { milk: 0, ghee: 0, chach: 0 };
 
@@ -598,6 +624,7 @@ function App() {
             onDeliverAll={handleDeliverAllApproved}
             onRejectOrder={handleRejectUserOrder}
             onEditUserOrder={handleEditUserOrder}
+            onDeleteUser={handleDeleteUser}
             onToggleUserStatus={handleToggleUserStatus}
             profileRequests={profileRequests}
             onApproveProfile={handleApproveProfile}
