@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Copy, QrCode, Clock, CheckCircle, Upload, Smartphone } from 'lucide-react';
-import QRCode from 'react-qr-code';
+import upiQrImage from '../assets/upi-qr.jpg';
 
 const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, currentUser, selectedDate }) => {
   const [utr, setUtr] = useState('');
@@ -80,8 +80,8 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
 
         {showQR ? (
           <div style={{ background: 'var(--surface)', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1.5rem' }}>
-            <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', display: 'inline-block' }}>
-              <QRCode value={upiLink} size={180} level="H" />
+            <div style={{ background: 'white', padding: '0.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <img src={upiQrImage} alt="UPI QR Code" style={{ width: '200px', height: 'auto', borderRadius: '8px' }} />
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.8rem', textAlign: 'center' }}>Scan to pay exact <strong>₹{totalBill}</strong></p>
           </div>
