@@ -18,13 +18,27 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
     Object.entries(userOrders).forEach(([dateStr, order]) => {
       if (order.status !== 'delivered') return;
       
-      let dailyTotal = 0;
+      let dailyTotal = order.totalPrice;
       const details = [];
-      if (order.milk) { dailyTotal += order.milk * prices.milk; details.push(`${order.milk}L Milk`); }
-      if (order.ghee) { dailyTotal += order.ghee * prices.ghee; details.push(`${order.ghee}Kg Ghee`); }
-      if (order.chach) { dailyTotal += order.chach * prices.chach; details.push(`${order.chach}L Chach`); }
-      if (order.paneer) { dailyTotal += order.paneer * prices.paneer; details.push(`${order.paneer}Kg Paneer`); }
-      if (order.curd) { dailyTotal += order.curd * prices.curd; details.push(`${order.curd} Curd`); }
+      
+      if (order.items && order.items.length > 0) {
+        order.items.forEach(i => details.push(`${i.quantity} ${i.name}`));
+      } else {
+        if (order.milk) details.push(`${order.milk}L Milk`);
+        if (order.ghee) details.push(`${order.ghee}Kg Ghee`);
+        if (order.chach) details.push(`${order.chach}L Chach`);
+        if (order.paneer) details.push(`${order.paneer}Kg Paneer`);
+        if (order.curd) details.push(`${order.curd} Curd`);
+      }
+
+      if (dailyTotal === undefined) {
+        dailyTotal = 0;
+        if (order.milk) dailyTotal += order.milk * prices.milk;
+        if (order.ghee) dailyTotal += order.ghee * prices.ghee;
+        if (order.chach) dailyTotal += order.chach * prices.chach;
+        if (order.paneer) dailyTotal += order.paneer * prices.paneer;
+        if (order.curd) dailyTotal += order.curd * prices.curd;
+      }
 
       if (dailyTotal > 0) {
         items.push({
