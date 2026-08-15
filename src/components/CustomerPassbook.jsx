@@ -5,7 +5,10 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders, globalPayments, prices }) => {
-  const [filterMonth, setFilterMonth] = useState('');
+  const [filterMonth, setFilterMonth] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   const { fullTransactions, filteredTransactions, openingBalance } = useMemo(() => {
     if (!userMobile || !globalOrders || !globalPayments) return { fullTransactions: [], filteredTransactions: [], openingBalance: 0 };
