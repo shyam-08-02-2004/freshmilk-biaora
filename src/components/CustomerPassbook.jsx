@@ -97,8 +97,12 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
       }
     }
 
-    // Reverse filtered so newest is at the top
-    return { fullTransactions: computedItems.reverse(), filteredTransactions: filtered.reverse(), openingBalance: openBal };
+    // Reverse filtered so newest is at the top, avoid mutating in place
+    return { 
+      fullTransactions: [...computedItems].reverse(), 
+      filteredTransactions: [...filtered].reverse(), 
+      openingBalance: openBal 
+    };
   }, [userMobile, globalOrders, globalPayments, prices, filterMonth]);
 
   if (!isOpen) return null;
