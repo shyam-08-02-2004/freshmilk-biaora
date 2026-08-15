@@ -120,15 +120,26 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
           />
         </div>
 
-        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
-          <a href={phonePeLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#5f259f', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-            <Smartphone size={18} /> PhonePe
-          </a>
-          <a href={gpayLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#1a73e8', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-            <Smartphone size={18} /> GPay
-          </a>
-          <a href={upiLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#333', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-            <Smartphone size={18} /> Other UPI
+        <div style={{ marginTop: '1.5rem', padding: '0 1rem' }}>
+          <a 
+            href={upiLink} 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '0.8rem', 
+              width: '100%', 
+              padding: '1rem', 
+              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', 
+              color: 'white', 
+              textDecoration: 'none', 
+              borderRadius: '12px', 
+              fontWeight: 'bold', 
+              fontSize: '1.1rem',
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)',
+            }}
+          >
+            <Smartphone size={22} /> Pay via UPI (GPay, PhonePe, Paytm)
           </a>
         </div>
 
