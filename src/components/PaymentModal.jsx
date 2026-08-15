@@ -12,7 +12,10 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
   const [showQR, setShowQR] = useState(false);
   const [error, setError] = useState('');
   const upiId = "shyamdangi084@okicici";
-  const upiLink = `upi://pay?pa=${upiId}&pn=FreshMilk&mc=0000&mode=02&purpose=00&am=${totalBill > 0 ? Number(totalBill).toFixed(2) : '1.00'}&cu=INR`;
+  const payAmount = totalBill > 0 ? Number(totalBill).toFixed(2) : '1.00';
+  const upiLink = `upi://pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
+  const phonePeLink = `phonepe://pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
+  const gpayLink = `tez://upi/pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(upiId);
@@ -64,11 +67,14 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
         </div>
 
         <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
-          <a href={upiLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#5f259f', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+          <a href={phonePeLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#5f259f', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
             <Smartphone size={18} /> PhonePe
           </a>
-          <a href={upiLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#1a73e8', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-            <Smartphone size={18} /> GPay / Other
+          <a href={gpayLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#1a73e8', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+            <Smartphone size={18} /> GPay
+          </a>
+          <a href={upiLink} style={{ flex: 1, minWidth: '140px', padding: '0.8rem', background: '#333', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+            <Smartphone size={18} /> Other UPI
           </a>
         </div>
 
