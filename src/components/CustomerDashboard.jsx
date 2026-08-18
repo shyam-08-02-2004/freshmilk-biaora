@@ -4,6 +4,8 @@ import { Clock, CreditCard, ShieldCheck } from 'lucide-react';
 import HorizontalCalendar from './HorizontalCalendar';
 import OrderCard from './OrderCard';
 import MilkCalendar from './MilkCalendar';
+import FamilyActivityFeed from './FamilyActivityFeed';
+import ConsumptionGraph from './ConsumptionGraph';
 
 const CustomerDashboard = ({
   selectedDate,
@@ -102,9 +104,17 @@ const CustomerDashboard = ({
           currentUser={currentUser}
           globalInventory={globalInventory || {}}
         />
+
+        <FamilyActivityFeed 
+          orders={orders}
+          currentUser={currentUser}
+        />
       </div>
 
       <div className="right-column">
+        {/* Weekly Consumption Graph */}
+        <ConsumptionGraph orders={orders} />
+
         {/* Tomorrow's Delivery Summary */}
         <div className="widget-card" style={{ marginBottom: '1.5rem', padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '1.25rem', background: '#f0fdf4', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border)' }}>

@@ -8,7 +8,7 @@ const CustomerVacationModal = ({ isOpen, onClose, currentUser, onVacationUpdate 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 1000, position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="modal-content profile-modal" style={{ maxWidth: '400px', width: '90%', position: 'relative', background: 'white', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
         <button onClick={onClose} className="close-btn" style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer' }}>
           <X size={20} color="var(--text-secondary)" />

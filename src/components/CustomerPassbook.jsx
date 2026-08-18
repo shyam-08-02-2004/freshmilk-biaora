@@ -181,104 +181,107 @@ const CustomerPassbook = ({ isOpen, onClose, userName, userMobile, globalOrders,
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000, position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ background: 'white', width: '100%', maxWidth: '600px', height: '90vh', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="modal-overlay" onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '1rem' }}>
+      <div className="modal-content receipt-modal" onClick={e => e.stopPropagation()} style={{ 
+        background: '#fff', 
+        width: '100%', 
+        maxWidth: '450px', 
+        maxHeight: '90vh', 
+        borderRadius: '12px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        overflow: 'hidden',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        position: 'relative'
+      }}>
         
-        {/* Header */}
-        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
+        {/* Receipt Header */}
+        <div style={{ padding: '1.5rem', background: '#f8fafc', borderBottom: '2px dashed #cbd5e1', position: 'relative' }}>
+          {/* Top Zig-Zag effect via radial gradients (optional, we use dashed border instead for simplicity) */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.3rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileText size={24} color="var(--primary)" />
-                Passbook (Khata)
+              <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#0f172a', fontWeight: '800', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                <FileText size={20} color="#0f172a" /> INVOICE
               </h2>
-              <p style={{ margin: '0.2rem 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{userName} ({userMobile})</p>
+              <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: '#64748b', fontFamily: 'monospace' }}>CUST: {userName}</p>
+              <p style={{ margin: '0', fontSize: '0.85rem', color: '#64748b', fontFamily: 'monospace' }}>MOB: {userMobile}</p>
             </div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }}>
-              <X size={24} color="var(--text-secondary)" />
+            <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', cursor: 'pointer', padding: '0.4rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <X size={18} color="#64748b" />
             </button>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '1rem' }}>
             <input 
               type="month" 
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
-              style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+              style={{ flex: 1, padding: '0.6rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.85rem', fontFamily: 'monospace', outline: 'none', background: 'white' }}
             />
             <button 
               onClick={handleDownloadPDF}
-              style={{ width: '100%', background: '#f3e8ff', color: '#9333ea', border: '1px solid #d8b4fe', padding: '0.6rem 1rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', cursor: 'pointer' }}
+              style={{ background: '#1e293b', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '6px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', cursor: 'pointer', fontFamily: 'monospace', fontSize: '0.85rem' }}
             >
-              <Download size={18} /> Download PDF
+              <Download size={16} /> PDF
             </button>
-            {filterMonth && (
-              <button 
-                onClick={() => setFilterMonth('')} 
-                style={{ width: '100%', padding: '0.6rem 1rem', background: '#f1f5f9', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-              >
-                Clear Filter
-              </button>
-            )}
           </div>
         </div>
 
 
-        {/* Ledger List */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0' }}>
+        {/* Ledger List (Receipt Body) */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', background: '#fafafa', fontFamily: 'monospace' }}>
+          
           {filterMonth && (
-            <div style={{ padding: '1rem 1.5rem', background: '#fffbeb', borderBottom: '1px solid #fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 'bold', color: '#b45309' }}>Opening Balance (Pichla Baki):</span>
-              <strong style={{ fontSize: '1.1rem', color: openingBalance > 0 ? '#ef4444' : '#10b981' }}>
-                ₹{Math.max(0, openingBalance)} Due
+            <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#64748b', fontSize: '0.85rem' }}>OPENING BAL:</span>
+              <strong style={{ fontSize: '1rem', color: openingBalance > 0 ? '#ef4444' : '#10b981' }}>
+                ₹{Math.max(0, openingBalance).toFixed(2)}
               </strong>
             </div>
           )}
 
           {filteredTransactions.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-              <FileText size={48} color="var(--border)" style={{ marginBottom: '1rem' }} />
-              <p>No transactions found for this period.</p>
+            <div style={{ textAlign: 'center', padding: '3rem 0', color: '#94a3b8' }}>
+              <p style={{ fontSize: '0.9rem' }}>NO TRANSACTIONS</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {filteredTransactions.map((t, index) => {
                 const isOrder = t.type === 'order';
                 return (
-                  <div key={t.id} style={{ display: 'flex', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', background: index % 2 === 0 ? 'white' : '#f8fafc' }}>
-                    
-                    {/* Icon & Date */}
-                    <div style={{ marginRight: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isOrder ? '#fee2e2' : '#dcfce7', color: isOrder ? '#ef4444' : '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.3rem' }}>
-                        {isOrder ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
+                  <div key={t.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>{format(t.date, 'dd MMM yy')}</span>
+                        <span style={{ fontSize: '0.85rem', color: '#334155', fontWeight: '600' }}>
+                          {isOrder ? 'BILL' : 'PAID'} - {t.description}
+                        </span>
                       </div>
+                      <strong style={{ fontSize: '0.9rem', color: isOrder ? '#ef4444' : '#10b981', marginLeft: '1rem' }}>
+                        {isOrder ? '' : '-'}₹{t.amount.toFixed(2)}
+                      </strong>
                     </div>
-
-                    {/* Details */}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                        <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
-                          {isOrder ? 'Bill (Debit)' : 'Payment (Credit)'}
-                        </strong>
-                        <strong style={{ fontSize: '1rem', color: isOrder ? '#ef4444' : '#10b981' }}>
-                          {isOrder ? '-' : '+'}₹{t.amount}
-                        </strong>
-                      </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                        {format(t.date, 'dd MMM yyyy')} • {t.description}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'flex-end', borderTop: '1px dashed var(--border)', paddingTop: '0.4rem' }}>
-                        Balance: <strong style={{ color: t.balance > 0 ? '#ef4444' : '#10b981', marginLeft: '0.3rem' }}>
-                           ₹{Math.max(0, t.balance)} Due
-                        </strong>
-                      </div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'right' }}>
+                      BAL: ₹{Math.max(0, t.balance).toFixed(2)}
                     </div>
-
                   </div>
                 );
               })}
             </div>
           )}
+        </div>
+
+        {/* Receipt Footer */}
+        <div style={{ padding: '1.5rem', background: '#f8fafc', borderTop: '2px dashed #cbd5e1' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '1rem', color: '#64748b', fontFamily: 'monospace', fontWeight: 'bold' }}>TOTAL DUE</span>
+              <strong style={{ fontSize: '1.5rem', color: currentDue > 0 ? '#ef4444' : '#10b981', fontFamily: 'monospace' }}>
+                ₹{Math.max(0, currentDue).toFixed(2)}
+              </strong>
+           </div>
+           {/* Mock Barcode */}
+           <div style={{ height: '30px', width: '100%', background: 'repeating-linear-gradient(90deg, #1e293b, #1e293b 2px, transparent 2px, transparent 4px, #1e293b 4px, #1e293b 5px, transparent 5px, transparent 8px, #1e293b 8px, #1e293b 12px, transparent 12px, transparent 14px)', opacity: 0.8, marginBottom: '0.5rem' }}></div>
+           <p style={{ textAlign: 'center', fontSize: '0.65rem', color: '#94a3b8', fontFamily: 'monospace', margin: 0, letterSpacing: '2px' }}>{userMobile.substring(0,4)} {Math.random().toString().slice(2,8)} {userMobile.substring(4)}</p>
         </div>
 
       </div>

@@ -3,14 +3,14 @@ import { User, Phone, MapPin, X, CreditCard } from 'lucide-react';
 
 const AdminContactModal = ({ onClose, onOpenPayment }) => {
   return (
-    <div className="modal-overlay" style={{ zIndex: 300 }}>
+    <div className="modal-overlay">
       <div className="modal-content admin-contact-modal" style={{ maxWidth: '400px', position: 'relative' }}>
         <button onClick={onClose} className="close-btn" style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
           <X size={20} />
         </button>
         
         <div style={{ textAlign: 'center', marginBottom: '2rem', marginTop: '1rem' }}>
-          <div style={{ width: '180px', height: '180px', margin: '0 auto 1.5rem', borderRadius: '50%', padding: '5px', background: 'linear-gradient(45deg, var(--primary), var(--secondary))', boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+          <div style={{ width: 'clamp(120px, 40vw, 180px)', height: 'clamp(120px, 40vw, 180px)', margin: '0 auto 1.5rem', borderRadius: '50%', padding: '5px', background: 'linear-gradient(45deg, var(--primary), var(--secondary))', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
             <img src="/assets/admin_photo.jpg" alt="Shyam Dangi" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', objectPosition: 'center top' }} />
           </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)' }}>Shyam Dangi</h2>

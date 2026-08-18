@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Home, ShoppingBag, Plus, FileText, User, Menu, Bell, CreditCard, HelpCircle, Plane } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, ShoppingBag, Plus, FileText, User, Menu, Bell, CreditCard, HelpCircle, Plane, Download, Leaf } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
 const CustomerLayout = ({ 
@@ -16,6 +16,35 @@ const CustomerLayout = ({
 }) => {
   const { t, language, toggleLanguage } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showInstallCard, setShowInstallCard] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+      setIsInstalled(true);
+    }
+    const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+    const installedHandler = () => { setIsInstalled(true); setDeferredPrompt(null); setShowInstallCard(false); };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', installedHandler);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', installedHandler);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      alert("App install karne ke liye apne browser (Chrome/Safari) ke options me 'Install App' ya 'Add to Home Screen' par click karein. Laptop me URL bar ke right side me Install icon hota hai.");
+      setShowInstallCard(false);
+      return;
+    }
+    setShowInstallCard(false);
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') { setDeferredPrompt(null); }
+  };
 
   const handleNavClick = (tab) => {
     if (tab === 'history') onOpenHistory();
@@ -36,7 +65,7 @@ const CustomerLayout = ({
           <Menu size={24} color="var(--text-primary)" />
         </button>
         <div className="brand" style={{ gap: '0.5rem', cursor: 'pointer' }} onClick={onAdminContactToggle}>
-          <img src="/assets/babu_logo.png" alt="Logo" style={{ height: '32px' }} />
+          <img src="/assets/babu_logo_new.jpg" alt="Logo" style={{ height: '36px', width: '36px', borderRadius: '8px', objectFit: 'contain' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--secondary)', lineHeight: '1' }}>FreshMilk</span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', lineHeight: '1' }}>Biaora</span>
@@ -49,17 +78,81 @@ const CustomerLayout = ({
           >
             {language === 'en' ? 'अ/A' : 'A/अ'}
           </button>
-          <button className="icon-btn" style={{ position: 'relative' }}>
-            <Bell size={22} color="var(--text-primary)" />
-            <span style={{ position: 'absolute', top: '0px', right: '2px', width: '8px', height: '8px', background: 'var(--danger)', borderRadius: '50%' }}></span>
-          </button>
+
+          {/* Bell/Download icon */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowInstallCard(prev => !prev)}
+              style={{
+                position: 'relative', width: '36px', height: '36px', borderRadius: '50%',
+                background: (!isInstalled) ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'rgba(255, 255, 255, 0.2)',
+                border: (!isInstalled) ? 'none' : '1px solid rgba(255, 255, 255, 0.4)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', boxShadow: (!isInstalled) ? '0 2px 8px rgba(16,185,129,0.4)' : 'none',
+              }}
+              title={!isInstalled ? "App Download Karen" : "Notifications"}
+            >
+              {!isInstalled ? (
+                <>
+                  <Download size={18} color="white" />
+                  <span style={{
+                    position: 'absolute', top: '0px', right: '0px', width: '10px', height: '10px',
+                    background: '#ef4444', borderRadius: '50%', border: '2px solid white',
+                    animation: 'pulse 2s infinite'
+                  }} />
+                </>
+              ) : (
+                <Bell size={20} color="white" />
+              )}
+            </button>
+
+            {/* Install card dropdown */}
+            {showInstallCard && !isInstalled && (
+              <div style={{
+                position: 'absolute', top: '44px', right: 0, zIndex: 9999,
+                background: 'white', borderRadius: '16px', padding: '16px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: '220px',
+                border: '1px solid #e5e7eb', animation: 'slideDown 0.2s ease'
+              }}>
+                <img src="/icon.jpg" alt="App" style={{ width: '56px', height: '56px', borderRadius: '12px', objectFit: 'cover', display: 'block', margin: '0 auto 10px' }} />
+                <div style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.95rem', color: '#1a1a1a', margin: '4px 0' }}>FreshMilk Biaora</div>
+                <div style={{ textAlign: 'center', fontSize: '0.78rem', color: '#6b7280', marginBottom: '14px' }}>Apne phone mein install karo!</div>
+                <button
+                  onClick={handleInstallClick}
+                  style={{
+                    width: '100%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: 'white', border: 'none', borderRadius: '10px', padding: '10px',
+                    fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                  }}
+                >
+                  <Download size={16} /> Download App
+                </button>
+              </div>
+            )}
+
+            {/* Normal notification card when already installed or no prompt */}
+            {showInstallCard && isInstalled && (
+              <div style={{
+                position: 'absolute', top: '44px', right: 0, zIndex: 9999,
+                background: 'white', borderRadius: '16px', padding: '16px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: '200px',
+                border: '1px solid #e5e7eb', animation: 'slideDown 0.2s ease',
+                textAlign: 'center', color: '#6b7280', fontSize: '0.85rem'
+              }}>
+                <Bell size={28} color="#10b981" style={{ margin: '0 auto 8px', display: 'block' }} />
+                ✅ App installed hai!
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
 
       {/* Desktop Sidebar */}
       <aside className={`desktop-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="sidebar-brand" style={{ cursor: 'pointer' }} onClick={onAdminContactToggle}>
-          <img src="/assets/babu_logo.png" alt="Logo" style={{ height: '40px' }} />
+          <img src="/assets/babu_logo_new.jpg" alt="Logo" style={{ height: '48px', width: '48px', borderRadius: '12px', objectFit: 'contain', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--secondary)', lineHeight: '1' }}>FreshMilk</span>
             <span style={{ fontSize: '1rem', color: 'var(--text-primary)', lineHeight: '1' }}>Biaora</span>
@@ -107,13 +200,71 @@ const CustomerLayout = ({
             <h2 style={{ fontSize: '1.2rem', margin: '0 0 0.2rem' }}>Hi, {currentUser?.name?.split(' ')[0] || 'Customer'} 👋</h2>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Good Morning! Fresh milk, every day.</p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <button className="lang-btn" onClick={toggleLanguage}>
               🌐 {language === 'en' ? 'हिन्दी' : 'English'}
             </button>
             <button className="desktop-btn" onClick={() => onOpenHistory()}>
               <ShoppingBag size={18} /> History
             </button>
+            
+            {/* Desktop Install Bell */}
+            <div style={{ position: 'relative' }}>
+              <button
+                className="desktop-btn"
+                style={{ position: 'relative', padding: '0.4rem', borderRadius: '50%', background: 'white', color: 'var(--primary)', border: '1px solid var(--border)' }}
+                onClick={() => setShowInstallCard(prev => !prev)}
+                title={!isInstalled ? 'App Download Karen' : 'Notifications'}
+              >
+                {!isInstalled ? (
+                  <>
+                    <Download size={20} />
+                    <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', background: 'var(--danger)', borderRadius: '50%', animation: 'pulse 2s infinite' }}></span>
+                  </>
+                ) : (
+                  <Bell size={20} />
+                )}
+              </button>
+
+              {/* Install card dropdown */}
+              {showInstallCard && !isInstalled && (
+                <div style={{
+                  position: 'absolute', top: '50px', right: 0, zIndex: 9999,
+                  background: 'white', borderRadius: '16px', padding: '16px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: '220px',
+                  border: '1px solid #e5e7eb', animation: 'slideDown 0.2s ease'
+                }}>
+                  <img src="/icon.jpg" alt="App" style={{ width: '56px', height: '56px', borderRadius: '12px', objectFit: 'cover', display: 'block', margin: '0 auto 10px' }} />
+                  <div style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.95rem', color: '#1a1a1a', marginBottom: '4px' }}>FreshMilk Biaora</div>
+                  <div style={{ textAlign: 'center', fontSize: '0.78rem', color: '#6b7280', marginBottom: '14px' }}>Apne device mein install karo!</div>
+                  <button
+                    onClick={handleInstallClick}
+                    style={{
+                      width: '100%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: 'white', border: 'none', borderRadius: '10px', padding: '10px',
+                      fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                    }}
+                  >
+                    <Download size={16} /> Download App
+                  </button>
+                </div>
+              )}
+              
+              {/* Normal notification card when already installed */}
+              {showInstallCard && isInstalled && (
+                <div style={{
+                  position: 'absolute', top: '50px', right: 0, zIndex: 9999,
+                  background: 'white', borderRadius: '16px', padding: '16px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.18)', minWidth: '200px',
+                  border: '1px solid #e5e7eb', animation: 'slideDown 0.2s ease',
+                  textAlign: 'center', color: '#6b7280', fontSize: '0.85rem'
+                }}>
+                  <Bell size={28} color="#10b981" style={{ margin: '0 auto 8px', display: 'block' }} />
+                  ✅ App installed hai!
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -130,7 +281,11 @@ const CustomerLayout = ({
         </button>
         <button className={`bottom-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => handleNavClick('history')}>
           <ShoppingBag size={22} />
-          <span>My Orders</span>
+          <span>Orders</span>
+        </button>
+        <button className={`bottom-nav-item ${activeTab === 'sabzi' ? 'active' : ''}`} onClick={() => setActiveTab('sabzi')}>
+          <Leaf size={22} color={activeTab === 'sabzi' ? 'var(--primary)' : 'currentColor'} />
+          <span style={{ color: activeTab === 'sabzi' ? 'var(--primary)' : 'currentColor' }}>Sabzi</span>
         </button>
         <div className="bottom-nav-fab-container">
           <button className="bottom-nav-fab" onClick={() => onOpenQuickMilk()}>

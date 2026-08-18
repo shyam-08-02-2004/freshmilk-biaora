@@ -56,6 +56,103 @@ body {
   padding-bottom: 100px;
 }
 
+.admin-layout {
+  display: block;
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.users-list {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.users-list h3 {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--background);
+  margin-bottom: 0.8rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+.user-card:hover {
+  border-color: var(--primary-light);
+}
+
+.user-card.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.user-info h4 {
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.user-info p {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.user-due span {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.user-details-panel {
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.history-item.pending {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Users tab split layout on desktop */
+.admin-users-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    display: block;
+    overflow-y: auto;
+  }
+  .admin-users-layout {
+    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .users-list {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .user-details-panel {
+    padding: 1rem;
+  }
+}
+
 .header {
   position: relative;
   z-index: 50;
@@ -396,7 +493,7 @@ body {
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  z-index: 100;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -404,14 +501,17 @@ body {
 }
 
 .modal-content {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   width: 100%;
   max-width: 600px;
   border-radius: 24px;
   padding: 2rem;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .modal-header {
@@ -1305,7 +1405,7 @@ body {
   background: white;
   padding: 0.9rem 1.5rem;
   border-bottom: 1px solid var(--border);
-  z-index: 10;
+  z-index: 999;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -1331,7 +1431,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.4);
-  z-index: 90;
+  z-index: 999;
   display: none;
 }
 
@@ -1370,6 +1470,8 @@ body {
   line-height: 1.4;
 }
 
+.mobile-only-pwa-bell { display: none; }
+
 /* --- Mobile Responsive (≤768px) --- */
 @media (max-width: 768px) {
   .admin-container {
@@ -1383,7 +1485,7 @@ body {
     top: 0;
     height: 100vh;
     width: 280px !important;
-    z-index: 100;
+    z-index: 1000;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     overflow-y: auto;
@@ -1404,13 +1506,18 @@ body {
     min-height: calc(100vh - 130px);
     overflow-y: auto;
     padding-bottom: 80px;
+    flex: 1;
   }
 
   .admin-content-header {
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 999;
     background: white;
+  }
+
+  .mobile-only-pwa-bell {
+    display: block !important;
   }
 
   .admin-back-btn {
@@ -1420,16 +1527,27 @@ body {
   .admin-bottom-nav {
     display: flex;
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: white;
-    border-top: 1px solid #e2e8f0;
-    z-index: 95;
+    bottom: 0; left: 0; right: 0;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    z-index: 9999;
+    justify-content: space-around;
     align-items: center;
-    padding: 0 4px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    padding: 0 10px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .admin-bnav-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .admin-bnav-btn.active {
+    color: var(--primary);
+    transform: translateY(-2px);
   }
 
   .hidden-mobile { display: none !important; }
@@ -1448,3 +1566,215 @@ body {
 
 .customers-grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-top: 1rem; }
 @media (max-width: 768px) { .customers-grid { display: flex; flex-direction: column; gap: 1rem; } }
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- Advanced Mobile Bottom Navigation (Instagram Style) --- */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    z-index: 9999;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex: 1;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  .bottom-nav-item.active svg {
+    filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.4));
+  }
+
+  .bottom-nav-fab-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    transform: translateY(-20px);
+  }
+
+  .bottom-nav-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: 4px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .bottom-nav-fab:active {
+    transform: scale(0.95);
+  }
+
+  .bottom-nav-fab-container span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 4px;
+    position: absolute;
+    bottom: -18px;
+  }
+
+  .customer-layout {
+    padding-bottom: 70px;
+  }
+}
+
+/* --- Skeleton Shimmer Effect --- */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.skeleton-box {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, #e2e8f0 4%, #f1f5f9 25%, #e2e8f0 36%);
+  background-size: 1000px 100%;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/* --- Premium Features Animations --- */
+
+/* 1. Liquid Tanks (Inventory) */
+@keyframes liquidWave {
+  0% { background-position-x: 0; }
+  100% { background-position-x: 1000px; }
+}
+
+.liquid-tank-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.1);
+  backdrop-filter: blur(10px);
+}
+
+.liquid-tank-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+  transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 4px 6px rgba(255,255,255,0.5);
+}
+
+.liquid-tank-fill::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 200%;
+  height: 20px;
+  background-image: radial-gradient(circle at 10px 10px, transparent 12px, #e0f2fe 13px);
+  background-size: 40px 20px;
+  background-repeat: repeat-x;
+  animation: liquidWave 3s linear infinite;
+  opacity: 0.8;
+}
+
+/* 2. Sci-Fi QR Scanner */
+@keyframes scanLaser {
+  0% { top: 0; box-shadow: 0 0 10px #10b981; }
+  50% { top: 100%; box-shadow: 0 0 20px #10b981, 0 0 40px #10b981; }
+  100% { top: 0; box-shadow: 0 0 10px #10b981; }
+}
+
+.scanner-laser {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #10b981;
+  animation: scanLaser 2.5s infinite linear;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.scanner-container-scifi {
+  position: relative;
+  border: 2px solid #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5), inset 0 0 15px rgba(16, 185, 129, 0.5);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 3. Floating Notification Drop */
+@keyframes floatDrop {
+  0% { transform: translate(-50%, -150%) scale(0.9); opacity: 0; }
+  60% { transform: translate(-50%, 10%) scale(1.02); opacity: 1; }
+  80% { transform: translate(-50%, -5%) scale(0.98); opacity: 1; }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+
+.floating-balloon-notification {
+  animation: floatDrop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 4. Celebration Animations */
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); opacity: 1; }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes driveAcross {
+  0% { left: -30%; transform: rotate(-2deg); }
+  20% { transform: rotate(1deg) translateY(-2px); }
+  40% { transform: rotate(-1deg) translateY(0); }
+  60% { transform: rotate(1deg) translateY(-2px); }
+  80% { transform: rotate(-1deg) translateY(0); }
+  100% { left: 110%; transform: rotate(0); }
+}

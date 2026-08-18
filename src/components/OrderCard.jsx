@@ -39,8 +39,8 @@ const OrderCard = ({
   
   const isApproved = currentOrder?.status === 'approved';
   const isDelivered = currentOrder?.status === 'delivered';
-  // Allow editing approved orders (it will turn back to pending)
-  const isLocked = isDelivered;
+  // Prevent editing if delivered OR approved
+  const isLocked = isDelivered || isApproved;
   const isOrderable = !isPastDate && !isLockedToday && !isLocked && !isFutureBeyondTomorrow && !isOnVacation;
 
   const hasExistingOrder = (currentOrder?.milk > 0) || (currentOrder?.ghee > 0) || (currentOrder?.chach > 0) || (currentOrder?.paneer > 0) || (currentOrder?.curd > 0);
@@ -54,6 +54,7 @@ const OrderCard = ({
     curd: currentOrder?.curd || 0
   });
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [orderedBy, setOrderedBy] = useState('Main Account');
 
   useEffect(() => {
     setLocalOrder({
@@ -98,8 +99,11 @@ const OrderCard = ({
 
   const handleConfirm = () => {
     if (!isOrderable || !hasChanges) return;
-    const orderToSave = { ...localOrder };
-    onSaveOrder(selectedDate, orderToSave, true); // replaceMode = true
+    const finalOrder = { ...localOrder };
+    if (orderedBy !== 'Main Account') {
+      finalOrder.orderedBy = orderedBy;
+    }
+    onSaveOrder(selectedDate, finalOrder, true);
   };
 
   const handleDelete = () => {
@@ -221,6 +225,22 @@ const OrderCard = ({
             : isFutureBeyondTomorrow ? '📆 Only Today & Tomorrow orders allowed'
             : isOnVacation ? '🏖️ Vacation mode is active'
             : '🔒 Order locked'}
+        </div>
+      )}
+
+      {isOrderable && currentUser?.familyMembers && currentUser.familyMembers.length > 0 && (
+        <div style={{ padding: '1rem 1.25rem', background: '#f8fafc', borderTop: '1px solid var(--border)' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 'bold', marginBottom: '0.5rem' }}>Ordered By (Family Member)</label>
+          <select 
+            value={orderedBy}
+            onChange={(e) => setOrderedBy(e.target.value)}
+            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'white', fontSize: '0.95rem', fontWeight: '500', outline: 'none' }}
+          >
+            <option value="Main Account">Main Account ({currentUser.name})</option>
+            {currentUser.familyMembers.map((member, idx) => (
+              <option key={idx} value={member}>{member}</option>
+            ))}
+          </select>
         </div>
       )}
 

@@ -9,19 +9,15 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
   
-  const [displayAmount, setDisplayAmount] = useState(totalBill);
+  const [displayAmount, setDisplayAmount] = useState(0);
   const [step, setStep] = useState(1);
   
-  useEffect(() => {
-    if (!userOrders || !prices) {
-      setDisplayAmount(totalBill);
-      return;
-    }
-    
+  const computeMonthTotal = (month) => {
+    if (!userOrders || !prices) return 0;
     let monthTotal = 0;
     Object.entries(userOrders).forEach(([dateStr, order]) => {
       if (order.status !== 'delivered') return;
-      if (dateStr.startsWith(paymentMonth)) {
+      if (dateStr.startsWith(month)) {
          let dTotal = order.totalPrice;
          if (dTotal === undefined) {
              dTotal = 0;
@@ -34,26 +30,33 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
          monthTotal += dTotal;
       }
     });
+    return monthTotal;
+  };
 
+  const computeMonthPaid = (month) => {
+    if (!userPayments) return 0;
     let monthPaid = 0;
-    if (userPayments) {
-      userPayments.forEach(p => {
-         if (p.status === 'approved' && p.paymentMonth === paymentMonth) {
-            monthPaid += p.amount;
-         }
-      });
-    }
+    userPayments.forEach(p => {
+       if (p.status === 'approved' && p.paymentMonth === month) {
+          monthPaid += p.amount;
+       }
+    });
+    return monthPaid;
+  };
 
-    // Show remaining balance for the selected month only (independent of overall dues)
-    const remainingForMonth = Math.max(0, monthTotal - monthPaid);
-    setDisplayAmount(remainingForMonth);
-  }, [paymentMonth, userOrders, userPayments, prices, totalBill]);
+  // Recompute amount whenever month or relevant data changes
+  useEffect(() => {
+    const monthTotal = computeMonthTotal(paymentMonth);
+    const monthPaid = computeMonthPaid(paymentMonth);
+    setDisplayAmount(Math.max(0, monthTotal - monthPaid));
+  }, [paymentMonth, userOrders, userPayments, prices]);
 
   const [screenshot, setScreenshot] = useState(null);
   const [showQR, setShowQR] = useState(false);
   const [error, setError] = useState('');
   const upiId = "shyamdangi084-1@okicici";
   const payAmount = displayAmount > 0 ? Number(displayAmount).toFixed(2) : '1.00';
+  const trRef = `FM${Date.now()}`;
   const upiLink = `upi://pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
   const phonePeLink = `phonepe://pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
   const gpayLink = `tez://upi/pay?pa=${upiId}&pn=Fresh%20Milk&am=${payAmount}&cu=INR`;
@@ -93,7 +96,7 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
   };
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 300 }}>
+    <div className="modal-overlay">
       <div className="modal-content profile-modal" style={{ maxWidth: '400px', width: '100%', position: 'relative' }}>
         <button onClick={onClose} className="close-btn" style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
           <X size={20} />
@@ -110,7 +113,14 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
               <input 
                 type="month" 
                 value={paymentMonth}
-                onChange={(e) => setPaymentMonth(e.target.value)}
+                onChange={(e) => {
+                  const newMonth = e.target.value;
+                  setPaymentMonth(newMonth);
+                  // recompute amount instantly
+                  const monthTotal = computeMonthTotal(newMonth);
+                  const monthPaid = computeMonthPaid(newMonth);
+                  setDisplayAmount(Math.max(0, monthTotal - monthPaid));
+                }}
                 style={{ width: '100%', padding: '1.2rem', borderRadius: '14px', border: '2px solid var(--primary)', background: 'var(--surface)', color: 'var(--text-primary)', marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.3rem', textAlign: 'center', outline: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)' }}
                 required
               />
@@ -195,26 +205,6 @@ const PaymentModal = ({ onClose, totalBill, onSubmitPayment, pendingRequest, cur
                   <Smartphone size={20} /> Google Pay
                 </a>
 
-                <a 
-                  href={upiLink} 
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    gap: '0.6rem', 
-                    width: '100%', 
-                    padding: '0.9rem', 
-                    background: 'linear-gradient(135deg, #475569, #334155)', 
-                    color: 'white', 
-                    textDecoration: 'none', 
-                    borderRadius: '12px', 
-                    fontWeight: 'bold', 
-                    fontSize: '1rem',
-                    boxShadow: '0 4px 12px rgba(51, 65, 85, 0.3)',
-                  }}
-                >
-                  <QrCode size={20} /> Other UPI App
-                </a>
               </div>
 
               {showQR ? (

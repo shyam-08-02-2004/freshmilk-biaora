@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt, Camera, FileText, Plane, Plus, MessageCircle, Search } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Users, Milk, CheckCircle, Trash2, KeyRound, UserCheck, XCircle, Phone, Clock, ArrowLeft, Truck, DownloadCloud, BellRing, Package, BarChart3, Megaphone, Receipt, Camera, FileText, Plane, Plus, MessageCircle, Search, Download, Bell } from 'lucide-react';
 import { format } from 'date-fns';
+import confetti from 'canvas-confetti';
 import AdminHistoryModal from './AdminHistoryModal';
 import AdminDeliverySheet from './AdminDeliverySheet';
 import AdminBroadcasts from './AdminBroadcasts';
@@ -14,6 +15,7 @@ import CustomerPassbook from './CustomerPassbook';
 import QRScannerModal from './QRScannerModal';
 import AdminBulkCashEntry from './AdminBulkCashEntry';
 import MilkCalendar from './MilkCalendar';
+import AdminSabziPanel from './AdminSabziPanel';
 import { useLanguage } from '../LanguageContext';
 
 const AdminDashboard = ({ 
@@ -30,6 +32,8 @@ const AdminDashboard = ({
   broadcasts, setBroadcasts,
   globalExpenses, setGlobalExpenses,
   globalInventory, setGlobalInventory,
+  globalVegetables, setGlobalVegetables,
+  globalSabziOrders, setGlobalSabziOrders,
   onSuccessAnimation
 }) => {
   const { t } = useLanguage();
@@ -44,6 +48,66 @@ const AdminDashboard = ({
   const [isBulkCashOpen, setIsBulkCashOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrders, setSelectedOrders] = useState([]);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showInstallCard, setShowInstallCard] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Compute all active orders
+  const allActiveOrders = useMemo(() => {
+    const active = [];
+    registeredUsers.forEach(user => {
+      Object.entries(globalOrders[user.mobile] || {}).forEach(([dateStr, order]) => {
+        if (order.status === 'pending' || order.status === 'approved') {
+          active.push({ date: dateStr, user: user, order: order });
+        }
+      });
+    });
+    return active;
+  }, [registeredUsers, globalOrders]);
+
+  const prevActiveCount = useRef(allActiveOrders.length);
+
+  useEffect(() => {
+    if (prevActiveCount.current > 0 && allActiveOrders.length === 0) {
+      // Trigger Celebration!
+      confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+      });
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 4500);
+    }
+    prevActiveCount.current = allActiveOrders.length;
+  }, [allActiveOrders.length]);
+
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+      setIsInstalled(true);
+    }
+    const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+    const installedHandler = () => { setIsInstalled(true); setDeferredPrompt(null); setShowInstallCard(false); };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', installedHandler);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', installedHandler);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      alert("App install karne ke liye apne browser (Chrome/Safari) ke options me 'Install App' ya 'Add to Home Screen' par click karein. Laptop me URL bar ke right side me Install icon hota hai.");
+      setShowInstallCard(false);
+      return;
+    }
+    setShowInstallCard(false);
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') { setDeferredPrompt(null); }
+  };
 
   const touchTimer = React.useRef(null);
 
@@ -129,7 +193,7 @@ const AdminDashboard = ({
   };
 
   const [editingOrderDate, setEditingOrderDate] = useState(null);
-  const [editOrderValues, setEditOrderValues] = useState({ milk: 0, ghee: 0, chach: 0 });
+  const [editOrderValues, setEditOrderValues] = useState({ milk: 0, ghee: 0, chach: 0, paneer: 0, curd: 0 });
   const [filterMonth, setFilterMonth] = useState(format(new Date(), 'yyyy-MM'));
   const [expandedPaymentUsers, setExpandedPaymentUsers] = useState({});
   const [isEditingSummary, setIsEditingSummary] = useState(false);
@@ -141,7 +205,7 @@ const AdminDashboard = ({
 
   const startEditOrder = (date, order) => {
     setEditingOrderDate(date);
-    setEditOrderValues({ milk: order.milk || 0, ghee: order.ghee || 0, chach: order.chach || 0 });
+    setEditOrderValues({ milk: order.milk || 0, ghee: order.ghee || 0, chach: order.chach || 0, paneer: order.paneer || 0, curd: order.curd || 0 });
   };
 
   const saveEditOrder = (userMobile, date) => {
@@ -257,8 +321,48 @@ const AdminDashboard = ({
 
 
 
+  const handleWhatsAppBill = (user, customMonthStr = null) => {
+    const monthStr = customMonthStr || new Date().toISOString().slice(0, 7);
+    // Parse "2026-08" to Date
+    const [year, month] = monthStr.split('-');
+    const dateObj = new Date(year, month - 1, 1);
+    const monthName = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+    
+    const due = calculateUserDue(user);
+    const { mTotal, mPaid } = calculateMonthlyUserSummary(user.mobile, monthStr);
+    
+    const message = `Hello ${user.name} ,\n\nThis is your FreshMilk Biaora bill for ${monthName}.\n\nTotal Bill: ₹${mTotal}\nPaid: ₹${mPaid}\nRemaining Due: ₹${due}\n\nPlease pay the pending amount.`;
+    
+    window.open(`https://wa.me/91${user.mobile}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   return (
     <div className="admin-container">
+      {/* CELEBRATION OVERLAY */}
+      {showCelebration && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', animation: 'fadeIn 0.5s ease-out'
+        }}>
+          <div style={{ textAlign: 'center', animation: 'bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55)' }}>
+            <h1 style={{ color: '#10b981', fontSize: '3rem', margin: '0 0 1rem', textShadow: '0 4px 20px rgba(16,185,129,0.5)' }}>Great Job! 🎉</h1>
+            <p style={{ color: 'white', fontSize: '1.2rem', margin: '0' }}>Aaj ki sabhi deliveries poori ho gayi!</p>
+          </div>
+          
+          <div style={{ position: 'absolute', bottom: '20%', width: '100%', height: '100px', overflow: 'hidden' }}>
+            <div style={{
+              position: 'absolute', left: '-20%', animation: 'driveAcross 3s cubic-bezier(0.4, 0, 0.2, 1) forwards', display: 'flex', alignItems: 'center', gap: '1rem'
+            }}>
+              <Truck size={80} color="#3b82f6" />
+              <div style={{ background: '#3b82f6', color: 'white', padding: '0.5rem 1rem', borderRadius: '12px', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(59,130,246,0.4)' }}>
+                Babu Fresh Milk
+              </div>
+            </div>
+            {/* Road */}
+            <div style={{ position: 'absolute', bottom: 0, width: '100%', height: '4px', background: '#334155', borderTop: '2px dashed #475569' }}></div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && <div className="admin-mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} />}
 
@@ -319,6 +423,12 @@ const AdminDashboard = ({
                 {Object.keys(paymentRequests).length}
               </span>
             )}
+          </button>
+          <button 
+            onClick={() => handleTabClick('sabzi')}
+            className={`admin-sidebar-btn ${activeTab === 'sabzi' ? 'active' : ''}`}
+          >
+            <span style={{ fontSize: '1.2rem', width: '20px', textAlign: 'center' }}>🥬</span> Sabzi Orders
           </button>
 
           <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', padding: '1rem 1rem 0.2rem', marginTop: '0.5rem', borderTop: '1px solid var(--border)' }}>More Features</div>
@@ -382,23 +492,25 @@ const AdminDashboard = ({
               cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.3rem', width: '100%', marginTop: '0.2rem' 
             }}
           >
-            {showAllMoreFeatures ? '▲ Show Less' : '▼ View More (5)'}
+            {showAllMoreFeatures ? '▲ Show Less' : '▼ View More (6)'}
           </button>
         </div>
       </div>
 
       {/* RIGHT CONTENT AREA */}
       <div className="admin-content-area">
-        <div className="admin-content-header">
-          <button className="admin-back-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            <span style={{fontSize:'1.5rem', lineHeight:1}}>☰</span>
-          </button>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
-            {activeTab} Management
-          </h2>
+        <div className="admin-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button className="admin-back-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              <span style={{fontSize:'1.5rem', lineHeight:1}}>☰</span>
+            </button>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+              {activeTab === 'sabzi' ? 'Sabzi Orders (Updated)' : `${activeTab} Management`}
+            </h2>
+          </div>
         </div>
         
-        <div className="admin-layout" style={{ display: 'block', overflowY: 'auto' }}>
+        <div className="admin-layout" style={{ display: 'block', overflowY: 'auto', flex: 1 }}>
         {activeTab === 'users' && (
           <div style={{ padding: '1rem' }}>
             {/* Daily To-Do Summary */}
@@ -474,7 +586,7 @@ const AdminDashboard = ({
                   <div key={user.mobile} style={{ background: isDefaulter ? '#fef2f2' : 'var(--surface)', padding: '1.5rem', borderRadius: '16px', border: `1px solid ${isDefaulter ? '#fca5a5' : 'var(--border)'}`, boxShadow: isDefaulter ? '0 4px 12px rgba(239, 68, 68, 0.1)' : '0 4px 6px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <img src={user.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isDefaulter ? '#ef4444' : 'var(--primary-light)'}` }} />
+                        <img src={user.avatar || "/assets/babu_logo_new.jpg"} alt="User Avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isDefaulter ? '#ef4444' : 'var(--primary-light)'}` }} />
                         <div>
                           <h4 
                             onClick={() => { setSelectedUser(user); }}
@@ -487,9 +599,9 @@ const AdminDashboard = ({
                             <a href={`tel:${user.mobile}`} style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', background: 'var(--background)', border: '1px solid var(--border)', padding: '0.3rem 0.6rem', borderRadius: '12px' }}>
                               <Phone size={14} color="#2563eb" /> Call
                             </a>
-                            <a href={`https://wa.me/91${user.mobile}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', background: 'var(--background)', border: '1px solid var(--border)', padding: '0.3rem 0.6rem', borderRadius: '12px' }}>
+                            <button onClick={(e) => { e.preventDefault(); handleWhatsAppBill(user); }} style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'var(--background)', border: '1px solid var(--border)', padding: '0.3rem 0.6rem', borderRadius: '12px', cursor: 'pointer' }}>
                               <MessageCircle size={14} color="#25D366" /> WhatsApp
-                            </a>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -508,14 +620,14 @@ const AdminDashboard = ({
                         <strong style={{ minWidth: '70px' }}>Location:</strong> 
                         <span>{user.location || 'N/A'}</span>
                         {user.location && (
-                          <a 
-                            href={user.coordinates ? `https://www.google.com/maps?q=${user.coordinates.lat},${user.coordinates.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(user.location + ', Biaora')}`} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            style={{ marginLeft: 'auto', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', background: '#dcfce7', padding: '0.2rem 0.6rem', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold' }}
-                          >
-                            📍 View on Map
-                          </a>
+                            <a 
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(user.location + (user.location.includes(',') ? '' : ', Biaora'))}`} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              style={{ marginLeft: 'auto', color: 'white', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', padding: '0.4rem 0.8rem', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(59,130,246,0.3)' }}
+                            >
+                              🗺️ Navigate
+                            </a>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
@@ -547,7 +659,7 @@ const AdminDashboard = ({
 
         {activeTab === 'orders' && (
           <>
-            <div className="users-list">
+            <div style={{ padding: '1rem', flex: 1, width: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h3 style={{ margin: 0 }}>Order Requests & Delivery</h3>
               </div>
@@ -570,20 +682,6 @@ const AdminDashboard = ({
               )}
 
               {(() => {
-                // 1. Collect all pending/approved orders across all users
-                const allActiveOrders = [];
-                registeredUsers.forEach(user => {
-                  Object.entries(globalOrders[user.mobile] || {}).forEach(([dateStr, order]) => {
-                    if (order.status === 'pending' || order.status === 'approved') {
-                      allActiveOrders.push({
-                        date: dateStr,
-                        user: user,
-                        order: order
-                      });
-                    }
-                  });
-                });
-
                 if (allActiveOrders.length === 0) {
                   return <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}><Package size={48} color="var(--border)" style={{ marginBottom: '1rem' }} /><p>No pending or approved order requests.</p></div>;
                 }
@@ -698,7 +796,7 @@ const AdminDashboard = ({
                                 >
                                   {isSelected && <CheckCircle size={14} color="white" />}
                                 </div>
-                                <img src={user.avatar || '/assets/babu_logo.png'} alt="Avatar" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                                <img src={user.avatar || '/assets/babu_logo_new.jpg'} alt="Avatar" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
                                 <div>
                                   <h4 
                                     onClick={() => { setSelectedUser(user); setShowAllOrders(false); setShowAllPayments(false); }}
@@ -823,7 +921,7 @@ const AdminDashboard = ({
                       style={{ background: 'var(--surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border)', cursor: 'pointer', transition: 'box-shadow 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                        <img src={user?.avatar || "/assets/babu_logo.png"} alt="User Avatar" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
+                        <img src={user?.avatar || "/assets/babu_logo_new.jpg"} alt="User Avatar" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-light)' }} />
                         <div>
                           <h4 style={{ margin: 0, color: 'var(--primary)', fontSize: '1.1rem' }}>{user?.name || mobile}</h4>
                           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0.2rem 0 0' }}>{mobile}</p>
@@ -911,7 +1009,6 @@ const AdminDashboard = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {usersWithPendingPayments.map(user => {
                     const req = paymentRequests[user.mobile];
-                    const isExpanded = expandedPaymentUsers[user.mobile];
                     
                     const monthlyPayments = (globalPayments[user.mobile] || [])
                       .filter(p => {
@@ -931,7 +1028,7 @@ const AdminDashboard = ({
                           style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', borderBottom: '1px solid var(--border)' }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                            <img src={user.avatar || "/assets/babu_logo.png"} alt="User" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} />
+                            <img src={user.avatar || "/assets/babu_logo_new.jpg"} alt="User" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} />
                             <div>
                               <h4 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '1rem' }}>{user.name}</h4>
                               <a href={`tel:${user.mobile}`} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'var(--background)', padding: '0.2rem 0.5rem', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '0.2rem', width: 'fit-content' }}>
@@ -990,6 +1087,27 @@ const AdminDashboard = ({
             })()}
           </div>
         )}
+
+        {activeTab === 'expenses' && (
+          <AdminExpenses
+            globalExpenses={globalExpenses}
+            setGlobalExpenses={setGlobalExpenses}
+            globalPayments={globalPayments}
+            filterMonth={filterMonth}
+            setFilterMonth={setFilterMonth}
+          />
+        )}
+
+        {activeTab === 'sabzi' && (
+          <AdminSabziPanel
+            globalVegetables={globalVegetables}
+            setGlobalVegetables={setGlobalVegetables}
+            globalSabziOrders={globalSabziOrders}
+            setGlobalSabziOrders={setGlobalSabziOrders}
+            registeredUsers={registeredUsers}
+            onBack={() => setActiveTab('users')}
+          />
+        )}
       </div>
 
       {isHistoryOpen && (
@@ -1003,7 +1121,7 @@ const AdminDashboard = ({
     
       {/* FULL PAGE USER DETAILS MODAL */}
       {selectedUser && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1000, background: 'var(--background)', overflowY: 'auto' }} onClick={() => setIsEditingSummary(false)}>
+        <div className="admin-profile-modal" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1000, background: 'var(--background)', overflowY: 'auto' }} onClick={() => setIsEditingSummary(false)}>
           <div style={{ padding: '1rem', background: 'var(--surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', gap: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
             <button 
               onClick={(e) => { e.stopPropagation(); setSelectedUser(null); setShowAllOrders(false); setShowAllPayments(false); }}
@@ -1143,16 +1261,14 @@ const AdminDashboard = ({
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {/* Action buttons row */}
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                <a
-                                  href={`https://wa.me/91${selectedUser.mobile}?text=${encodeURIComponent(`Hello ${selectedUser.name},\n\nThis is your FreshMilk Biaora bill for *${format(new Date(filterMonth + '-01'), 'MMMM yyyy')}*.\n\nPrevious Dues: ₹${mPreviousDues}\nThis Month Bill: ₹${mTotal}\nPaid: ₹${mPaid}\n*Total Payable: ₹${mRemain}*\n\nPlease pay the pending amount.`)}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ padding: '0.35rem 0.75rem', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold', fontSize: '0.82rem' }}
-                                title="Send Bill via WhatsApp"
-                              >
-                                <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                                WhatsApp
-                              </a>
+                                <button
+                                  onClick={(e) => { e.preventDefault(); handleWhatsAppBill(selectedUser, filterMonth); }}
+                                  style={{ padding: '0.35rem 0.75rem', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 'bold', fontSize: '0.82rem' }}
+                                  title="Send Bill via WhatsApp"
+                                >
+                                  <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                                  WhatsApp
+                                </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1263,16 +1379,20 @@ const AdminDashboard = ({
                               </div>
                               <div className="history-details" style={{ flex: 1 }}>
                                 {editingOrderDate === date ? (
-                                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>M: <input type="number" min="0" value={editOrderValues.milk} onChange={e => setEditOrderValues({...editOrderValues, milk: Number(e.target.value)})} style={{ width: '45px', padding: '0.3rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
-                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>G: <input type="number" min="0" value={editOrderValues.ghee} onChange={e => setEditOrderValues({...editOrderValues, ghee: Number(e.target.value)})} style={{ width: '45px', padding: '0.3rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
-                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>C: <input type="number" min="0" value={editOrderValues.chach} onChange={e => setEditOrderValues({...editOrderValues, chach: Number(e.target.value)})} style={{ width: '45px', padding: '0.3rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', width: '100%', alignItems: 'flex-start' }}>
+                                    <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '2px', flex: '1 1 50px' }}>M(L) <input type="number" min="0" step="any" value={editOrderValues.milk} onChange={e => setEditOrderValues({...editOrderValues, milk: Number(e.target.value)})} style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
+                                    <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '2px', flex: '1 1 50px' }}>G(Kg) <input type="number" min="0" step="any" value={editOrderValues.ghee} onChange={e => setEditOrderValues({...editOrderValues, ghee: Number(e.target.value)})} style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
+                                    <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '2px', flex: '1 1 50px' }}>C(L) <input type="number" min="0" step="any" value={editOrderValues.chach} onChange={e => setEditOrderValues({...editOrderValues, chach: Number(e.target.value)})} style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
+                                    <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '2px', flex: '1 1 50px' }}>P(Kg) <input type="number" min="0" step="any" value={editOrderValues.paneer} onChange={e => setEditOrderValues({...editOrderValues, paneer: Number(e.target.value)})} style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
+                                    <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '2px', flex: '1 1 50px' }}>D(Kg) <input type="number" min="0" step="any" value={editOrderValues.curd} onChange={e => setEditOrderValues({...editOrderValues, curd: Number(e.target.value)})} style={{ width: '100%', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }} /></label>
                                   </div>
                                 ) : (
                                   <>
                                     {order.milk > 0 && <span className="item-pill">{order.milk}L Milk</span>}
                                     {order.ghee > 0 && <span className="item-pill">{order.ghee}Kg Ghee</span>}
                                     {order.chach > 0 && <span className="item-pill">{order.chach}L Chach</span>}
+                                    {order.paneer > 0 && <span className="item-pill">{order.paneer}Kg Paneer</span>}
+                                    {order.curd > 0 && <span className="item-pill">{order.curd}Kg Curd</span>}
                                   </>
                                 )}
                               </div>
@@ -1418,6 +1538,7 @@ const AdminDashboard = ({
           registeredUsers={registeredUsers} 
           globalOrders={globalOrders} 
           globalPayments={globalPayments} 
+          setGlobalPayments={setGlobalPayments}
           prices={prices} 
         />
       )}

@@ -14,7 +14,7 @@ const AdminHistoryModal = ({ onClose, adminLogs, filterMonth, setFilterMonth }) 
   });
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 500 }} onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose}>
       <div 
         onClick={(e) => e.stopPropagation()}
         className="responsive-modal-content"

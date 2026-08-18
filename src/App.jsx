@@ -10,6 +10,7 @@ import AdminContactModal from './components/AdminContactModal';
 import PaymentModal from './components/PaymentModal';
 import QuickMilkModal from './components/QuickMilkModal';
 import CustomerDashboard from './components/CustomerDashboard';
+import CustomerSabziMarket from './components/CustomerSabziMarket';
 import CustomerLayout from './components/CustomerLayout';
 import CustomerPassbook from './components/CustomerPassbook';
 import CustomerVacationModal from './components/CustomerVacationModal';
@@ -19,6 +20,7 @@ import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { Megaphone } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
+import { playClick, playSuccess, playSwoosh } from './utils/haptics';
 import './index.css';
 import './customer-ui.css';
 
@@ -107,6 +109,37 @@ function App() {
   const [globalExpenses, setGlobalExpenses] = useFirestoreSync('globalExpenses', []);
   const [broadcasts, setBroadcasts] = useFirestoreSync('broadcasts', []);
   const [globalInventory, setGlobalInventory] = useFirestoreSync('globalInventory', { milk: true, ghee: true, chach: true, paneer: true, curd: true });
+  const [globalVegetables, setGlobalVegetables] = useFirestoreSync('globalVegetables', [
+    { id: 'v1', name: 'Aloo (Potato)', price: 40, unit: 'kg', inStock: true, emoji: '🥔', image: '/sabzi/potato.png' },
+    { id: 'v2', name: 'Tamatar (Tomato)', price: 60, unit: 'kg', inStock: true, emoji: '🍅', image: '/sabzi/tomato.jpg' },
+    { id: 'v3', name: 'Mirchi (Green Chilli)', price: 10, unit: '100g', inStock: true, emoji: '🌶️', image: '/sabzi/chilli.png' },
+    { id: 'v4', name: 'Dhaniya (Coriander)', price: 10, unit: 'bunch', inStock: true, emoji: '🌿', image: '/sabzi/coriander.png' },
+    { id: 'v5', name: 'Nimboo (Lemon)', price: 5, unit: 'piece', inStock: true, emoji: '🍋', image: '/sabzi/lemon.png' }
+  ]);
+  
+  useEffect(() => {
+    if (globalVegetables && globalVegetables.length > 0) {
+      let needsMigration = false;
+      const migrated = globalVegetables.map(v => {
+        if (!v.image) {
+          needsMigration = true;
+          let img = '';
+          if (v.id === 'v1' || v.name.includes('Aloo')) img = '/sabzi/potato.png';
+          if (v.id === 'v2' || v.name.includes('Tamatar')) img = '/sabzi/tomato.jpg';
+          if (v.id === 'v3' || v.name.includes('Mirchi')) img = '/sabzi/chilli.png';
+          if (v.id === 'v4' || v.name.includes('Dhaniya')) img = '/sabzi/coriander.png';
+          if (v.id === 'v5' || v.name.includes('Nimboo')) img = '/sabzi/lemon.png';
+          return { ...v, image: img };
+        }
+        return v;
+      });
+      if (needsMigration) {
+        setGlobalVegetables(migrated);
+      }
+    }
+  }, [globalVegetables, setGlobalVegetables]);
+
+  const [globalSabziOrders, setGlobalSabziOrders] = useFirestoreSync('globalSabziOrders', {});
   const adminTotalReceived = useMemo(() => {
     let total = 0;
     Object.values(globalPayments).forEach(userPayments => {
@@ -232,6 +265,13 @@ function App() {
     const mobile = currentUser.mobile;
     setRegisteredUsers(prev => prev.map(u => u.mobile === mobile ? { ...u, avatar: base64Image } : u));
     setCurrentUser(prev => ({ ...prev, avatar: base64Image }));
+  };
+
+  const handleUpdateFamily = (familyMembers) => {
+    if (!currentUser) return;
+    const mobile = currentUser.mobile;
+    setRegisteredUsers(prev => prev.map(u => u.mobile === mobile ? { ...u, familyMembers } : u));
+    setCurrentUser(prev => ({ ...prev, familyMembers }));
   };
 
   const handlePaymentSubmit = (mobile, utr, amount, paymentMonth, screenshot) => {
@@ -432,6 +472,14 @@ function App() {
     // Write to Firestore OUTSIDE setState — guaranteed to fire
     setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
     localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+    
+    if (!currentUser || currentUser.role !== 'admin') {
+       if (newDayOrder.milk === 0 && newDayOrder.ghee === 0 && newDayOrder.chach === 0 && newDayOrder.paneer === 0 && newDayOrder.curd === 0) {
+         playClick();
+       } else {
+         playSuccess();
+       }
+    }
   };
 
   const handleClearDayOrder = (date) => {
@@ -457,6 +505,7 @@ function App() {
     setGlobalOrders(newGlobalOrders);
     setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
     localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+    playSwoosh();
   };
 
   const handleDeliverUserOrder = (userMobile, dateKey) => {
@@ -470,6 +519,7 @@ function App() {
     setGlobalOrders(newGlobalOrders);
     setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
     localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+    playSuccess();
     const user = registeredUsers.find(u => u.mobile === userMobile);
     const parts = [];
     if (dayOrder.milk) parts.push(`${dayOrder.milk}L Milk`);
@@ -496,6 +546,7 @@ function App() {
       setGlobalOrders(newGlobalOrders);
       setDoc(doc(db, 'store', 'globalOrders'), { data: newGlobalOrders });
       localStorage.setItem('biaora_globalOrders', JSON.stringify(newGlobalOrders));
+      playSuccess();
     }
   };
 
@@ -588,6 +639,37 @@ function App() {
     }
   };
 
+  if (isLoggedIn && !usersLoaded) {
+    return (
+      <div style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header Skeleton */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div className="skeleton-box" style={{ width: '48px', height: '48px', borderRadius: '12px' }}></div>
+            <div>
+              <div className="skeleton-box" style={{ width: '120px', height: '20px', marginBottom: '8px' }}></div>
+              <div className="skeleton-box" style={{ width: '80px', height: '16px' }}></div>
+            </div>
+          </div>
+          <div className="skeleton-box" style={{ width: '40px', height: '40px', borderRadius: '50%' }}></div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: window.innerWidth > 768 ? '1fr 380px' : '1fr' }}>
+          <div>
+            <div className="skeleton-box" style={{ width: '100%', height: '80px', borderRadius: '16px', marginBottom: '1.5rem' }}></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginBottom: '1.5rem' }}>
+              {Array.from({ length: 14 }).map((_, i) => (
+                <div key={i} className="skeleton-box" style={{ aspectRatio: '1', borderRadius: '12px' }}></div>
+              ))}
+            </div>
+          </div>
+          <div className="skeleton-box" style={{ width: '100%', height: '300px', borderRadius: '20px' }}></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoggedIn) {
     return <AuthPage onAuthAction={handleAuth} />;
   }
@@ -643,6 +725,10 @@ function App() {
             setGlobalExpenses={setGlobalExpenses}
             globalInventory={globalInventory}
             setGlobalInventory={setGlobalInventory}
+            globalVegetables={globalVegetables}
+            setGlobalVegetables={setGlobalVegetables}
+            globalSabziOrders={globalSabziOrders}
+            setGlobalSabziOrders={setGlobalSabziOrders}
             onSuccessAnimation={setSuccessMessage}
           />
         </main>
@@ -654,6 +740,7 @@ function App() {
             onProfileRequest={handleProfileRequest} 
             profileRequestStatus={profileRequests[currentUser?.mobile]} 
             onUpdateAvatar={handleUpdateAvatar}
+            onUpdateFamily={handleUpdateFamily}
             onVacationUpdate={handleVacationUpdate}
           />
         )}
@@ -666,6 +753,18 @@ function App() {
       </div>
     );
   }
+
+  const checkIsReminderDay = () => {
+    const today = new Date();
+    const date = today.getDate();
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    // Mid month: 14th to 16th
+    if (date >= 14 && date <= 16) return true;
+    // End month: Last 3 days or 1st day of next month
+    if (date >= lastDay - 2 || date === 1) return true;
+    return false;
+  };
+  const isReminderDay = checkIsReminderDay();
 
   return (
     <>
@@ -680,6 +779,27 @@ function App() {
         onOpenVacation={() => setIsVacationOpen(true)}
         onAdminContactToggle={() => setIsAdminContactOpen(true)}
       >
+        {/* Floating Bill Payment Reminder */}
+        {totalBill > 0 && isReminderDay && !sessionStorage.getItem('dismissedDue') && (
+          <div className="floating-balloon-notification" style={{
+            position: 'fixed', top: '80px', left: '50%', transform: 'translateX(-50%)',
+            background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)',
+            border: '1px solid rgba(255,255,255,0.8)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,1)',
+            borderRadius: '24px', padding: '1rem', zIndex: 1000, width: '90%', maxWidth: '350px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'
+          }}>
+            <button onClick={() => { sessionStorage.setItem('dismissedDue', 'true'); setActiveTab('home'); /* force re-render if needed but this works on next click anyway */ document.querySelector('.floating-balloon-notification').style.display='none'; }} style={{ position: 'absolute', right: '10px', top: '10px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>✖</button>
+            <div style={{ fontSize: '2rem', marginBottom: '0.2rem', animation: 'bounce 2s infinite' }}>🎈</div>
+            <h4 style={{ margin: '0 0 0.2rem', color: '#1e293b', fontSize: '1rem' }}>Namaste! 🙏</h4>
+            <p style={{ margin: '0 0 1rem', color: '#64748b', fontSize: '0.85rem' }}>Aapka pichla doodh ka hisab due hai.</p>
+            <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#ef4444', marginBottom: '1rem' }}>₹{totalBill.toFixed(0)}</div>
+            <button onClick={() => { setIsPaymentOpen(true); sessionStorage.setItem('dismissedDue', 'true'); }} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', border: 'none', padding: '0.8rem 2rem', borderRadius: '100px', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(16,185,129,0.4)', cursor: 'pointer' }}>
+              Pay Now
+            </button>
+          </div>
+        )}
+
         {/* User Broadcast Banners */}
         {(() => {
           const activeBroadcasts = (broadcasts || []).filter(b => new Date(b.expiresAt) > new Date());
@@ -701,21 +821,32 @@ function App() {
           );
         })()}
 
-        <CustomerDashboard 
-          selectedDate={selectedDate}
-          setCurrentDate={setSelectedDate}
-          orders={orders}
-          onDayClick={setSelectedDate}
-          currentUser={currentUser}
-          prices={PRICES}
-          onSaveOrder={handleSaveDayOrder}
-          monthPaidBill={monthPaidBill}
-          totalBill={totalBill}
-          previousDues={previousDues}
-          onOpenPayment={() => setIsPaymentOpen(true)}
-          onOpenPassbook={() => setIsPassbookOpen(true)}
-          globalInventory={globalInventory}
-        />
+        {activeTab === 'home' && (
+          <CustomerDashboard 
+            selectedDate={selectedDate}
+            setCurrentDate={setSelectedDate}
+            orders={orders}
+            onDayClick={setSelectedDate}
+            currentUser={currentUser}
+            prices={PRICES}
+            onSaveOrder={handleSaveDayOrder}
+            monthPaidBill={monthPaidBill}
+            totalBill={totalBill}
+            previousDues={previousDues}
+            onOpenPayment={() => setIsPaymentOpen(true)}
+            onOpenPassbook={() => setIsPassbookOpen(true)}
+            globalInventory={globalInventory}
+          />
+        )}
+        
+        {activeTab === 'sabzi' && (
+          <CustomerSabziMarket 
+            currentUser={currentUser}
+            globalVegetables={globalVegetables}
+            globalSabziOrders={globalSabziOrders}
+            orders={orders}
+          />
+        )}
       </CustomerLayout>
 
       {isHistoryOpen && (
@@ -758,6 +889,7 @@ function App() {
           onProfileRequest={handleProfileRequest} 
           profileRequestStatus={profileRequests[currentUser?.mobile]} 
           onUpdateAvatar={handleUpdateAvatar} 
+          onUpdateFamily={handleUpdateFamily}
           onVacationUpdate={handleVacationUpdate} 
         />
       )}
@@ -792,6 +924,7 @@ function App() {
           onSaveOrder={handleSaveDayOrder}
           currentOrders={orders}
           prices={PRICES}
+          currentUser={currentUser}
         />
       )}
 

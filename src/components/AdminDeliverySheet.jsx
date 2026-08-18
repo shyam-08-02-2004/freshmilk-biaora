@@ -190,7 +190,10 @@ const AdminDeliverySheet = ({ registeredUsers, globalOrders, prices }) => {
                           {i + 1}
                        </div>
                        <div>
-                         <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>{d.user.name}</h4>
+                         <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                           {d.user.name} 
+                           {d.order.orderedBy && <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold', marginLeft: '0.4rem', background: '#e0f2fe', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>(by {d.order.orderedBy})</span>}
+                         </h4>
                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{d.user.mobile}</div>
                        </div>
                     </div>

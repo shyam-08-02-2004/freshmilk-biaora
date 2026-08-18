@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Check, Minus, Plus } from 'lucide-react';
 import { format, startOfDay, addDays } from 'date-fns';
 
-const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
+const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices, currentUser }) => {
   const now = new Date();
   const isPast1130AM = now.getHours() > 11 || (now.getHours() === 11 && now.getMinutes() >= 30);
   
@@ -14,16 +14,69 @@ const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
   const existingMilk = existingOrder.milk || 0;
   const [milkQty, setMilkQty] = useState(existingMilk || 1); // Default to 1 litre if they have 0
   const [isSaved, setIsSaved] = useState(false);
+  const [orderedBy, setOrderedBy] = useState('Main Account');
   
   const isTodayDate = format(targetDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
   const isPast7AM = now.getHours() >= 7;
   const isDecreaseLocked = isTodayDate && isPast7AM;
 
+  // Slide-to-Order logic
+  const [isSliding, setIsSliding] = useState(false);
+  const [slideProgress, setSlideProgress] = useState(0);
+  const sliderRef = React.useRef(null);
+
+  const handleDragStart = (e) => {
+    if (milkQty === 0) return;
+    setIsSliding(true);
+  };
+
+  const handleDrag = (e) => {
+    if (!isSliding || !sliderRef.current || milkQty === 0) return;
+    
+    let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+    const rect = sliderRef.current.getBoundingClientRect();
+    let x = clientX - rect.left;
+    
+    // Calculate percentage (clamped between 0 and 100)
+    let percentage = (x / rect.width) * 100;
+    percentage = Math.max(0, Math.min(percentage, 100));
+    
+    setSlideProgress(percentage);
+    
+    if (percentage > 95) {
+      setIsSliding(false);
+      setSlideProgress(100);
+      handleConfirm();
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (isSliding) {
+      setIsSliding(false);
+      // Snap back if not completed
+      if (slideProgress <= 95) {
+        setSlideProgress(0);
+      }
+    }
+  };
+
+  // Add event listeners for mouse/touch end on window to prevent sticking
+  React.useEffect(() => {
+    const handleUp = () => handleDragEnd();
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchend', handleUp);
+    return () => {
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchend', handleUp);
+    };
+  }, [isSliding, slideProgress]);
+
   const handleConfirm = () => {
     // Keep existing items, just update milk
     const updatedOrder = {
       ...existingOrder,
-      milk: milkQty
+      milk: milkQty,
+      orderedBy: orderedBy !== 'Main Account' ? orderedBy : undefined
     };
     onSaveOrder(targetDate, updatedOrder, true); // replaceMode
     setIsSaved(true);
@@ -33,7 +86,7 @@ const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
   };
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={(e) => e.target.classList.contains('modal-overlay') && onClose()}>
+    <div className="modal-overlay" onClick={(e) => e.target.classList.contains('modal-overlay') && onClose()}>
       <div className="modal-content" style={{ maxWidth: '400px', padding: 0, overflow: 'hidden' }}>
         {/* Header Image Area */}
         <div style={{ background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)', padding: '2rem 1rem', textAlign: 'center', position: 'relative' }}>
@@ -91,14 +144,82 @@ const QuickMilkModal = ({ onClose, onSaveOrder, currentOrders, prices }) => {
                 </div>
               )}
 
-              <button 
-                onClick={handleConfirm}
-                style={{ width: '100%', padding: '1rem', background: milkQty > 0 ? 'var(--secondary)' : '#cbd5e1', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: milkQty > 0 ? 'pointer' : 'not-allowed', boxShadow: milkQty > 0 ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none', transition: 'all 0.2s', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                disabled={milkQty === 0}
+              {currentUser?.familyMembers && currentUser.familyMembers.length > 0 && (
+                <div style={{ marginBottom: '1rem', background: '#f8fafc', padding: '0.8rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 'bold', marginBottom: '0.5rem' }}>Ordered By (Family Member)</label>
+                  <select 
+                    value={orderedBy}
+                    onChange={(e) => setOrderedBy(e.target.value)}
+                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'white', fontSize: '0.95rem', fontWeight: '500', outline: 'none' }}
+                  >
+                    <option value="Main Account">Main Account ({currentUser.name})</option>
+                    {currentUser.familyMembers.map((member, idx) => (
+                      <option key={idx} value={member}>{member}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Slide to Order Container */}
+              <div 
+                ref={sliderRef}
+                style={{ 
+                  width: '100%', 
+                  height: '60px', 
+                  background: milkQty > 0 ? '#cbd5e1' : '#f1f5f9', 
+                  borderRadius: '30px', 
+                  position: 'relative', 
+                  overflow: 'hidden',
+                  marginTop: '1.5rem',
+                  cursor: milkQty > 0 ? 'pointer' : 'not-allowed',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+                }}
+                onMouseMove={handleDrag}
+                onTouchMove={handleDrag}
               >
-                <span>Confirm Order</span>
-                <span>₹{milkQty * prices.milk}</span>
-              </button>
+                {/* Progress Fill */}
+                <div style={{ 
+                  position: 'absolute', top: 0, left: 0, height: '100%', 
+                  width: `${slideProgress}%`, 
+                  background: 'linear-gradient(90deg, var(--secondary) 0%, #34d399 100%)',
+                  transition: isSliding ? 'none' : 'width 0.3s ease',
+                  borderRadius: '30px 0 0 30px'
+                }}></div>
+                
+                {/* Text Indicator */}
+                <div style={{ 
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: slideProgress > 50 ? 'white' : (milkQty > 0 ? '#475569' : '#94a3b8'),
+                  fontWeight: 'bold', fontSize: '1rem', zIndex: 1,
+                  pointerEvents: 'none',
+                  transition: 'color 0.2s'
+                }}>
+                  {milkQty > 0 ? `Slide to Order (₹${milkQty * prices.milk})` : 'Select Quantity'}
+                </div>
+                
+                {/* Draggable Knob */}
+                <div 
+                  style={{
+                    position: 'absolute', top: '4px', left: `calc(${slideProgress}% - ${slideProgress > 0 ? (slideProgress/100)*52 : 0}px + 4px)`,
+                    width: '52px', height: '52px', background: 'white',
+                    borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: milkQty > 0 ? (isSliding ? 'grabbing' : 'grab') : 'not-allowed',
+                    zIndex: 2, transition: isSliding ? 'none' : 'left 0.3s ease',
+                    opacity: milkQty > 0 ? 1 : 0.5
+                  }}
+                  onMouseDown={handleDragStart}
+                  onTouchStart={handleDragStart}
+                >
+                  <div style={{ color: 'var(--secondary)' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="13 17 18 12 13 7"></polyline>
+                      <polyline points="6 17 11 12 6 7"></polyline>
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </div>

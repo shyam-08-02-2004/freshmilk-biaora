@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, isToday, isFuture } from 'date-fns';
-import { ChevronLeft, ChevronRight, Truck, Droplets, Pause, X, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, Droplets, Pause, X, Clock, Milk } from 'lucide-react';
 
 const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
   const [viewMonth, setViewMonth] = useState(new Date());
@@ -40,12 +40,12 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'delivered': return { bg: '#ebfdf0', color: '#16a34a', dotColor: '#16a34a', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#16a34a'}}></div> };
-      case 'approved': return { bg: '#eff6ff', color: '#2563eb', dotColor: '#2563eb', icon: <Truck size={10} color="#2563eb"/> };
-      case 'paused':   return { bg: '#f3f4f6', color: '#6b7280', dotColor: '#9ca3af', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#9ca3af'}}></div> };
-      case 'pending':  return { bg: '#fef9c3', color: '#d97706', dotColor: '#d97706', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#d97706'}}></div> };
-      case 'future':   return { bg: 'transparent', color: '#9ca3af', dotColor: 'transparent', icon: null };
-      default:         return { bg: '#fef2f2', color: '#ef4444', dotColor: '#ef4444', icon: <div style={{width: '4px', height: '4px', borderRadius: '50%', background: '#ef4444'}}></div> };
+      case 'delivered': return { bg: '#ebfdf0', color: '#16a34a', icon: <Milk size={14} color="#16a34a" fill="#16a34a"/> };
+      case 'approved': return { bg: '#eff6ff', color: '#2563eb', icon: <Truck size={14} color="#2563eb"/> };
+      case 'paused':   return { bg: '#f3f4f6', color: '#6b7280', icon: <Pause size={14} color="#6b7280" fill="#6b7280"/> };
+      case 'pending':  return { bg: '#fef9c3', color: '#d97706', icon: <Clock size={14} color="#d97706"/> };
+      case 'future':   return { bg: 'transparent', color: '#9ca3af', icon: null };
+      default:         return { bg: '#fef2f2', color: '#ef4444', icon: <X size={14} color="#ef4444"/> };
     }
   };
 
@@ -200,14 +200,17 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '4px',
-                  height: '46px',
-                  cursor: 'default'
+                  height: '50px', // slightly taller to fit icons better
+                  cursor: 'default',
+                  border: today ? '2px solid #d4af37' : '1px solid transparent',
+                  boxShadow: today ? '0 0 12px rgba(212, 175, 55, 0.4)' : 'none',
+                  transition: 'all 0.2s'
                 }}
               >
                 <div style={{
                   fontSize: '0.9rem',
-                  fontWeight: '600',
-                  color: isTodayDelivered ? 'white' : '#374151',
+                  fontWeight: '700', // bolder date
+                  color: isTodayDelivered ? 'white' : (today ? '#d4af37' : '#374151'),
                   lineHeight: 1
                 }}>
                   {format(date, 'd')}
@@ -235,11 +238,11 @@ const MilkCalendar = ({ orders = {}, currentUser, isAdmin = false }) => {
           background: '#fafafa'
         }}>
           {[
-            { color: '#16a34a', icon: <div style={{width:'8px',height:'8px',borderRadius:'50%',background:'#16a34a'}}></div>, label: 'Delivered' },
-            { color: '#2563eb', icon: <Truck size={10} color="#2563eb"/>, label: 'Approved' },
-            { color: '#6b7280', icon: <Pause size={10} color="#6b7280" fill="#6b7280"/>, label: 'Paused' },
-            { color: '#ef4444', icon: <X size={10} color="#ef4444"/>, label: 'No Order' },
-            { color: '#d97706', icon: <Clock size={10} color="#d97706"/>, label: 'Pending' },
+            { color: '#16a34a', icon: <Milk size={12} color="#16a34a" fill="#16a34a"/>, label: 'Delivered' },
+            { color: '#2563eb', icon: <Truck size={12} color="#2563eb"/>, label: 'Approved' },
+            { color: '#6b7280', icon: <Pause size={12} color="#6b7280" fill="#6b7280"/>, label: 'Paused' },
+            { color: '#ef4444', icon: <X size={12} color="#ef4444"/>, label: 'No Order' },
+            { color: '#d97706', icon: <Clock size={12} color="#d97706"/>, label: 'Pending' },
           ].map((item, i) => (
             <div key={i} style={{
               display: 'flex',

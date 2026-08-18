@@ -32,7 +32,7 @@ const AdminVacations = ({ registeredUsers }) => {
             return (
               <div key={user.mobile} style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <img src={user.avatar || "/assets/babu_logo.png"} alt={user.name} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <img src={user.avatar || "/assets/babu_logo_new.jpg"} alt={user.name} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />
                   <div>
                     <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.1rem' }}>{user.name}</h4>
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{user.mobile}</span>

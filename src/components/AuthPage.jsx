@@ -114,7 +114,7 @@ const AuthPage = ({ onAuthAction }) => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo" style={{ background: 'transparent', padding: 0 }}>
-            <img src="/assets/babu_logo.png" alt="Babu Dairy Logo" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
+            <img src="/assets/babu_logo_new.jpg" alt="Babu Dairy Logo" style={{ width: '100px', height: '100px', borderRadius: '20px', objectFit: 'contain', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }} />
           </div>
           <h2>FreshMilk Biaora</h2>
           <p>{isLogin ? 'Welcome back! Please login to your account.' : 'Create an account to get started.'}</p>
