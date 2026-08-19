@@ -105,6 +105,7 @@ const CustomerSabziMarket = ({
       await setDoc(doc(db, "store", "globalSabziOrders"), { data: newGlobalSabziOrders });
       
       setOrderSuccess(true);
+      setShowHistory(true);
       setTimeout(() => setOrderSuccess(false), 3000);
     } catch (e) {
       alert("Error placing order: " + e.message);

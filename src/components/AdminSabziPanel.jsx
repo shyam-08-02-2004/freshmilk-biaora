@@ -159,8 +159,8 @@ const AdminSabziPanel = ({
               ) : (
                 pendingOrders.map(order => (
                   <div key={order.mobile} style={{ background: 'white', padding: '1rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderLeft: '6px solid #f59e0b' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1rem' }}>
+                      <div style={{ flex: '1 1 auto', minWidth: '150px' }}>
                         <h3 style={{ margin: '0 0 0.2rem 0', color: '#1e293b' }}>{order.user?.name || 'Unknown User'}</h3>
                         <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>{order.mobile} • {order.user?.address || 'No Address'}</p>
                       </div>
@@ -303,7 +303,7 @@ const AdminSabziPanel = ({
               ) : (
                 historyOrders.map(order => (
                   <div key={`${order.mobile}-${order.date}`} style={{ background: 'white', padding: '1rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderLeft: '6px solid #10b981' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>
                       <div>
                         <h3 style={{ margin: '0 0 0.2rem 0', color: '#1e293b' }}>{order.user?.name || 'Unknown User'}</h3>
                         <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>{order.mobile}</p>
