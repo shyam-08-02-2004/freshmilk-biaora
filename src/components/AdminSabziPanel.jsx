@@ -92,6 +92,68 @@ const AdminSabziPanel = ({
     await setDoc(doc(db, "store", "globalSabziOrders"), { data: newGlobalOrders });
   };
 
+  const handleApprove = async (mobile, order, date) => {
+    const updatedUserOrders = {
+      ...globalSabziOrders[mobile],
+      [date]: { ...order, status: 'approved' }
+    };
+    const newGlobalOrders = {
+      ...globalSabziOrders,
+      [mobile]: updatedUserOrders
+    };
+    setGlobalSabziOrders(newGlobalOrders);
+    await setDoc(doc(db, "store", "globalSabziOrders"), { data: newGlobalOrders });
+  };
+
+  const handleDownloadPDF = () => {
+    const docPdf = new jsPDF();
+    docPdf.setFontSize(16);
+    docPdf.text('Today Delivery - Sabzi Orders', 14, 15);
+    
+    const itemTotals = {};
+    todayDeliveries.forEach(order => {
+      order.items.forEach(item => {
+        if (!itemTotals[item.name]) itemTotals[item.name] = 0;
+        itemTotals[item.name] += item.qty;
+      });
+    });
+
+    const itemsSummary = Object.keys(itemTotals).map(name => [name, itemTotals[name]]);
+    
+    docPdf.autoTable({
+      startY: 25,
+      head: [['Item Name', 'Total Qty']],
+      body: itemsSummary,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129] }
+    });
+
+    let startY = docPdf.lastAutoTable.finalY + 15;
+    docPdf.setFontSize(14);
+    docPdf.text('Customer Wise Orders', 14, startY);
+
+    const customerData = todayDeliveries.map(order => {
+      const itemsList = order.items.map(i => `${i.name} (${i.qty})`).join(', ');
+      return [
+        order.user?.name || 'Unknown',
+        order.mobile,
+        order.user?.address || '',
+        itemsList,
+        `Rs.${order.total}`
+      ];
+    });
+
+    docPdf.autoTable({
+      startY: startY + 5,
+      head: [['Name', 'Mobile', 'Address', 'Items', 'Amount']],
+      body: customerData,
+      theme: 'grid',
+      headStyles: { fillColor: [3, 105, 161] }
+    });
+
+    docPdf.save('Sabzi_Today_Delivery.pdf');
+  };
+
   const handleTogglePaid = async (mobile, order, date) => {
     const updatedUserOrders = {
       ...globalSabziOrders[mobile],
