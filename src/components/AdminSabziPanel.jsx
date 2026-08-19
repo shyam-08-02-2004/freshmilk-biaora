@@ -22,7 +22,7 @@ const AdminSabziPanel = ({
   const tomorrowStr = format(tomorrowDate, 'yyyy-MM-dd');
   const todayStr = format(now, 'yyyy-MM-dd');
 
-  const [selectedDate, setSelectedDate] = useState(tomorrowStr);
+  const [selectedOrderTab, setSelectedOrderTab] = useState('pending');
   const [newVeg, setNewVeg] = useState({ name: '', price: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
   const [isEditing, setIsEditing] = useState(false);
 
@@ -30,14 +30,38 @@ const AdminSabziPanel = ({
   const pendingOrders = useMemo(() => {
     const orders = [];
     Object.keys(globalSabziOrders || {}).forEach(mobile => {
-      const userDateOrder = globalSabziOrders[mobile]?.[selectedDate];
-      if (userDateOrder && userDateOrder.status === 'pending') {
-        const user = (registeredUsers || []).find(u => u.mobile === mobile);
-        orders.push({ mobile, user, ...userDateOrder, date: selectedDate });
-      }
+      Object.keys(globalSabziOrders[mobile] || {}).forEach(date => {
+        const order = globalSabziOrders[mobile][date];
+        if (order && order.status === 'pending') {
+          const user = (registeredUsers || []).find(u => u.mobile === mobile);
+          orders.push({ mobile, user, ...order, date });
+        }
+      });
     });
     return orders.sort((a, b) => new Date(b.placedAt) - new Date(a.placedAt));
-  }, [globalSabziOrders, selectedDate, registeredUsers]);
+  }, [globalSabziOrders, registeredUsers]);
+
+  const todayDeliveries = useMemo(() => {
+    const orders = [];
+    const nowLocal = new Date();
+    const tStr = format(nowLocal, 'yyyy-MM-dd');
+    const h = nowLocal.getHours();
+    const m = nowLocal.getMinutes();
+    
+    Object.keys(globalSabziOrders || {}).forEach(mobile => {
+      Object.keys(globalSabziOrders[mobile] || {}).forEach(date => {
+        const order = globalSabziOrders[mobile][date];
+        if (order && order.status === 'approved') {
+          if (date < tStr) return;
+          if (date === tStr && (h > 15 || (h === 15 && m >= 50))) return;
+          
+          const user = (registeredUsers || []).find(u => u.mobile === mobile);
+          orders.push({ mobile, user, ...order, date });
+        }
+      });
+    });
+    return orders.sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [globalSabziOrders, registeredUsers]);
 
   // Computed History for "history" tab (delivered in last 7 days)
   const historyOrders = useMemo(() => {
