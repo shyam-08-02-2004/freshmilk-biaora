@@ -4,7 +4,7 @@ import { format, addDays, subDays } from 'date-fns';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const AdminSabziPanel = ({ 
   globalVegetables = [], 
@@ -120,7 +120,7 @@ const AdminSabziPanel = ({
 
     const itemsSummary = Object.keys(itemTotals).map(name => [name, itemTotals[name]]);
     
-    docPdf.autoTable({
+    autoTable(docPdf, {
       startY: 25,
       head: [['Item Name', 'Total Qty']],
       body: itemsSummary,
@@ -143,7 +143,7 @@ const AdminSabziPanel = ({
       ];
     });
 
-    docPdf.autoTable({
+    autoTable(docPdf, {
       startY: startY + 5,
       head: [['Name', 'Mobile', 'Address', 'Items', 'Amount']],
       body: customerData,
