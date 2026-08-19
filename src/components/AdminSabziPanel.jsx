@@ -21,7 +21,7 @@ const AdminSabziPanel = ({
   const todayStr = format(now, 'yyyy-MM-dd');
 
   const [selectedDate, setSelectedDate] = useState(tomorrowStr);
-  const [newVeg, setNewVeg] = useState({ name: '', price: '', unit: 'kg', emoji: '🥬', inStock: true });
+  const [newVeg, setNewVeg] = useState({ name: '', price: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
   const [isEditing, setIsEditing] = useState(false);
 
   // Computed Orders for "orders" tab (pending today/tomorrow)
@@ -95,7 +95,7 @@ const AdminSabziPanel = ({
     const updated = [...(globalVegetables || []), vegObj];
     setGlobalVegetables(updated);
     await setDoc(doc(db, "store", "globalVegetables"), { data: updated });
-    setNewVeg({ name: '', price: '', unit: 'kg', emoji: '🥬', inStock: true });
+    setNewVeg({ name: '', price: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
     setIsEditing(false);
   };
 
@@ -264,7 +264,7 @@ const AdminSabziPanel = ({
             {isEditing && (
               <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ margin: '0 0 1rem 0' }}>Add Vegetable</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
                   <input type="text" placeholder="Name (e.g. Aloo)" value={newVeg.name} onChange={e => setNewVeg({...newVeg, name: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                   <input type="number" placeholder="Price" value={newVeg.price} onChange={e => setNewVeg({...newVeg, price: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                   <select value={newVeg.unit} onChange={e => setNewVeg({...newVeg, unit: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
@@ -276,7 +276,13 @@ const AdminSabziPanel = ({
                     <option value="bunch">bunch</option>
                   </select>
                   <input type="text" placeholder="Emoji (e.g. 🥔)" value={newVeg.emoji} onChange={e => setNewVeg({...newVeg, emoji: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                  <input type="text" placeholder="Image URL (optional)" value={newVeg.image || ''} onChange={e => setNewVeg({...newVeg, image: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1', gridColumn: '1 / -1' }} />
                 </div>
+                {newVeg.image && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <img src={newVeg.image} alt="Preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                  </div>
+                )}
                 <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
                   <button onClick={handleAddVegetable} style={{ background: '#10b981', color: 'white', padding: '0.8rem 2rem', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Save</button>
                   <button onClick={() => setIsEditing(false)} style={{ background: '#f1f5f9', color: '#475569', padding: '0.8rem 2rem', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
