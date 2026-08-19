@@ -292,6 +292,21 @@ const AdminSabziPanel = ({
 
       {/* Content */}
       <div style={{ padding: '1rem', flex: 1, paddingBottom: '100px' }}>
+        {/* Top Analytics Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ background: 'linear-gradient(135deg, #0ea5e9, #38bdf8)', padding: '1rem', borderRadius: '12px', color: 'white', boxShadow: '0 4px 6px rgba(14,165,233,0.2)' }}>
+            <div style={{ fontSize: '0.8rem', opacity: 0.9, marginBottom: '0.2rem' }}>💰 Expected Revenue</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>₹{analytics.expectedRevenue}</div>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', padding: '1rem', borderRadius: '12px', color: 'white', boxShadow: '0 4px 6px rgba(16,185,129,0.2)' }}>
+            <div style={{ fontSize: '0.8rem', opacity: 0.9, marginBottom: '0.2rem' }}>🏆 Top Selling</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{analytics.topSelling}</div>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg, #ef4444, #f87171)', padding: '1rem', borderRadius: '12px', color: 'white', boxShadow: '0 4px 6px rgba(239,68,68,0.2)' }}>
+            <div style={{ fontSize: '0.8rem', opacity: 0.9, marginBottom: '0.2rem' }}>⚠️ Low Stock Items</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{analytics.lowStockCount}</div>
+          </div>
+        </div>
         
         {/* ORDERS TAB */}
         {activeTab === 'orders' && (
@@ -497,12 +512,16 @@ const AdminSabziPanel = ({
                         <tr key={veg.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                           <td style={{ padding: '0.6rem 0.8rem', fontWeight: 'bold', color: '#1e293b' }}>{veg.name} <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>({veg.unit})</span></td>
                           <td style={{ padding: '0.6rem 0.8rem' }}>
-                            <input 
-                              type="number" 
-                              value={bulkEdits[veg.id]?.price || ''} 
-                              onChange={e => handleBulkChange(veg.id, 'price', e.target.value)}
-                              style={{ width: '100%', padding: '0.4rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
-                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                              <button onClick={() => handleBulkChange(veg.id, 'price', Math.max(0, Number(bulkEdits[veg.id]?.price || 0) - 5))} style={{ padding: '0.2rem 0.5rem', background: '#f1f5f9', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-5</button>
+                              <input 
+                                type="number" 
+                                value={bulkEdits[veg.id]?.price || ''} 
+                                onChange={e => handleBulkChange(veg.id, 'price', e.target.value)}
+                                style={{ width: '60px', padding: '0.4rem', borderRadius: '6px', border: '1px solid #cbd5e1', textAlign: 'center' }}
+                              />
+                              <button onClick={() => handleBulkChange(veg.id, 'price', Number(bulkEdits[veg.id]?.price || 0) + 5)} style={{ padding: '0.2rem 0.5rem', background: '#f1f5f9', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>+5</button>
+                            </div>
                           </td>
                           <td style={{ padding: '0.6rem 0.8rem' }}>
                             <input 
