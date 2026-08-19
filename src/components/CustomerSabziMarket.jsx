@@ -302,7 +302,7 @@ const CustomerSabziMarket = ({
                   <h4 style={{ margin: '0 0 0.3rem 0', fontSize: '1.1rem', color: '#1e293b', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
        {veg.name} 
        {veg.originalPrice && veg.originalPrice > veg.price && (
-         <span style={{background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px'}}>SALE</span>
+         <span style={{background: '#dcfce7', color: '#16a34a', fontSize: '0.75rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px'}}>📉 Price Dropped by ₹{veg.originalPrice - veg.price}</span>
        )}
     </h4>
                   <p style={{ margin: 0, color: '#10b981', fontWeight: 'bold' }}>

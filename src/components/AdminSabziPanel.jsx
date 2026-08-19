@@ -169,7 +169,22 @@ const AdminSabziPanel = ({
 
   const handleUpdateInventory = async (id, field, value) => {
     const updated = (globalVegetables || []).map(v => {
-      if (v.id === id) return { ...v, [field]: value };
+      if (v.id === id) {
+        let updates = { ...v, [field]: value };
+        if (field === 'price') {
+          if (v.price && value < v.price) {
+            // Automatically set original price to current price if dropping
+            // Only if originalPrice is not already higher
+            if (!v.originalPrice || v.price > v.originalPrice) {
+               updates.originalPrice = v.price;
+            }
+          } else if (v.originalPrice && value >= v.originalPrice) {
+            // Price increased back to normal
+            updates.originalPrice = '';
+          }
+        }
+        return updates;
+      }
       return v;
     });
     setGlobalVegetables(updated);
@@ -452,7 +467,7 @@ const AdminSabziPanel = ({
                       <div style={{ fontSize: '2rem', marginRight: '1rem' }}>{veg.emoji}</div>
                     )}
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 0.2rem 0', color: '#1e293b', display:'flex', gap:'0.5rem', alignItems:'center' }}>{veg.name} <span style={{background:'#e0e7ff', color:'#4f46e5', fontSize:'0.7rem', padding:'2px 8px', borderRadius:'12px', fontWeight:'normal'}}>{veg.category || 'अन्य'}</span> {veg.originalPrice && veg.originalPrice > veg.price && <span style={{background:'#ef4444',color:'white',fontSize:'0.65rem',padding:'2px 6px',borderRadius:'4px'}}>SALE</span>}</h4>
+                      <h4 style={{ margin: '0 0 0.2rem 0', color: '#1e293b', display:'flex', gap:'0.5rem', alignItems:'center' }}>{veg.name} <span style={{background:'#e0e7ff', color:'#4f46e5', fontSize:'0.7rem', padding:'2px 8px', borderRadius:'12px', fontWeight:'normal'}}>{veg.category || 'अन्य'}</span> {veg.originalPrice && veg.originalPrice > veg.price && <span style={{background:'#dcfce7',color:'#16a34a',fontSize:'0.7rem',padding:'2px 6px',borderRadius:'4px',fontWeight:'bold',display:'flex',alignItems:'center',gap:'2px'}}>📉 Price Dropped by ₹{veg.originalPrice - veg.price}</span>}</h4>
                       <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>ID: {veg.id} {veg.stockQty !== '' && veg.stockQty !== undefined ? `| Stock: ${veg.stockQty} ${veg.unit}` : ''}</p>
      {veg.stockQty !== '' && veg.stockQty !== undefined && veg.stockQty <= 2 && <p style={{ margin: '0.2rem 0 0 0', color: '#ef4444', fontSize: '0.8rem', fontWeight: 'bold' }}>⚠️ Low Stock Alert</p>}
                     </div>
