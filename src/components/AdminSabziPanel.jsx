@@ -148,18 +148,18 @@ const AdminSabziPanel = ({
         {/* ORDERS TAB */}
         {activeTab === 'orders' && (
           <div>
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1.5rem' }}>
               <button 
                 onClick={() => setSelectedDate(todayStr)}
-                style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: selectedDate === todayStr ? 'none' : '1px solid #cbd5e1', background: selectedDate === todayStr ? '#0369a1' : 'white', color: selectedDate === todayStr ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
+                style={{ flex: '1 1 min-content', whiteSpace: 'nowrap', padding: '0.6rem', borderRadius: '8px', border: selectedDate === todayStr ? 'none' : '1px solid #cbd5e1', background: selectedDate === todayStr ? '#0369a1' : 'white', color: selectedDate === todayStr ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
               >
                 Today's Orders
               </button>
               <button 
                 onClick={() => setSelectedDate(tomorrowStr)}
-                style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: selectedDate === tomorrowStr ? 'none' : '1px solid #cbd5e1', background: selectedDate === tomorrowStr ? '#0369a1' : 'white', color: selectedDate === tomorrowStr ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
+                style={{ flex: '1 1 min-content', whiteSpace: 'nowrap', padding: '0.6rem', borderRadius: '8px', border: selectedDate === tomorrowStr ? 'none' : '1px solid #cbd5e1', background: selectedDate === tomorrowStr ? '#0369a1' : 'white', color: selectedDate === tomorrowStr ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
               >
-                Tomorrow's Orders
+                Today Delivery
               </button>
             </div>
 
@@ -167,7 +167,7 @@ const AdminSabziPanel = ({
               {pendingOrders.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', background: 'white', borderRadius: '16px' }}>
                   <Package size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
-                  <h3 style={{ color: '#475569', margin: 0 }}>No Pending Sabzi orders for {selectedDate === todayStr ? 'Today' : 'Tomorrow'}.</h3>
+                  <h3 style={{ color: '#475569', margin: 0 }}>No Pending Sabzi orders for {selectedDate === todayStr ? 'Today' : 'Today Delivery'}.</h3>
                 </div>
               ) : (
                 pendingOrders.map(order => (
