@@ -847,19 +847,33 @@ const AdminDashboard = ({
                                     </button>
                                   </>
                                 ) : (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (isFuture) {
-                                        alert(`Cannot deliver future orders. Wait until ${format(dateObj, 'dd MMM')}`);
-                                        return;
-                                      }
-                                      onDeliverOrder(user.mobile, dateStr);
-                                    }}
-                                    style={{ padding: '0.5rem 1rem', background: isFuture ? '#cbd5e1' : '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: isFuture ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                                  >
-                                    <Truck size={16} /> Mark Delivered
-                                  </button>
+                                  <>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (isFuture) {
+                                          alert(`Cannot deliver future orders. Wait until ${format(dateObj, 'dd MMM')}`);
+                                          return;
+                                        }
+                                        onDeliverOrder(user.mobile, dateStr);
+                                      }}
+                                      style={{ padding: '0.5rem 1rem', background: isFuture ? '#cbd5e1' : '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: isFuture ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                    >
+                                      <Truck size={16} /> Mark Delivered
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (window.confirm('Are you sure you want to cancel this approved order?')) {
+                                          onRejectOrder(user.mobile, dateStr);
+                                        }
+                                      }}
+                                      style={{ padding: '0.5rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                      title="Cancel Approved Order"
+                                    >
+                                      <XCircle size={18} />
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             </div>
@@ -1438,9 +1452,18 @@ const AdminDashboard = ({
                                         </button>
                                       </div>
                                     ) : (
-                                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: '#10b981', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                                        <CheckCircle size={14} /> Approved
-                                      </span>
+                                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: '#10b981', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                          <CheckCircle size={14} /> Approved
+                                        </span>
+                                        <button 
+                                          onClick={() => { if(window.confirm('Are you sure you want to cancel this approved order?')) onRejectOrder(selectedUser.mobile, date); }}
+                                          style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', padding: '0.3rem 0.6rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
+                                          title="Cancel Approved Order"
+                                        >
+                                          <XCircle size={14} /> Cancel
+                                        </button>
+                                      </div>
                                     )}
                                   </div>
                                 )}
