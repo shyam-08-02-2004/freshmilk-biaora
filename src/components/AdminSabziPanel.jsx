@@ -3,6 +3,8 @@ import { Leaf, CheckCircle2, Package, Plus, ArrowLeft, Edit3, ClipboardList, Che
 import { format, addDays, subDays } from 'date-fns';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const AdminSabziPanel = ({ 
   globalVegetables = [], 
@@ -150,71 +152,123 @@ const AdminSabziPanel = ({
           <div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1.5rem' }}>
               <button 
-                onClick={() => setSelectedDate(todayStr)}
-                style={{ flex: '1 1 min-content', whiteSpace: 'nowrap', padding: '0.6rem', borderRadius: '8px', border: selectedDate === todayStr ? 'none' : '1px solid #cbd5e1', background: selectedDate === todayStr ? '#0369a1' : 'white', color: selectedDate === todayStr ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
+                onClick={() => setSelectedOrderTab('pending')}
+                style={{ flex: '1 1 min-content', whiteSpace: 'nowrap', padding: '0.6rem', borderRadius: '8px', border: selectedOrderTab === 'pending' ? 'none' : '1px solid #cbd5e1', background: selectedOrderTab === 'pending' ? '#0369a1' : 'white', color: selectedOrderTab === 'pending' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
               >
-                Today's Orders
+                Pending Approvals
               </button>
               <button 
-                onClick={() => setSelectedDate(tomorrowStr)}
-                style={{ flex: '1 1 min-content', whiteSpace: 'nowrap', padding: '0.6rem', borderRadius: '8px', border: selectedDate === tomorrowStr ? 'none' : '1px solid #cbd5e1', background: selectedDate === tomorrowStr ? '#0369a1' : 'white', color: selectedDate === tomorrowStr ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
+                onClick={() => setSelectedOrderTab('approved')}
+                style={{ flex: '1 1 min-content', whiteSpace: 'nowrap', padding: '0.6rem', borderRadius: '8px', border: selectedOrderTab === 'approved' ? 'none' : '1px solid #cbd5e1', background: selectedOrderTab === 'approved' ? '#10b981' : 'white', color: selectedOrderTab === 'approved' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
               >
                 Today Delivery
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {pendingOrders.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '3rem 1rem', background: 'white', borderRadius: '16px' }}>
-                  <Package size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
-                  <h3 style={{ color: '#475569', margin: 0 }}>No Pending Sabzi orders for {selectedDate === todayStr ? 'Today' : 'Today Delivery'}.</h3>
-                </div>
-              ) : (
-                pendingOrders.map(order => (
-                  <div key={order.mobile} style={{ background: 'white', padding: '1rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderLeft: '6px solid #f59e0b' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1rem' }}>
-                      <div style={{ flex: '1 1 auto', minWidth: '150px' }}>
-                        <h3 style={{ margin: '0 0 0.2rem 0', color: '#1e293b' }}>{order.user?.name || 'Unknown User'}</h3>
-                        <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>{order.mobile} • {order.user?.address || 'No Address'}</p>
-                      </div>
-                      <button 
-                        onClick={() => handleMarkDelivered(order.mobile, order, order.date)}
-                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.5rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', fontSize: '0.85rem' }}
-                      >
-                        <CheckCircle2 size={16} /> Mark Delivered
-                      </button>
-                    </div>
-                    
-                    <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
-                      {order.items.map(item => (
-                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#334155' }}>
-                          <span>{item.name} x {item.qty}</span>
-                          <span style={{ fontWeight: 'bold' }}>₹{item.total}</span>
-                        </div>
-                      ))}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px dashed #cbd5e1', color: '#0f172a', fontWeight: '900', fontSize: '1.1rem', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Status:</span>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', background: order.isPaid ? '#dcfce7' : '#f1f5f9', padding: '0.3rem 0.6rem', borderRadius: '8px', border: `1px solid ${order.isPaid ? '#22c55e' : '#cbd5e1'}`, transition: 'all 0.2s' }}>
-                            <input 
-                              type="checkbox" 
-                              checked={!!order.isPaid} 
-                              onChange={() => handleTogglePaid(order.mobile, order, order.date)}
-                              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                            />
-                            <span style={{ fontSize: '0.9rem', color: order.isPaid ? '#15803d' : '#475569', fontWeight: 'bold' }}>Paid</span>
-                          </label>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span>Total Collect:</span>
-                          <span style={{ color: order.isPaid ? '#22c55e' : '#0f172a' }}>₹{order.total}</span>
-                        </div>
-                      </div>
-                    </div>
+            {selectedOrderTab === 'pending' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {pendingOrders.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem', background: 'white', borderRadius: '16px' }}>
+                    <Package size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
+                    <h3 style={{ color: '#475569', margin: 0 }}>No pending sabzi approvals.</h3>
                   </div>
-                ))
-              )}
-            </div>
+                ) : (
+                  pendingOrders.map(order => (
+                    <div key={order.mobile + order.date} style={{ background: 'white', padding: '1rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderLeft: '6px solid #f59e0b' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1rem' }}>
+                        <div style={{ flex: '1 1 auto', minWidth: '150px' }}>
+                          <h3 style={{ margin: '0 0 0.2rem 0', color: '#1e293b' }}>{order.user?.name || 'Unknown User'}</h3>
+                          <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>{order.mobile} • {order.user?.address || 'No Address'}</p>
+                          <p style={{ margin: '0.2rem 0 0 0', color: '#0f172a', fontSize: '0.8rem', fontWeight: 'bold' }}>For Delivery: {order.date}</p>
+                        </div>
+                        <button 
+                          onClick={() => handleApprove(order.mobile, order, order.date)}
+                          style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', fontSize: '0.85rem' }}
+                        >
+                          <CheckCircle2 size={16} /> Approve
+                        </button>
+                      </div>
+                      
+                      <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
+                        {order.items.map(item => (
+                          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#334155' }}>
+                            <span>{item.name} x {item.qty}</span>
+                            <span style={{ fontWeight: 'bold' }}>₹{item.total}</span>
+                          </div>
+                        ))}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px dashed #cbd5e1', color: '#0f172a', fontWeight: '900', fontSize: '1.1rem', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span>Total Amount:</span>
+                            <span>₹{order.total}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {selectedOrderTab === 'approved' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+                  <button onClick={handleDownloadPDF} style={{ background: '#0284c7', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    Download PDF
+                  </button>
+                </div>
+                {todayDeliveries.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem', background: 'white', borderRadius: '16px' }}>
+                    <Package size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
+                    <h3 style={{ color: '#475569', margin: 0 }}>No orders for Today Delivery.</h3>
+                  </div>
+                ) : (
+                  todayDeliveries.map(order => (
+                    <div key={order.mobile + order.date} style={{ background: 'white', padding: '1rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', borderLeft: '6px solid #10b981' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1rem' }}>
+                        <div style={{ flex: '1 1 auto', minWidth: '150px' }}>
+                          <h3 style={{ margin: '0 0 0.2rem 0', color: '#1e293b' }}>{order.user?.name || 'Unknown User'}</h3>
+                          <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>{order.mobile} • {order.user?.address || 'No Address'}</p>
+                          <p style={{ margin: '0.2rem 0 0 0', color: '#0f172a', fontSize: '0.8rem', fontWeight: 'bold' }}>Delivery: {order.date}</p>
+                        </div>
+                        <button 
+                          onClick={() => handleMarkDelivered(order.mobile, order, order.date)}
+                          style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', fontSize: '0.85rem' }}
+                        >
+                          <CheckCircle2 size={16} /> Mark Delivered
+                        </button>
+                      </div>
+                      
+                      <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
+                        {order.items.map(item => (
+                          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#334155' }}>
+                            <span>{item.name} x {item.qty}</span>
+                            <span style={{ fontWeight: 'bold' }}>₹{item.total}</span>
+                          </div>
+                        ))}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px dashed #cbd5e1', color: '#0f172a', fontWeight: '900', fontSize: '1.1rem', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Status:</span>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', background: order.isPaid ? '#dcfce7' : '#f1f5f9', padding: '0.3rem 0.6rem', borderRadius: '8px', border: `1px solid ${order.isPaid ? '#22c55e' : '#cbd5e1'}`, transition: 'all 0.2s' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={!!order.isPaid} 
+                                onChange={() => handleTogglePaid(order.mobile, order, order.date)}
+                                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                              />
+                              <span style={{ fontSize: '0.9rem', color: order.isPaid ? '#15803d' : '#475569', fontWeight: 'bold' }}>Paid</span>
+                            </label>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span>Total Collect:</span>
+                            <span style={{ color: order.isPaid ? '#22c55e' : '#0f172a' }}>₹{order.total}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         )}
 
