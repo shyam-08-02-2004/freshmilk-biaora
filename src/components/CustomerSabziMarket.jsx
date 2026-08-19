@@ -19,7 +19,9 @@ const CustomerSabziMarket = ({
   // Time & Date logic
   const now = new Date();
   const currentHour = now.getHours();
-  const isMarketClosed = currentHour >= 22; // 10 PM
+  const isTooEarly = currentHour < 16; // Before 4 PM
+  const isTooLate = currentHour >= 22; // After 10 PM
+  const isMarketClosed = isTooEarly || isTooLate;
   const tomorrowDate = addDays(now, 1);
   const tomorrowStr = format(tomorrowDate, 'yyyy-MM-dd');
   
@@ -200,9 +202,11 @@ const CustomerSabziMarket = ({
         <>
           {/* Status Checks */}
           {isMarketClosed && (
-            <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '12px', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-              <Clock size={20} />
-              Market closes at 10 PM. Ordering is closed for tomorrow.
+            <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '12px', marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontWeight: 'bold' }}>
+              <Clock size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                {isTooEarly ? 'Sabzi market sham 4:00 baje khulega (kal ki delivery ke liye).' : 'Market closes at 10 PM. Ordering is closed for tomorrow.'}
+              </div>
             </div>
           )}
 
