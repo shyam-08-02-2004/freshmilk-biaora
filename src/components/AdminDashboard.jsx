@@ -37,7 +37,22 @@ const AdminDashboard = ({
   onSuccessAnimation
 }) => {
   const { t } = useLanguage();
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('admin_selectedUser');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  React.useEffect(() => {
+    if (selectedUser) {
+      sessionStorage.setItem('admin_selectedUser', JSON.stringify(selectedUser));
+    } else {
+      sessionStorage.removeItem('admin_selectedUser');
+    }
+  }, [selectedUser]);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [showAllPayments, setShowAllPayments] = useState(false);
   const [showAllMoreFeatures, setShowAllMoreFeatures] = useState(false);

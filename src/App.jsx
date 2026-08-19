@@ -95,8 +95,12 @@ function App() {
   const [isPassbookOpen, setIsPassbookOpen] = useState(false);
   const [isVacationOpen, setIsVacationOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('user_activeTab') || 'home');
   const [adminActiveTab, setAdminActiveTab] = useState(() => sessionStorage.getItem('admin_activeTab') || 'users');
+
+  React.useEffect(() => {
+    sessionStorage.setItem('user_activeTab', activeTab);
+  }, [activeTab]);
   
   const [isLoggedIn, setIsLoggedIn] = useState(() => JSON.parse(localStorage.getItem('biaora_isLoggedIn')) || false);
   const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('biaora_currentUser')) || null);
