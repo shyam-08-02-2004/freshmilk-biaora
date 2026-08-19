@@ -94,7 +94,49 @@ const AdminSabziPanel = ({
     await setDoc(doc(db, "store", "globalSabziOrders"), { data: newGlobalOrders });
   };
 
-  const handleApprove = async (mobile, order, date) => {
+    const analytics = useMemo(() => {
+    let expectedRevenue = 0;
+    approvedOrders.forEach(o => expectedRevenue += o.total);
+    
+    let lowStockCount = 0;
+    (globalVegetables || []).forEach(v => {
+      if (v.stockQty !== '' && v.stockQty !== undefined && v.stockQty <= 2) {
+        lowStockCount++;
+      }
+    });
+
+    let topSelling = 'N/A';
+    let maxQty = 0;
+    const itemMap = {};
+    approvedOrders.forEach(o => {
+      o.items.forEach(i => {
+        itemMap[i.name] = (itemMap[i.name] || 0) + i.qty;
+      });
+    });
+    for (let name in itemMap) {
+      if (itemMap[name] > maxQty) {
+        maxQty = itemMap[name];
+        topSelling = name;
+      }
+    }
+
+    return { expectedRevenue, lowStockCount, topSelling };
+  }, [approvedOrders, globalVegetables]);
+
+  const handleApproveAll = async () => {
+    if (!window.confirm("Approve all pending orders?")) return;
+    let newGlobalOrders = JSON.parse(JSON.stringify(globalSabziOrders || {}));
+    pendingOrders.forEach(order => {
+      if (!newGlobalOrders[order.mobile]) newGlobalOrders[order.mobile] = {};
+      if (newGlobalOrders[order.mobile][order.date]) {
+        newGlobalOrders[order.mobile][order.date].status = 'approved';
+      }
+    });
+    setGlobalSabziOrders(newGlobalOrders);
+    await setDoc(doc(db, "store", "globalSabziOrders"), { data: JSON.parse(JSON.stringify(newGlobalOrders)) });
+  };
+
+const handleApprove = async (mobile, order, date) => {
     const updatedUserOrders = {
       ...globalSabziOrders[mobile],
       [date]: { ...order, status: 'approved' }
