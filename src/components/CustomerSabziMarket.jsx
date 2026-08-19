@@ -50,6 +50,15 @@ const CustomerSabziMarket = ({
     }, 0);
   }, [cart, globalVegetables]);
 
+  const handleSetCart = (id, val) => {
+    setCart(prev => {
+      const nw = { ...prev };
+      if (val <= 0) delete nw[id];
+      else nw[id] = val;
+      return nw;
+    });
+  };
+  
   const handleUpdateCart = (id, delta) => {
     setCart(prev => {
       const current = prev[id] || 0;
@@ -175,7 +184,7 @@ const CustomerSabziMarket = ({
                 </div>
                 {item.items.map(v => (
                   <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#475569' }}>
-                    <span>{v.name} x {v.qty}</span>
+                    <span>{v.name} {v.unit === 'kg' && v.qty < 1 ? `(${v.qty * 1000}g)` : `x ${v.qty} ${v.unit !== 'piece' && v.unit !== 'kg' ? v.unit : ''}${v.unit === 'kg' && v.qty >= 1 ? 'kg' : ''}`}</span>
                     <span>₹{v.total}</span>
                   </div>
                 ))}
@@ -250,25 +259,71 @@ const CustomerSabziMarket = ({
                   )}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 0.3rem 0', fontSize: '1.1rem', color: '#1e293b' }}>{veg.name}</h4>
-                  <p style={{ margin: 0, color: '#10b981', fontWeight: 'bold' }}>₹{veg.price} / {veg.unit}</p>
+                  <h4 style={{ margin: '0 0 0.3rem 0', fontSize: '1.1rem', color: '#1e293b', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+       {veg.name} 
+       {veg.originalPrice && veg.originalPrice > veg.price && (
+         <span style={{background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px'}}>SALE</span>
+       )}
+    </h4>
+                  <p style={{ margin: 0, color: '#10b981', fontWeight: 'bold' }}>
+       {veg.originalPrice && veg.originalPrice > veg.price ? (
+          <>
+             <span style={{ textDecoration: 'line-through', color: '#94a3b8', marginRight: '0.5rem', fontSize: '0.9rem' }}>₹{veg.originalPrice}</span>
+             <span>₹{veg.price} / {veg.unit}</span>
+          </>
+       ) : (
+          <span>₹{veg.price} / {veg.unit}</span>
+       )}
+    </p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {!veg.inStock ? (
                     <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem' }}>Out of Stock</span>
                   ) : (
+                    
                     <>
-                      <button 
-                        onClick={() => handleUpdateCart(veg.id, -1)}
-                        disabled={!cart[veg.id] || isMarketClosed || !hasMilkForTomorrow || existingOrder?.status === 'delivered'}
-                        style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 'bold', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >-</button>
-                      <span style={{ fontWeight: 'bold', minWidth: '20px', textAlign: 'center' }}>{cart[veg.id] || 0}</span>
-                      <button 
-                        onClick={() => handleUpdateCart(veg.id, 1)}
-                        disabled={isMarketClosed || !hasMilkForTomorrow || existingOrder?.status === 'delivered'}
-                        style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: '#10b981', color: 'white', fontWeight: 'bold', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >+</button>
+                      {veg.unit === 'kg' ? (
+                        <select 
+                          value={cart[veg.id] || 0} 
+                          onChange={(e) => handleSetCart(veg.id, Number(e.target.value))}
+                          disabled={isMarketClosed || !hasMilkForTomorrow || existingOrder?.status === 'delivered'}
+                          style={{ padding: '0.4rem', borderRadius: '8px', border: '1px solid #10b981', background: cart[veg.id] ? '#10b981' : 'white', color: cart[veg.id] ? 'white' : '#10b981', fontWeight: 'bold', fontSize: '0.9rem', outline: 'none' }}
+                        >
+                          <option value={0}>Add</option>
+                          <option value={0.1}>100g</option>
+                          <option value={0.25}>250g</option>
+                          <option value={0.5}>500g</option>
+                          <option value={1}>1 kg</option>
+                          <option value={1.5}>1.5 kg</option>
+                          <option value={2}>2 kg</option>
+                        </select>
+                      ) : veg.unit === 'g' || veg.unit === '100g' || veg.unit === '250g' || veg.unit === '500g' ? (
+                        <select 
+                          value={cart[veg.id] || 0} 
+                          onChange={(e) => handleSetCart(veg.id, Number(e.target.value))}
+                          disabled={isMarketClosed || !hasMilkForTomorrow || existingOrder?.status === 'delivered'}
+                          style={{ padding: '0.4rem', borderRadius: '8px', border: '1px solid #10b981', background: cart[veg.id] ? '#10b981' : 'white', color: cart[veg.id] ? 'white' : '#10b981', fontWeight: 'bold', fontSize: '0.9rem', outline: 'none' }}
+                        >
+                          <option value={0}>Add</option>
+                          <option value={1}>1 Pack</option>
+                          <option value={2}>2 Pack</option>
+                          <option value={3}>3 Pack</option>
+                        </select>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <button 
+                            onClick={() => handleUpdateCart(veg.id, -1)}
+                            disabled={!cart[veg.id] || isMarketClosed || !hasMilkForTomorrow || existingOrder?.status === 'delivered'}
+                            style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 'bold', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >-</button>
+                          <span style={{ fontWeight: 'bold', minWidth: '20px', textAlign: 'center' }}>{cart[veg.id] || 0}</span>
+                          <button 
+                            onClick={() => handleUpdateCart(veg.id, 1)}
+                            disabled={isMarketClosed || !hasMilkForTomorrow || existingOrder?.status === 'delivered'}
+                            style={{ width: '32px', height: '32px', borderRadius: '8px', border: 'none', background: '#10b981', color: 'white', fontWeight: 'bold', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          >+</button>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

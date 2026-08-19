@@ -23,7 +23,7 @@ const AdminSabziPanel = ({
   const todayStr = format(now, 'yyyy-MM-dd');
 
   const [selectedOrderTab, setSelectedOrderTab] = useState('pending');
-  const [newVeg, setNewVeg] = useState({ name: '', price: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
+  const [newVeg, setNewVeg] = useState({ name: '', price: '', originalPrice: '', stockQty: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
   const [isEditing, setIsEditing] = useState(false);
 
   // Computed Orders for "orders" tab (pending today/tomorrow)
@@ -133,7 +133,7 @@ const AdminSabziPanel = ({
     docPdf.text('Customer Wise Orders', 14, startY);
 
     const customerData = todayDeliveries.map(order => {
-      const itemsList = order.items.map(i => `${i.name} (${i.qty})`).join(', ');
+      const itemsList = order.items.map(i => `${i.name} ` + (i.unit === 'kg' && i.qty < 1 ? `(${i.qty * 1000}g)` : `(${i.qty}${i.unit === 'kg' ? 'kg' : (i.unit !== 'piece' ? i.unit : '')})`)).join(', ');
       return [
         order.user?.name || 'Unknown',
         order.mobile,
@@ -179,11 +179,11 @@ const AdminSabziPanel = ({
   const handleAddVegetable = async () => {
     if (!newVeg.name || !newVeg.price) return;
     const newId = 'v' + Date.now();
-    const vegObj = { ...newVeg, id: newId, price: Number(newVeg.price) };
+    const vegObj = { ...newVeg, id: newId, price: Number(newVeg.price), originalPrice: newVeg.originalPrice ? Number(newVeg.originalPrice) : '', stockQty: newVeg.stockQty ? Number(newVeg.stockQty) : '' };
     const updated = [...(globalVegetables || []), vegObj];
     setGlobalVegetables(updated);
     await setDoc(doc(db, "store", "globalVegetables"), { data: updated });
-    setNewVeg({ name: '', price: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
+    setNewVeg({ name: '', price: '', originalPrice: '', stockQty: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
     setIsEditing(false);
   };
 
@@ -278,7 +278,7 @@ const AdminSabziPanel = ({
                       <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
                         {order.items.map(item => (
                           <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#334155' }}>
-                            <span>{item.name} x {item.qty}</span>
+                            <span>{item.name} {item.unit === 'kg' && item.qty < 1 ? `(${item.qty * 1000}g)` : `x ${item.qty} ${item.unit !== 'piece' && item.unit !== 'kg' ? item.unit : ''}${item.unit === 'kg' && item.qty >= 1 ? 'kg' : ''}`}</span>
                             <span style={{ fontWeight: 'bold' }}>₹{item.total}</span>
                           </div>
                         ))}
@@ -327,7 +327,7 @@ const AdminSabziPanel = ({
                       <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
                         {order.items.map(item => (
                           <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#334155' }}>
-                            <span>{item.name} x {item.qty}</span>
+                            <span>{item.name} {item.unit === 'kg' && item.qty < 1 ? `(${item.qty * 1000}g)` : `x ${item.qty} ${item.unit !== 'piece' && item.unit !== 'kg' ? item.unit : ''}${item.unit === 'kg' && item.qty >= 1 ? 'kg' : ''}`}</span>
                             <span style={{ fontWeight: 'bold' }}>₹{item.total}</span>
                           </div>
                         ))}
@@ -405,8 +405,10 @@ const AdminSabziPanel = ({
               <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ margin: '0 0 1rem 0' }}>Add Vegetable</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
-                  <input type="text" placeholder="Name (e.g. Aloo)" value={newVeg.name} onChange={e => setNewVeg({...newVeg, name: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-                  <input type="number" placeholder="Price" value={newVeg.price} onChange={e => setNewVeg({...newVeg, price: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                                    <input type="text" placeholder="Name (e.g. Aloo)" value={newVeg.name} onChange={e => setNewVeg({...newVeg, name: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                  <input type="number" placeholder="Offer Price" value={newVeg.price} onChange={e => setNewVeg({...newVeg, price: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                  <input type="number" placeholder="Original Price (Optional)" value={newVeg.originalPrice} onChange={e => setNewVeg({...newVeg, originalPrice: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                  <input type="number" placeholder="Stock Qty (Optional)" value={newVeg.stockQty} onChange={e => setNewVeg({...newVeg, stockQty: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                   <select value={newVeg.unit} onChange={e => setNewVeg({...newVeg, unit: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                     <option value="kg">kg</option>
                     <option value="500g">500g</option>
@@ -442,8 +444,9 @@ const AdminSabziPanel = ({
                       <div style={{ fontSize: '2rem', marginRight: '1rem' }}>{veg.emoji}</div>
                     )}
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 0.2rem 0', color: '#1e293b' }}>{veg.name}</h4>
-                      <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>ID: {veg.id}</p>
+                      <h4 style={{ margin: '0 0 0.2rem 0', color: '#1e293b', display:'flex', gap:'0.5rem', alignItems:'center' }}>{veg.name} {veg.originalPrice && veg.originalPrice > veg.price && <span style={{background:'#ef4444',color:'white',fontSize:'0.65rem',padding:'2px 6px',borderRadius:'4px'}}>SALE</span>}</h4>
+                      <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>ID: {veg.id} {veg.stockQty !== '' && veg.stockQty !== undefined ? `| Stock: ${veg.stockQty} ${veg.unit}` : ''}</p>
+     {veg.stockQty !== '' && veg.stockQty !== undefined && veg.stockQty <= 2 && <p style={{ margin: '0.2rem 0 0 0', color: '#ef4444', fontSize: '0.8rem', fontWeight: 'bold' }}>⚠️ Low Stock Alert</p>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -457,6 +460,17 @@ const AdminSabziPanel = ({
                     />
                     <span style={{ color: '#64748b' }}>/ {veg.unit}</span>
                   </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ color: '#475569', fontSize: '0.85rem' }}>Stock:</span>
+                      <input 
+                        type="number" 
+                        value={veg.stockQty || ''}
+                        placeholder="Qty"
+                        onChange={e => handleUpdateInventory(veg.id, 'stockQty', e.target.value ? Number(e.target.value) : '')}
+                        style={{ width: '60px', padding: '0.3rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                      />
+                      <span style={{ color: '#64748b', fontSize: '0.85rem' }}>{veg.unit}</span>
+                    </div>
                 </div>
               ))}
             </div>
@@ -489,7 +503,7 @@ const AdminSabziPanel = ({
                     <div>
                       {order.items.map(item => (
                         <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#475569', marginBottom: '0.2rem' }}>
-                          <span>{item.name} x {item.qty}</span>
+                          <span>{item.name} {item.unit === 'kg' && item.qty < 1 ? `(${item.qty * 1000}g)` : `x ${item.qty} ${item.unit !== 'piece' && item.unit !== 'kg' ? item.unit : ''}${item.unit === 'kg' && item.qty >= 1 ? 'kg' : ''}`}</span>
                           <span>₹{item.total}</span>
                         </div>
                       ))}
