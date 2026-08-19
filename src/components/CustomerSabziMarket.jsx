@@ -15,6 +15,18 @@ const CustomerSabziMarket = ({
   const [showHistory, setShowHistory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [hideOutOfStock, setHideOutOfStock] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const cartSavings = useMemo(() => {
+    let savings = 0;
+    Object.keys(cart).forEach(id => {
+      const veg = globalVegetables.find(v => v.id === id);
+      if (veg && veg.originalPrice && veg.originalPrice > veg.price) {
+        savings += (veg.originalPrice - veg.price) * cart[id];
+      }
+    });
+    return savings;
+  }, [cart, globalVegetables]);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [cartInitialized, setCartInitialized] = useState(false);
 
@@ -138,6 +150,10 @@ const CustomerSabziMarket = ({
     if (selectedCategory !== 'All') {
       list = list.filter(v => (v.category || 'अन्य') === selectedCategory);
     }
+    if (searchQuery.trim() !== '') {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(v => v.name.toLowerCase().includes(q));
+    }
     if (hideOutOfStock) {
       list = list.filter(v => v.inStock);
     }
@@ -145,7 +161,7 @@ const CustomerSabziMarket = ({
       if (a.inStock === b.inStock) return 0;
       return a.inStock ? -1 : 1;
     });
-  }, [globalVegetables, selectedCategory, hideOutOfStock]);
+  }, [globalVegetables, selectedCategory, hideOutOfStock, searchQuery]);
 
   // Get History
   const historyList = useMemo(() => {
@@ -294,6 +310,23 @@ const CustomerSabziMarket = ({
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+                    {/* Search Bar */}
+          {!showHistory && !isMarketClosed && (
+            <div style={{ marginBottom: '1.2rem', position: 'relative' }}>
+              <input 
+                type="text" 
+                placeholder="Search vegetables (e.g. Tamatar, Pyaz)..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.5rem', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
+              />
+              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '1.1rem', color: '#94a3b8' }}>🔍</span>
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', fontSize: '1.1rem', color: '#94a3b8', cursor: 'pointer' }}>✖</button>
+              )}
             </div>
           )}
 
