@@ -177,9 +177,20 @@ const CustomerSabziMarket = ({
                     <span>₹{v.total}</span>
                   </div>
                 ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1' }}>
-                  <span>Total</span>
-                  <span>₹{item.total}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>Total</span>
+                    {item.isPaid ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#dcfce7', color: '#15803d', padding: '0.2rem 0.6rem', borderRadius: '8px', fontSize: '0.85rem' }}>
+                        <span style={{ fontSize: '1rem' }}>✅</span> Paid
+                      </span>
+                    ) : (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#f1f5f9', color: '#64748b', padding: '0.2rem 0.6rem', borderRadius: '8px', fontSize: '0.85rem' }}>
+                        <span style={{ fontSize: '0.9rem' }}>🔲</span> Unpaid
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ color: item.isPaid ? '#15803d' : '#0f172a', fontSize: '1.1rem' }}>₹{item.total}</span>
                 </div>
               </div>
             ))

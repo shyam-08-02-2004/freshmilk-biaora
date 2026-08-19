@@ -66,6 +66,19 @@ const AdminSabziPanel = ({
     await setDoc(doc(db, "store", "globalSabziOrders"), { data: newGlobalOrders });
   };
 
+  const handleTogglePaid = async (mobile, order, date) => {
+    const updatedUserOrders = {
+      ...globalSabziOrders[mobile],
+      [date]: { ...order, isPaid: !order.isPaid }
+    };
+    const newGlobalOrders = {
+      ...globalSabziOrders,
+      [mobile]: updatedUserOrders
+    };
+    setGlobalSabziOrders(newGlobalOrders);
+    await setDoc(doc(db, "store", "globalSabziOrders"), { data: newGlobalOrders });
+  };
+
   const handleUpdateInventory = async (id, field, value) => {
     const updated = (globalVegetables || []).map(v => {
       if (v.id === id) return { ...v, [field]: value };
@@ -179,9 +192,23 @@ const AdminSabziPanel = ({
                           <span style={{ fontWeight: 'bold' }}>₹{item.total}</span>
                         </div>
                       ))}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px dashed #cbd5e1', color: '#0f172a', fontWeight: '900', fontSize: '1.1rem' }}>
-                        <span>Total Collect</span>
-                        <span>₹{order.total}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px dashed #cbd5e1', color: '#0f172a', fontWeight: '900', fontSize: '1.1rem', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Status:</span>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', background: order.isPaid ? '#dcfce7' : '#f1f5f9', padding: '0.3rem 0.6rem', borderRadius: '8px', border: `1px solid ${order.isPaid ? '#22c55e' : '#cbd5e1'}`, transition: 'all 0.2s' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={!!order.isPaid} 
+                              onChange={() => handleTogglePaid(order.mobile, order, order.date)}
+                              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: '0.9rem', color: order.isPaid ? '#15803d' : '#475569', fontWeight: 'bold' }}>Paid</span>
+                          </label>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>Total Collect:</span>
+                          <span style={{ color: order.isPaid ? '#22c55e' : '#0f172a' }}>₹{order.total}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -320,9 +347,23 @@ const AdminSabziPanel = ({
                           <span>₹{item.total}</span>
                         </div>
                       ))}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontWeight: 'bold' }}>
-                        <span>Total Amount</span>
-                        <span>₹{order.total}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px dashed #cbd5e1', color: '#0f172a', fontWeight: '900', fontSize: '1.1rem', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Status:</span>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer', background: order.isPaid ? '#dcfce7' : '#f1f5f9', padding: '0.3rem 0.6rem', borderRadius: '8px', border: `1px solid ${order.isPaid ? '#22c55e' : '#cbd5e1'}`, transition: 'all 0.2s' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={!!order.isPaid} 
+                              onChange={() => handleTogglePaid(order.mobile, order, order.date)}
+                              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: '0.9rem', color: order.isPaid ? '#15803d' : '#475569', fontWeight: 'bold' }}>Paid</span>
+                          </label>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>Total Amount:</span>
+                          <span style={{ color: order.isPaid ? '#22c55e' : '#0f172a' }}>₹{order.total}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
