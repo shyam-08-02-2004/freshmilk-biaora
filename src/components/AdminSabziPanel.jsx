@@ -25,6 +25,8 @@ const AdminSabziPanel = ({
   const [selectedOrderTab, setSelectedOrderTab] = useState('pending');
   const [newVeg, setNewVeg] = useState({ name: '', price: '', originalPrice: '', stockQty: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' , category: 'हरी सब्जियां'});
   const [isEditing, setIsEditing] = useState(false);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [bulkEdits, setBulkEdits] = useState({});
 
   // Computed Orders for "orders" tab (pending today/tomorrow)
   const pendingOrders = useMemo(() => {
@@ -165,6 +167,49 @@ const AdminSabziPanel = ({
     };
     setGlobalSabziOrders(newGlobalOrders);
     await setDoc(doc(db, "store", "globalSabziOrders"), { data: newGlobalOrders });
+  };
+
+  
+  const startBulkUpdate = () => {
+    const initialEdits = {};
+    (globalVegetables || []).forEach(v => {
+      initialEdits[v.id] = { price: v.price, stockQty: v.stockQty || '', inStock: v.inStock };
+    });
+    setBulkEdits(initialEdits);
+    setIsBulkUpdating(true);
+  };
+
+  const handleBulkChange = (id, field, value) => {
+    setBulkEdits(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value }
+    }));
+  };
+
+  const saveBulkUpdate = async () => {
+    const updated = (globalVegetables || []).map(v => {
+      const edit = bulkEdits[v.id];
+      if (edit) {
+        const newPrice = Number(edit.price);
+        let origPrice = v.originalPrice;
+        if (v.price && newPrice < v.price) {
+          if (!origPrice || v.price > origPrice) origPrice = v.price;
+        } else if (origPrice && newPrice >= origPrice) {
+          origPrice = '';
+        }
+        return { 
+          ...v, 
+          price: newPrice, 
+          stockQty: edit.stockQty ? Number(edit.stockQty) : '', 
+          inStock: edit.inStock, 
+          originalPrice: origPrice 
+        };
+      }
+      return v;
+    });
+    setGlobalVegetables(updated);
+    await setDoc(doc(db, "store", "globalVegetables"), { data: updated });
+    setIsBulkUpdating(false);
   };
 
   const handleUpdateInventory = async (id, field, value) => {
@@ -404,17 +449,86 @@ const AdminSabziPanel = ({
           </div>
         )}
 
+        
         {/* ITEMS TAB */}
         {activeTab === 'items' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-              <button 
-                onClick={() => setIsEditing(!isEditing)}
-                style={{ background: '#0369a1', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
-              >
-                <Plus size={18} /> Add New Veggie
-              </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {!isBulkUpdating && (
+                <button 
+                  onClick={startBulkUpdate}
+                  style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                >
+                  ⚡ Morning Price Update
+                </button>
+              )}
+              {!isBulkUpdating && (
+                <button 
+                  onClick={() => setIsEditing(!isEditing)}
+                  style={{ background: '#0369a1', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                >
+                  <Plus size={18} /> Add New Veggie
+                </button>
+              )}
             </div>
+
+            {isBulkUpdating && (
+              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h3 style={{ margin: 0, color: '#1e293b' }}>⚡ Quick Update Table</h3>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => setIsBulkUpdating(false)} style={{ background: '#f1f5f9', color: '#475569', padding: '0.6rem 1.5rem', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={saveBulkUpdate} style={{ background: '#10b981', color: 'white', padding: '0.6rem 1.5rem', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Save All</button>
+                  </div>
+                </div>
+                
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', minWidth: '500px', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                        <th style={{ padding: '0.8rem', color: '#475569' }}>Item</th>
+                        <th style={{ padding: '0.8rem', color: '#475569', width: '120px' }}>Price (₹)</th>
+                        <th style={{ padding: '0.8rem', color: '#475569', width: '120px' }}>Stock Qty</th>
+                        <th style={{ padding: '0.8rem', color: '#475569', width: '100px' }}>In Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(globalVegetables || []).map(veg => (
+                        <tr key={veg.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '0.6rem 0.8rem', fontWeight: 'bold', color: '#1e293b' }}>{veg.name} <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>({veg.unit})</span></td>
+                          <td style={{ padding: '0.6rem 0.8rem' }}>
+                            <input 
+                              type="number" 
+                              value={bulkEdits[veg.id]?.price || ''} 
+                              onChange={e => handleBulkChange(veg.id, 'price', e.target.value)}
+                              style={{ width: '100%', padding: '0.4rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                            />
+                          </td>
+                          <td style={{ padding: '0.6rem 0.8rem' }}>
+                            <input 
+                              type="number" 
+                              value={bulkEdits[veg.id]?.stockQty || ''} 
+                              onChange={e => handleBulkChange(veg.id, 'stockQty', e.target.value)}
+                              style={{ width: '100%', padding: '0.4rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                              placeholder="Empty=∞"
+                            />
+                          </td>
+                          <td style={{ padding: '0.6rem 0.8rem' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={bulkEdits[veg.id]?.inStock || false} 
+                              onChange={e => handleBulkChange(veg.id, 'inStock', e.target.checked)}
+                              style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
 
             {isEditing && (
               <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
@@ -455,7 +569,7 @@ const AdminSabziPanel = ({
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+            {!isBulkUpdating && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
               {(globalVegetables || []).map(veg => (
                 <div key={veg.id} style={{ background: 'white', padding: '1rem', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
@@ -496,10 +610,9 @@ const AdminSabziPanel = ({
                     </div>
                 </div>
               ))}
-            </div>
+            </div>}
           </div>
         )}
-
         {/* HISTORY TAB */}
         {activeTab === 'history' && (
           <div>

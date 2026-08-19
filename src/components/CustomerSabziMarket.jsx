@@ -14,6 +14,7 @@ const CustomerSabziMarket = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [hideOutOfStock, setHideOutOfStock] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [cartInitialized, setCartInitialized] = useState(false);
 
@@ -133,9 +134,18 @@ const CustomerSabziMarket = ({
   }, [globalVegetables]);
 
   const displayedVegetables = useMemo(() => {
-    if (selectedCategory === 'All') return globalVegetables;
-    return globalVegetables.filter(v => (v.category || 'अन्य') === selectedCategory);
-  }, [globalVegetables, selectedCategory]);
+    let list = globalVegetables;
+    if (selectedCategory !== 'All') {
+      list = list.filter(v => (v.category || 'अन्य') === selectedCategory);
+    }
+    if (hideOutOfStock) {
+      list = list.filter(v => v.inStock);
+    }
+    return list.sort((a, b) => {
+      if (a.inStock === b.inStock) return 0;
+      return a.inStock ? -1 : 1;
+    });
+  }, [globalVegetables, selectedCategory, hideOutOfStock]);
 
   // Get History
   const historyList = useMemo(() => {
