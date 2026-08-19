@@ -208,7 +208,7 @@ const AdminSabziPanel = ({
       return v;
     });
     setGlobalVegetables(updated);
-    await setDoc(doc(db, "store", "globalVegetables"), { data: updated });
+    await setDoc(doc(db, "store", "globalVegetables"), { data: JSON.parse(JSON.stringify(updated)) });
     setIsBulkUpdating(false);
   };
 
@@ -233,7 +233,7 @@ const AdminSabziPanel = ({
       return v;
     });
     setGlobalVegetables(updated);
-    await setDoc(doc(db, "store", "globalVegetables"), { data: updated });
+    await setDoc(doc(db, "store", "globalVegetables"), { data: JSON.parse(JSON.stringify(updated)) });
   };
 
   const handleAddVegetable = async () => {
@@ -242,7 +242,7 @@ const AdminSabziPanel = ({
     const vegObj = { ...newVeg, id: newId, price: Number(newVeg.price), originalPrice: newVeg.originalPrice ? Number(newVeg.originalPrice) : '', stockQty: newVeg.stockQty ? Number(newVeg.stockQty) : '' , category: newVeg.category || 'अन्य' };
     const updated = [...(globalVegetables || []), vegObj];
     setGlobalVegetables(updated);
-    await setDoc(doc(db, "store", "globalVegetables"), { data: updated });
+    await setDoc(doc(db, "store", "globalVegetables"), { data: JSON.parse(JSON.stringify(updated)) });
     setNewVeg({ name: '', price: '', originalPrice: '', stockQty: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' , category: 'हरी सब्जियां'});
     setIsEditing(false);
   };
