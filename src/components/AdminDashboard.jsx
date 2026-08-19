@@ -81,6 +81,16 @@ const AdminDashboard = ({
     return active;
   }, [registeredUsers, globalOrders]);
 
+  React.useEffect(() => {
+    setSelectedOrders(prev => {
+      if (prev.length === 0) return prev;
+      const activeKeys = new Set(allActiveOrders.map(o => `${o.user.mobile}_${o.date}`));
+      const filtered = prev.filter(key => activeKeys.has(key));
+      if (filtered.length !== prev.length) return filtered;
+      return prev;
+    });
+  }, [allActiveOrders]);
+
   const prevActiveCount = useRef(allActiveOrders.length);
 
   useEffect(() => {
@@ -680,14 +690,14 @@ const AdminDashboard = ({
               </div>
               
               {selectedOrders.length > 0 && (
-                <div style={{ position: 'sticky', top: '0', zIndex: 100, background: 'white', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', border: '1px solid var(--primary)' }}>
+                <div className="admin-bulk-actions">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ background: 'var(--primary)', color: 'white', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                       {selectedOrders.length}
                     </div>
                     <strong style={{ color: 'var(--text-primary)' }}>Selected</strong>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div className="admin-bulk-actions-buttons">
                     <button onClick={handleBulkApprove} style={{ padding: '0.5rem 1rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CheckCircle size={16}/> Approve</button>
                     <button onClick={handleBulkDeliver} style={{ padding: '0.5rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Truck size={16}/> Deliver</button>
                     <button onClick={handleBulkDelete} style={{ padding: '0.5rem 1rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Trash2 size={16}/> Reject</button>
