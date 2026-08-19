@@ -96,7 +96,7 @@ const AdminSabziPanel = ({
 
     const analytics = useMemo(() => {
     let expectedRevenue = 0;
-    approvedOrders.forEach(o => expectedRevenue += o.total);
+    todayDeliveries.forEach(o => expectedRevenue += o.total);
     
     let lowStockCount = 0;
     (globalVegetables || []).forEach(v => {
@@ -108,7 +108,7 @@ const AdminSabziPanel = ({
     let topSelling = 'N/A';
     let maxQty = 0;
     const itemMap = {};
-    approvedOrders.forEach(o => {
+    todayDeliveries.forEach(o => {
       o.items.forEach(i => {
         itemMap[i.name] = (itemMap[i.name] || 0) + i.qty;
       });
@@ -121,7 +121,7 @@ const AdminSabziPanel = ({
     }
 
     return { expectedRevenue, lowStockCount, topSelling };
-  }, [approvedOrders, globalVegetables]);
+  }, [todayDeliveries, globalVegetables]);
 
   const handleApproveAll = async () => {
     if (!window.confirm("Approve all pending orders?")) return;
