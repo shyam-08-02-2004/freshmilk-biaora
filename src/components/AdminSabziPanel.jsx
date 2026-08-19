@@ -23,7 +23,7 @@ const AdminSabziPanel = ({
   const todayStr = format(now, 'yyyy-MM-dd');
 
   const [selectedOrderTab, setSelectedOrderTab] = useState('pending');
-  const [newVeg, setNewVeg] = useState({ name: '', price: '', originalPrice: '', stockQty: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
+  const [newVeg, setNewVeg] = useState({ name: '', price: '', originalPrice: '', stockQty: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' , category: 'हरी सब्जियां'});
   const [isEditing, setIsEditing] = useState(false);
 
   // Computed Orders for "orders" tab (pending today/tomorrow)
@@ -179,11 +179,11 @@ const AdminSabziPanel = ({
   const handleAddVegetable = async () => {
     if (!newVeg.name || !newVeg.price) return;
     const newId = 'v' + Date.now();
-    const vegObj = { ...newVeg, id: newId, price: Number(newVeg.price), originalPrice: newVeg.originalPrice ? Number(newVeg.originalPrice) : '', stockQty: newVeg.stockQty ? Number(newVeg.stockQty) : '' };
+    const vegObj = { ...newVeg, id: newId, price: Number(newVeg.price), originalPrice: newVeg.originalPrice ? Number(newVeg.originalPrice) : '', stockQty: newVeg.stockQty ? Number(newVeg.stockQty) : '' , category: newVeg.category || 'अन्य' };
     const updated = [...(globalVegetables || []), vegObj];
     setGlobalVegetables(updated);
     await setDoc(doc(db, "store", "globalVegetables"), { data: updated });
-    setNewVeg({ name: '', price: '', originalPrice: '', stockQty: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' });
+    setNewVeg({ name: '', price: '', originalPrice: '', stockQty: '', unit: 'kg', emoji: '🥬', inStock: true, image: '' , category: 'हरी सब्जियां'});
     setIsEditing(false);
   };
 
@@ -409,6 +409,14 @@ const AdminSabziPanel = ({
                   <input type="number" placeholder="Offer Price" value={newVeg.price} onChange={e => setNewVeg({...newVeg, price: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                   <input type="number" placeholder="Original Price (Optional)" value={newVeg.originalPrice} onChange={e => setNewVeg({...newVeg, originalPrice: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
                   <input type="number" placeholder="Stock Qty (Optional)" value={newVeg.stockQty} onChange={e => setNewVeg({...newVeg, stockQty: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                                    <select value={newVeg.category || 'हरी सब्जियां'} onChange={e => setNewVeg({...newVeg, category: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                    <option value="हरी सब्जियां">हरी सब्जियां (Green/Leafy)</option>
+                    <option value="रोजाना">रोजाना (Aloo/Pyaz/Tamatar)</option>
+                    <option value="सलाद">सलाद (Salad)</option>
+                    <option value="मसाले">मसाले (अदरक/लहसुन/मिर्ची)</option>
+                    <option value="फल">फल (Fruits)</option>
+                    <option value="अन्य">अन्य (Others)</option>
+                  </select>
                   <select value={newVeg.unit} onChange={e => setNewVeg({...newVeg, unit: e.target.value})} style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                     <option value="kg">kg</option>
                     <option value="500g">500g</option>
@@ -444,7 +452,7 @@ const AdminSabziPanel = ({
                       <div style={{ fontSize: '2rem', marginRight: '1rem' }}>{veg.emoji}</div>
                     )}
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 0.2rem 0', color: '#1e293b', display:'flex', gap:'0.5rem', alignItems:'center' }}>{veg.name} {veg.originalPrice && veg.originalPrice > veg.price && <span style={{background:'#ef4444',color:'white',fontSize:'0.65rem',padding:'2px 6px',borderRadius:'4px'}}>SALE</span>}</h4>
+                      <h4 style={{ margin: '0 0 0.2rem 0', color: '#1e293b', display:'flex', gap:'0.5rem', alignItems:'center' }}>{veg.name} <span style={{background:'#e0e7ff', color:'#4f46e5', fontSize:'0.7rem', padding:'2px 8px', borderRadius:'12px', fontWeight:'normal'}}>{veg.category || 'अन्य'}</span> {veg.originalPrice && veg.originalPrice > veg.price && <span style={{background:'#ef4444',color:'white',fontSize:'0.65rem',padding:'2px 6px',borderRadius:'4px'}}>SALE</span>}</h4>
                       <p style={{ margin: 0, color: '#64748b', fontSize: '0.85rem' }}>ID: {veg.id} {veg.stockQty !== '' && veg.stockQty !== undefined ? `| Stock: ${veg.stockQty} ${veg.unit}` : ''}</p>
      {veg.stockQty !== '' && veg.stockQty !== undefined && veg.stockQty <= 2 && <p style={{ margin: '0.2rem 0 0 0', color: '#ef4444', fontSize: '0.8rem', fontWeight: 'bold' }}>⚠️ Low Stock Alert</p>}
                     </div>

@@ -13,6 +13,7 @@ const CustomerSabziMarket = ({
   const [cart, setCart] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [cartInitialized, setCartInitialized] = useState(false);
 
@@ -124,6 +125,17 @@ const CustomerSabziMarket = ({
       setIsSubmitting(false);
     }
   };
+
+  // Categories
+  const categoriesList = useMemo(() => {
+    const cats = new Set(globalVegetables.map(v => v.category || 'अन्य'));
+    return ['All', ...Array.from(cats)];
+  }, [globalVegetables]);
+
+  const displayedVegetables = useMemo(() => {
+    if (selectedCategory === 'All') return globalVegetables;
+    return globalVegetables.filter(v => (v.category || 'अन्य') === selectedCategory);
+  }, [globalVegetables, selectedCategory]);
 
   // Get History
   const historyList = useMemo(() => {
@@ -247,9 +259,37 @@ const CustomerSabziMarket = ({
              </div>
           )}
 
+          {/* Categories Chips */}
+          {!showHistory && !isMarketClosed && (
+            <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '1rem', marginBottom: '0.5rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <style>{".hide-scroll::-webkit-scrollbar { display: none; }"}</style>
+              <div className="hide-scroll" style={{ display: 'flex', gap: '0.5rem' }}>
+                {categoriesList.map(cat => (
+                  <button 
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    style={{ 
+                      padding: '0.5rem 1rem', 
+                      borderRadius: '20px', 
+                      border: selectedCategory === cat ? 'none' : '1px solid #cbd5e1', 
+                      background: selectedCategory === cat ? '#047857' : 'white', 
+                      color: selectedCategory === cat ? 'white' : '#475569', 
+                      fontWeight: 'bold', 
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      boxShadow: selectedCategory === cat ? '0 2px 4px rgba(4, 120, 87, 0.2)' : 'none'
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Veggie List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '100px' }}>
-            {globalVegetables.map(veg => (
+            {displayedVegetables.map(veg => (
               <div key={veg.id} style={{ display: 'flex', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', opacity: veg.inStock ? 1 : 0.5 }}>
                 <div style={{ marginRight: '1rem', background: '#f8fafc', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', overflow: 'hidden' }}>
                   {veg.image ? (
